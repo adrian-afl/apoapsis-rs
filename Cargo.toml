@@ -1,0 +1,7 @@
+[package]
+name = "planetdraw-rs"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+vengine-rs = {git = "ssh://git@github.com/adrian-afl/vengine-rs.git", rev = "2d26ec8a7a326c8cb6998024b68b79d551b445f4"}

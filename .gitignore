@@ -1,0 +1,6 @@
+target
+.idea
+log.txt
+
+shaders/tmp-preparsed
+shaders/node_modules

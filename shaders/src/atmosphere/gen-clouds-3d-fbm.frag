@@ -1,0 +1,79 @@
+#version 460
+#extension GL_ARB_separate_shader_objects : enable
+
+uniform float elapsed;
+uniform float frequency;
+uniform vec4 seed;
+
+in vec2 UV;
+
+layout (location = 0) out float result;
+
+#include "include/texture/3d.glsl"
+
+float afloct(vec3 p, float tile){
+    p = mod(p, tile);
+    return fract(4768.1232345456 * sin((p.x+p.y*43.0+p.z*137.0)));
+}
+
+float aflnoisetile(vec3 x, float tile){
+    vec3 p = floor(x);
+    vec3 fr = smoothstep(0.0, 1.0, fract(x));
+    vec3 LBZ = p + vec3(0.0, 0.0, 0.0);
+    vec3 LTZ = p + vec3(0.0, 1.0, 0.0);
+    vec3 RBZ = p + vec3(1.0, 0.0, 0.0);
+    vec3 RTZ = p + vec3(1.0, 1.0, 0.0);
+
+    vec3 LBF = p + vec3(0.0, 0.0, 1.0);
+    vec3 LTF = p + vec3(0.0, 1.0, 1.0);
+    vec3 RBF = p + vec3(1.0, 0.0, 1.0);
+    vec3 RTF = p + vec3(1.0, 1.0, 1.0);
+
+    float l0candidate1 = afloct(LBZ, tile);
+    float l0candidate2 = afloct(RBZ, tile);
+    float l0candidate3 = afloct(LTZ, tile);
+    float l0candidate4 = afloct(RTZ, tile);
+
+    float l0candidate5 = afloct(LBF, tile);
+    float l0candidate6 = afloct(RBF, tile);
+    float l0candidate7 = afloct(LTF, tile);
+    float l0candidate8 = afloct(RTF, tile);
+
+    float l1candidate1 = mix(l0candidate1, l0candidate2, fr[0]);
+    float l1candidate2 = mix(l0candidate3, l0candidate4, fr[0]);
+    float l1candidate3 = mix(l0candidate5, l0candidate6, fr[0]);
+    float l1candidate4 = mix(l0candidate7, l0candidate8, fr[0]);
+
+
+    float l2candidate1 = mix(l1candidate1, l1candidate2, fr[1]);
+    float l2candidate2 = mix(l1candidate3, l1candidate4, fr[1]);
+
+    float l3candidate1 = mix(l2candidate1, l2candidate2, fr[2]);
+
+    return l3candidate1;
+}
+
+float aflsupernoise3dtile(vec3 p, float tile){
+	float a = aflnoisetile(p, tile);
+	float b = aflnoisetile(p + 120.5, tile);
+	return (a * b);
+}
+
+float cloudsFBM(vec3 p, int iterations){
+    float a = 0.0;
+    float w = 0.5;
+    float tile = 64.0;
+    for(int i=0;i<iterations;i++){
+        float x = abs(0.5 - aflsupernoise3dtile(p, tile))*2.0;
+        a += x * w;
+        p = p * 2.9;// + p * a * 0.001;
+        w *= 0.60;
+        tile *= 2.9;
+    }
+    return a;
+}
+
+void main() {
+    vec3 coord = uvTo3D(UV, 64.0);
+    result = cloudsFBM(coord * frequency + seed.xyz, 8);
+}
