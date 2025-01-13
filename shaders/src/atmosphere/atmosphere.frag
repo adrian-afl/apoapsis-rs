@@ -9,20 +9,8 @@ in vec2 UV;
 #include "uniforms/star.glsl"
 #include "include/sphere-raytracing.glsl"
 
-uniform float atmosphereStart;
 
-uniform float cloudsMinHeight;
-uniform float cloudsMaxHeight;
-uniform vec3 cloudsColor;
 
-uniform float rayleighHeight;
-uniform float rayleighDensity;
-
-uniform float mieHeight;
-uniform float mieDensity;
-uniform vec3 mieColor;
-
-uniform float seed;
 
 uniform sampler2D gBufferColorRGBroughnessA;
 uniform sampler2D gBufferNormalRGBdistanceA;

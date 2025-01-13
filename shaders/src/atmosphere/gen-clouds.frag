@@ -1,9 +1,11 @@
 #version 460
 #extension GL_ARB_separate_shader_objects : enable
 
-uniform float elapsed;
-uniform float frequency;
-uniform vec4 seed;
+layout(set = 0, binding = 0) uniform ubo {
+    float elapsed;
+    float frequency;
+    vec4 seed;
+} uniforms;
 
 in vec2 UV;
 
