@@ -97,6 +97,7 @@ async function run() {
 
     await fs.writeFile(path.join("tmp-preparsed", relativeName), resolved);
 
+    console.log(`compiling ${relativeName}`);
     const compilationResult = child_process.spawnSync("glslc", [`${path.join("tmp-preparsed", relativeName)}`,  "-o", `${path.join("compiled", relativeName)}.spv`]);
     if(compilationResult.status !== 0){
       console.log(util.styleText("red", compilationResult.stderr.toString("utf-8").trim()));

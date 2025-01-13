@@ -1,10 +1,10 @@
 #version 460
 #extension GL_ARB_separate_shader_objects : enable
 
-in vec2 inVertexPos;
-in vec2 inUV;
+layout(location = 0) in vec2 inVertexPos;
+layout(location = 1) in vec2 inUV;
 
-out vec2 UV;
+layout(location = 0) out vec2 UV;
 
 void main() {
   gl_Position = vec4(inVertexPos, 0.0, 1.0);
