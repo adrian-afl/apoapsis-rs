@@ -1,20 +1,23 @@
 #version 460
 #extension GL_ARB_separate_shader_objects : enable
 
-uniform int debugTextureIndex;
+layout(set = 0, binding = 0) uniform ubo {
+    float exposure;
+    int debugTextureIndex;
+} uniforms;
 
-uniform sampler2D celestialResultTexture;
+float exposure = uniforms.exposure;
+int debugTextureIndex = uniforms.debugTextureIndex;
 
-uniform float exposure;
+layout(set = 0, binding = 1) uniform sampler2D celestialResultTexture;
+layout(set = 0, binding = 2) uniform sampler2D debugTexture1;
+layout(set = 0, binding = 3) uniform sampler2D debugTexture2;
+layout(set = 0, binding = 4) uniform sampler2D debugTexture3;
+layout(set = 0, binding = 5) uniform sampler2D debugTexture4;
 
-uniform sampler2D debugTexture1;
-uniform sampler2D debugTexture2;
-uniform sampler2D debugTexture3;
-uniform sampler2D debugTexture4;
+layout (location = 0) in vec2 UV;
 
-in vec2 UV;
-
-out vec4 outColor;
+layout (location = 0) out vec4 outColor;
 
 vec3 aces_tonemap(vec3 color){	
 	mat3 m1 = mat3(

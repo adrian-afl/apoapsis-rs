@@ -86,6 +86,7 @@ async function run() {
   const entrypoints = list.filter(x => x.endsWith(".vert") || x.endsWith(".frag") || x.endsWith(".comp") || x.endsWith(".geom"));
   for (const entrypoint of entrypoints) {
     let relativeName = path.relative(path.join(__dirname, "src"), entrypoint);
+    console.log(`compiling ${relativeName}`);
     let resolved = await loadAndResolveShaderSource(relativeName);
 
     let outDirTmp = path.dirname(path.join("tmp-preparsed", relativeName));
@@ -97,7 +98,6 @@ async function run() {
 
     await fs.writeFile(path.join("tmp-preparsed", relativeName), resolved);
 
-    console.log(`compiling ${relativeName}`);
     const compilationResult = child_process.spawnSync("glslc", [`${path.join("tmp-preparsed", relativeName)}`,  "-o", `${path.join("compiled", relativeName)}.spv`]);
     if(compilationResult.status !== 0){
       console.log(util.styleText("red", compilationResult.stderr.toString("utf-8").trim()));

@@ -1,20 +1,27 @@
 #version 460
 #extension GL_ARB_separate_shader_objects : enable
 
-uniform sampler2D colorTexture;
-uniform sampler2D distanceTexture;
-uniform sampler2D worldPosTexture;
-uniform sampler2D normalTexture;
+layout(set = 0, binding = 0) uniform ubo {
+    mat4 lightPerspectiveMatrix;
+    mat4 lightViewMatrix;
+    vec4 lightColor_zero;
+    vec4 lightCameraRelativePosition_zero;
+} uniforms;
 
-uniform mat4 lightPerspectiveMatrix;
-uniform mat4 lightViewMatrix;
+layout(set = 0, binding = 1) uniform sampler2D colorTexture;
+layout(set = 0, binding = 2) uniform sampler2D distanceTexture;
+layout(set = 0, binding = 3) uniform sampler2D worldPosTexture;
+layout(set = 0, binding = 4) uniform sampler2D normalTexture;
 
-uniform vec3 lightColor;
-uniform vec3 lightCameraRelativePosition;
+mat4 lightPerspectiveMatrix = uniforms.lightPerspectiveMatrix;
+mat4 lightViewMatrix = uniforms.lightViewMatrix;
 
-in vec2 UV;
+vec3 lightColor = uniforms.lightColor_zero.rgb;
+vec3 lightCameraRelativePosition = uniforms.lightCameraRelativePosition_zero.xyz;
 
-out vec4 outColor;
+layout (location = 0) in vec2 UV;
+
+layout (location = 0) out vec4 outColor;
 
 float smoothShadow(vec3 ndc){
     float result = 0.0;

@@ -2,12 +2,15 @@
 #extension GL_ARB_separate_shader_objects : enable
 
 layout(set = 0, binding = 0) uniform ubo {
-    float elapsed;
-    float frequency;
     vec4 seed;
+    vec4 elapsed_frequency_zero_zero;
 } uniforms;
 
-in vec2 UV;
+vec3 seed = uniforms.seed.xyz;
+float elapsed = uniforms.elapsed_frequency_zero_zero.x;
+float frequency = uniforms.elapsed_frequency_zero_zero.y;
+
+layout(location = 0) in vec2 UV;
 
 layout (location = 0) out float result;
 

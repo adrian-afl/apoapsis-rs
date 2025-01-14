@@ -1,27 +1,28 @@
 #version 460
 #extension GL_ARB_separate_shader_objects : enable
 
-in vec2 UV;
+layout(location = 0) in vec2 UV;
 
-#include "include/frustum-cone.glsl"
-#include "uniforms/celestial-body.glsl"
-#include "uniforms/common.glsl"
-#include "uniforms/star.glsl"
-#include "include/sphere-raytracing.glsl"
+#define COMMON_BUFFER_SET 0
+#define COMMON_BUFFER_BINDING 0
+#include "buffers/common-buffer.glsl"
 
+#define CELESTIAL_BUFFER_SET 1
+#define CELESTIAL_BUFFER_BINDING 0
+#include "buffers/celestial-body-buffer.glsl"
 
+layout(set = 1, binding = 1) uniform sampler2D gBufferColorRGBroughnessA;
+layout(set = 1, binding = 2) uniform sampler2D gBufferNormalRGBdistanceA;
+layout(set = 1, binding = 3) uniform sampler2D gBufferEmissionRGBmetalnessA;
 
-
-uniform sampler2D gBufferColorRGBroughnessA;
-uniform sampler2D gBufferNormalRGBdistanceA;
-uniform sampler2D gBufferEmissionRGBmetalnessA;
-
-uniform sampler2D cloudsLowFreqTextureDensityR;
-uniform sampler2D cloudsHighFreqTextureDensityR;
+layout(set = 1, binding = 4) uniform sampler2D cloudsLowFreqTextureDensityR;
+layout(set = 1, binding = 5) uniform sampler2D cloudsHighFreqTextureDensityR;
 
 layout (location = 0) out vec4 outAdditiveRGB;
 layout (location = 1) out vec4 outAlphaRGBA;
 
+#include "include/frustum-cone.glsl"
+#include "include/sphere-raytracing.glsl"
 #include "atmosphere/common.glsl"
 #include "atmosphere/clouds.glsl"
 #include "atmosphere/rayleigh-mie.glsl"

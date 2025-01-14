@@ -1,41 +1,21 @@
 #version 460
 #extension GL_ARB_separate_shader_objects : enable
 
-uniform mat4 modelMatrix;
+#define MESH_BUFFER_SET 0
+#define MESH_BUFFER_BINDING 0
+#include "buffers/mesh-buffer.glsl"
 
-uniform vec3 color;
-uniform uint useColorTexture;
-uniform float colorTextureScale;
+layout(set = 0, binding = 1) uniform sampler2D colorTexture;
+layout(set = 0, binding = 2) uniform sampler2D roughnessTexture;
+layout(set = 0, binding = 3) uniform sampler2D metalnessTexture;
+layout(set = 0, binding = 4) uniform sampler2D emissionTexture;
+layout(set = 0, binding = 5) uniform sampler2D normalTexture;
+layout(set = 0, binding = 6) uniform sampler2D bumpTexture;
 
-uniform float roughness;
-uniform uint useRoughnessTexture;
-uniform float roughnessTextureScale;
-
-uniform float metalness;
-uniform uint useMetalnessTexture;
-uniform float metalnessTextureScale;
-
-uniform vec3 emission;
-uniform uint useEmissionTexture;
-uniform float emissionTextureScale;
-
-uniform uint useNormalTexture;
-uniform float normalTextureScale;
-
-uniform uint useBumpTexture;
-uniform float bumpTextureScale;
-
-uniform sampler2D colorTexture;
-uniform sampler2D roughnessTexture;
-uniform sampler2D metalnessTexture;
-uniform sampler2D emissionTexture;
-uniform sampler2D normalTexture;
-uniform sampler2D bumpTexture;
-
-in vec3 inoutNormal;
-in vec4 inoutTangent;
-in vec3 inoutWorldPos;
-in vec2 inoutUV;
+layout (location = 0) in vec3 inoutNormal;
+layout (location = 1) in vec4 inoutTangent;
+layout (location = 2) in vec3 inoutWorldPos;
+layout (location = 3) in vec2 inoutUV;
 
 layout (location = 0) out vec4 outColorRGBroughnessA;
 layout (location = 1) out vec4 outNormalRGBdistanceA;

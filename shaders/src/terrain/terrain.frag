@@ -1,10 +1,10 @@
 #version 460
 #extension GL_ARB_separate_shader_objects : enable
 
-in vec3 norm;
-in vec3 worldPos;
-in vec3 color;
-in float roughness;
+layout (location = 0) in vec3 norm;
+layout (location = 1) in vec3 worldPos;
+layout (location = 2) in vec3 color;
+layout (location = 3) in float roughness;
 
 layout (location = 0) out vec4 outColorRGBroughnessA;
 layout (location = 1) out vec4 outNormalRGBdistanceA;
