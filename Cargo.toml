@@ -4,4 +4,5 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-vengine-rs = {git = "ssh://git@github.com/adrian-afl/vengine-rs.git", rev = "2d26ec8a7a326c8cb6998024b68b79d551b445f4"}
+thiserror = "2.0.11"
+vengine-rs = { git = "ssh://git@github.com/adrian-afl/vengine-rs.git", rev = "525f6c0dd83f1c4a7509fcc70a5b4c836347a2e7" }
