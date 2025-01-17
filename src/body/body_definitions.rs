@@ -4,7 +4,7 @@ use glam::DVec3;
 use serde::Deserialize;
 use std::fs;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct BodyHeightModifier {
     pub image_path: String,
@@ -14,7 +14,7 @@ pub struct BodyHeightModifier {
     pub influence: f64,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct BodyColorModifier {
     pub image_path: String,
@@ -24,7 +24,7 @@ pub struct BodyColorModifier {
     pub influence: f64,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct BodyTerrainGeneration {
     pub seed: f64,
@@ -38,7 +38,7 @@ pub struct BodyTerrainGeneration {
     pub craters_count: u32,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum BodyBiomeModifier {
     Latitude,
@@ -46,7 +46,7 @@ pub enum BodyBiomeModifier {
     Random,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct BodyBiome {
     pub id: u32,
@@ -64,7 +64,7 @@ pub struct BodyBiome {
     pub max_crater_size: f64,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct BodyTerrain {
     pub radius: f64,
@@ -75,7 +75,7 @@ pub struct BodyTerrain {
     pub terrain_generation: BodyTerrainGeneration,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct BodyWater {
     pub height: f64,
@@ -83,7 +83,7 @@ pub struct BodyWater {
     pub color: DVec3,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct BodyClouds {
     pub min_height: f64,
@@ -92,7 +92,7 @@ pub struct BodyClouds {
     pub color: DVec3,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct BodyAtmosphere {
     pub seed: f64,
@@ -130,11 +130,11 @@ fn empty_sat_vec() -> Vec<BodyCelestialBodyDefinition> {
     vec![]
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct BodyDynamics {
     pub name: String,
-    pub rotation_axis: DVec3,
+    pub rotation_axis: DecimalVector3d,
     pub rotation_period: u64,     // in seconds
     pub mass: DeserializableDBig, // in kg
     pub motion: BodyMotion,
@@ -144,7 +144,7 @@ pub struct BodyDynamics {
     pub satellites: Vec<BodyCelestialBodyDefinition>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct BodyPlanetGenConfig {
     pub out_dir: String,
@@ -162,10 +162,10 @@ pub struct BodyPlanetGenConfig {
     pub cube_map_resolution: u16,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct BodyCelestialBodyDefinition {
-    pub id: String,
+    pub name: String,
     pub terrain: Option<BodyTerrain>,
     pub water: Option<BodyWater>,
     pub atmosphere: Option<BodyAtmosphere>,
