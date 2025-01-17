@@ -153,4 +153,6 @@ impl MeshDrawer {
             mesh_set_layout,
         })
     }
+
+    pub fn record() -> Result<(), CelestialRendererError> {}
 }

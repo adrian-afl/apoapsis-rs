@@ -5,6 +5,10 @@
 #define MESH_BUFFER_BINDING 0
 #include "buffers/mesh-buffer.glsl"
 
+#define COMMON_BUFFER_SET 1
+#define COMMON_BUFFER_BINDING 0
+#include "buffers/common-buffer.glsl"
+
 layout (location = 0) in vec3 inVertexPos;
 
 void main() {

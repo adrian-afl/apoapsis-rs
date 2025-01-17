@@ -1,6 +1,4 @@
 layout(set = MESH_BUFFER_SET, binding = MESH_BUFFER_BINDING) uniform meshDataBuffer {
-    mat4 perspectiveMatrix;
-    mat4 viewMatrix;
     mat4 modelMatrix;
 
     vec4 color_zero;
@@ -26,8 +24,6 @@ layout(set = MESH_BUFFER_SET, binding = MESH_BUFFER_BINDING) uniform meshDataBuf
     float bumpTextureScale;
 } meshData;
 
-mat4 perspectiveMatrix = meshData.perspectiveMatrix;
-mat4 viewMatrix = meshData.viewMatrix;
 mat4 modelMatrix = meshData.modelMatrix;
 
 vec3 color = meshData.color_zero.rgb;
