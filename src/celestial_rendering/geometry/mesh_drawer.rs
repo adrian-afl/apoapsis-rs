@@ -1,6 +1,9 @@
+use crate::celestial_rendering::buffers::common_buffer::CommonBuffer;
 use crate::celestial_rendering::errors::CelestialRendererError;
 use crate::celestial_rendering::geometry::g_buffer::GBuffer;
+use crate::celestial_rendering::scene::mesh::Mesh;
 use crate::config::Config;
+use vengine_rs::core::descriptor_set::VEDescriptorSet;
 use vengine_rs::core::descriptor_set_layout::{
     VEDescriptorSetFieldStage, VEDescriptorSetFieldType, VEDescriptorSetLayout,
     VEDescriptorSetLayoutField,
@@ -16,6 +19,8 @@ use vengine_rs::image::image::VEImageViewCreateInfo;
 pub struct MeshDrawer {
     pub render_stage: VERenderStage,
     pub mesh_set_layout: VEDescriptorSetLayout,
+    pub common_set_layout: VEDescriptorSetLayout,
+    pub common_set: VEDescriptorSet,
 }
 
 impl MeshDrawer {
@@ -23,6 +28,7 @@ impl MeshDrawer {
         config: &Config,
         toolkit: &VEToolkit,
         g_buffer: &mut GBuffer,
+        common_buffer: &CommonBuffer,
     ) -> Result<MeshDrawer, CelestialRendererError> {
         let vertex_attributes = [
             VertexAttribFormat::RGB32f,
@@ -122,6 +128,14 @@ impl MeshDrawer {
             },
         ])?;
 
+        let mut common_set_layout =
+            toolkit.create_descriptor_set_layout(&[VEDescriptorSetLayoutField {
+                // data buffer
+                binding: 0,
+                typ: VEDescriptorSetFieldType::UniformBuffer,
+                stage: VEDescriptorSetFieldStage::AllGraphics,
+            }])?;
+
         let vertex_shader = toolkit.create_shader_module(
             "shaders/compiled/mesh/mesh.vert.spv",
             VEShaderModuleType::Vertex,
@@ -140,7 +154,7 @@ impl MeshDrawer {
                 &normal_rgb_distance_a_attachment,
                 &emission_rgb_metalness_a_attachment,
             ],
-            &[&mesh_set_layout],
+            &[&mesh_set_layout, &common_set_layout],
             &vertex_shader,
             &fragment_shader,
             &vertex_attributes,
@@ -148,11 +162,29 @@ impl MeshDrawer {
             VECullMode::Back,
         )?;
 
+        let common_set = common_set_layout.create_descriptor_set()?;
+        common_set.bind_buffer(0, &common_buffer.buffer)?;
+
         Ok(MeshDrawer {
             render_stage,
             mesh_set_layout,
+            common_set_layout,
+            common_set,
         })
     }
 
-    pub fn record() -> Result<(), CelestialRendererError> {}
+    pub fn record(&self, meshes: &[&mut Mesh]) -> Result<(), CelestialRendererError> {
+        self.render_stage.begin_recording()?;
+
+        self.render_stage.set_descriptor_set(1, &self.common_set);
+
+        for mesh in meshes {
+            self.render_stage
+                .set_descriptor_set(0, &mesh.descriptor_set);
+            self.render_stage.draw_instanced(&mesh.geometry, 1);
+        }
+
+        self.render_stage.end_recording()?;
+        Ok(())
+    }
 }
