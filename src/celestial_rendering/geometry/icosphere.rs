@@ -10,7 +10,7 @@ use vengine_rs::graphics::render_stage::VERenderStage;
 use vengine_rs::graphics::vertex_attributes::VertexAttribFormat;
 use vengine_rs::graphics::vertex_buffer::VEVertexBuffer;
 
-const LOD_LEVELS: u8 = 3; // 1, 2, 3
+// const LOD_LEVELS: u8 = 3; // 1, 2, 3
 
 struct LoadedGeometry {
     pub vertex_buffer: VEVertexBuffer,
