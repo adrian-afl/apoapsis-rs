@@ -2,6 +2,7 @@ use crate::math::decimal_vector_3d::DecimalVector3d;
 use crate::math::sin_cos::{cos, f64_to_dbig, sin};
 use dashu_float::ops::SquareRoot;
 use dashu_float::DBig;
+use glam::{DMat3, DMat4};
 use std::ops::Deref;
 use std::sync::LazyLock;
 
@@ -101,5 +102,15 @@ impl DecimalMatrix3d {
             out[k] = (&self.data[k][i] + &self.data[i][k]) * &half_by_f_root;
             out
         }
+    }
+
+    pub fn as_dmat4(&self) -> DMat4 {
+        let mut data: [[f64; 3]; 3] = [[0.0; 3]; 3];
+        for x in 0..3 {
+            for y in 0..3 {
+                data[x][y] = self.data[x][y].to_f64().unwrap();
+            }
+        }
+        DMat4::from_mat3(DMat3::from_cols_array_2d(&data))
     }
 }

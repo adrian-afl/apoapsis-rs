@@ -28,6 +28,26 @@ pub fn write_vec3_zero(ptr: *mut f32, base_offset: isize, data: DVec3) -> isize 
     4
 }
 
+pub fn write_vec3_with_float(
+    ptr: *mut f32,
+    base_offset: isize,
+    data_a: DVec3,
+    data_b: f64,
+) -> isize {
+    let mut offset = base_offset;
+    unsafe {
+        ptr.offset(offset).write(data_a.x as f32);
+        offset += 1;
+        ptr.offset(offset).write(data_a.y as f32);
+        offset += 1;
+        ptr.offset(offset).write(data_a.z as f32);
+        offset += 1;
+        ptr.offset(offset).write(data_b as f32);
+        offset += 1;
+    }
+    4
+}
+
 pub fn write_vec4(ptr: *mut f32, base_offset: isize, data: DVec4) -> isize {
     let mut offset = base_offset;
     unsafe {

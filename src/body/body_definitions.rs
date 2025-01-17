@@ -78,7 +78,7 @@ pub struct BodyTerrain {
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct BodyWater {
-    pub height: f64,
+    pub radius: f64,
     pub waves_height: f64,
     pub color: DVec3,
 }
