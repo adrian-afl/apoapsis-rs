@@ -23,7 +23,7 @@ impl EmptyTextures {
                 Some(VEMemoryProperties::DeviceLocal),
             )
             .unwrap();
-        let view = image.get_view(VEImageViewCreateInfo::simple_2d())?;
+        let view = image.get_view(VEImageViewCreateInfo::simple_2d()).unwrap();
 
         self.empty_image = Some(image);
         self.empty_view = Some(view);

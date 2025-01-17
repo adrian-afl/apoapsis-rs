@@ -1,3 +1,4 @@
+mod body;
 mod celestial_rendering;
 mod config;
 mod math;

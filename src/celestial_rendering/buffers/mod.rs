@@ -1,3 +1,6 @@
 pub mod buffer_writers;
+pub mod celestial_body_buffer;
 pub mod common_buffer;
 pub mod mesh_buffer;
+pub mod terrain_icosphere_data_buffer;
+pub mod water_icosphere_data_buffer;
