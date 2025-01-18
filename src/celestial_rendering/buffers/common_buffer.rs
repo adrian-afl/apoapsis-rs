@@ -16,7 +16,7 @@ impl CommonBuffer {
         Ok(CommonBuffer {
             buffer: toolkit.create_buffer(
                 VEBufferType::Uniform,
-                8 * 1024,
+                512,
                 Some(VEMemoryProperties::HostCoherent),
             )?,
         })

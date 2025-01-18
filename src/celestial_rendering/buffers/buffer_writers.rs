@@ -70,6 +70,14 @@ pub fn write_float(ptr: *mut f32, base_offset: isize, data: f64) -> isize {
     1
 }
 
+pub fn write_int(ptr: *mut f32, base_offset: isize, data: i32) -> isize {
+    let ptr_int = ptr as *mut i32;
+    unsafe {
+        ptr_int.offset(base_offset).write(data);
+    }
+    1
+}
+
 pub fn write_bool_as_uint(ptr: *mut f32, base_offset: isize, data: bool) -> isize {
     let ptr_uint = ptr as *mut u32;
     unsafe {

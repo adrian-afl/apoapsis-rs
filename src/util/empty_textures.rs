@@ -20,7 +20,6 @@ impl EmptyTextures {
                 1,
                 VEImageFormat::R8unorm,
                 &[VEImageUsage::Sampled, VEImageUsage::Storage],
-                Some(VEMemoryProperties::DeviceLocal),
             )
             .unwrap();
         let view = image.get_view(VEImageViewCreateInfo::simple_2d()).unwrap();
