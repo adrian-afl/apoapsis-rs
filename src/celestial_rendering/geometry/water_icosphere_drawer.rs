@@ -5,15 +5,13 @@ use crate::celestial_rendering::geometry::g_buffer::GBuffer;
 use crate::celestial_rendering::geometry::icosphere::Icosphere;
 use crate::celestial_rendering::scene::camera::Camera;
 use crate::config::Config;
-use crate::math::decimal_vector_3d::DecimalVector3d;
 use crate::simulation::simulation::SimulatedBody;
-use glam::{DQuat, DVec3, Quat};
+use glam::{DQuat, DVec3};
 use vengine_rs::core::descriptor_set::VEDescriptorSet;
 use vengine_rs::core::descriptor_set_layout::{
     VEDescriptorSetFieldStage, VEDescriptorSetFieldType, VEDescriptorSetLayout,
     VEDescriptorSetLayoutField,
 };
-use vengine_rs::core::helpers::{clear_color_f32, clear_depth};
 use vengine_rs::core::shader_module::VEShaderModuleType;
 use vengine_rs::core::toolkit::VEToolkit;
 use vengine_rs::graphics::attachment::VEAttachment;
@@ -183,10 +181,10 @@ impl WaterIcosphereDrawer {
 
         Ok(())
     }
-    
+
     pub fn record(&mut self, toolkit: &VEToolkit) -> Result<(), CelestialRendererError> {
         self.render_stage.begin_recording()?;
-        
+
         self.icosphere.draw(toolkit, &self.render_stage)?;
 
         self.render_stage.end_recording()?;

@@ -11,19 +11,19 @@ vec2 UV = vec2(gl_GlobalInvocationID.xy) / vec2(executionSize.xy);
 #define COMMON_BUFFER_BINDING 0
 #include "buffers/common-buffer.glsl"
 
-#define CELESTIAL_BUFFER_SET 1
-#define CELESTIAL_BUFFER_BINDING 0
+#define CELESTIAL_BUFFER_SET 0
+#define CELESTIAL_BUFFER_BINDING 1
 #include "buffers/celestial-body-buffer.glsl"
 
-layout(set = 1, binding = 1) uniform sampler2D gBufferColorRGBroughnessA;
-layout(set = 1, binding = 2) uniform sampler2D gBufferNormalRGBdistanceA;
-layout(set = 1, binding = 3) uniform sampler2D gBufferEmissionRGBmetalnessA;
+layout(set = 0, binding = 2) uniform sampler2D gBufferColorRGBroughnessA;
+layout(set = 0, binding = 3) uniform sampler2D gBufferNormalRGBdistanceA;
+layout(set = 0, binding = 4) uniform sampler2D gBufferEmissionRGBmetalnessA;
 
-layout(set = 1, binding = 4) uniform sampler2D cloudsLowFreqTextureDensityR;
-layout(set = 1, binding = 5) uniform sampler2D cloudsHighFreqTextureDensityR;
+layout(set = 0, binding = 5) uniform sampler2D cloudsLowFreqTextureDensityR;
+layout(set = 0, binding = 6) uniform sampler2D cloudsHighFreqTextureDensityR;
 
-layout(set = 1, binding = 6, rgba16f) uniform restrict image2D outAdditiveRGB; // the restrict might bite my ass
-layout(set = 1, binding = 7, rgba16f) uniform restrict image2D outAlphaRGBA; // the restrict might bite my ass
+layout(set = 0, binding = 7, rgba16f) uniform restrict image2D outAdditiveRGB; // the restrict might bite my ass
+layout(set = 0, binding = 8, rgba16f) uniform restrict image2D outAlphaRGBA; // the restrict might bite my ass
 
 #include "include/frustum-cone.glsl"
 #include "include/sphere-raytracing.glsl"
