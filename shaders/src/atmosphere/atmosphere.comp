@@ -148,7 +148,6 @@ void main() {
     float hitsGeometry = step(0.001, geometryHit);
     vec3 meshFinal = meshIncoming * hitsGeometry;
 
-    
     imageStore(outAdditiveRGB, iUV, vec4(atmosphereAdditive.rgb, 0.0));
     imageStore(outAlphaRGBA, iUV, vec4(
         mix(meshFinal, 

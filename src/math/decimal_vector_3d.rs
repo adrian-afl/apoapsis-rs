@@ -28,9 +28,9 @@ impl DecimalVector3d {
 
     pub fn to_dvec3(&self) -> DVec3 {
         DVec3::new(
-            self.x.to_f64().unwrap(),
-            self.y.to_f64().unwrap(),
-            self.z.to_f64().unwrap(),
+            self.x.to_f64().value(),
+            self.y.to_f64().value(),
+            self.z.to_f64().value(),
         )
     }
 

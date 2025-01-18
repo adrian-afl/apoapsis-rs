@@ -27,7 +27,7 @@ fn main() {
     tracing::subscriber::set_global_default(subscriber).unwrap();
 
     let window_attributes = WindowAttributes::default()
-        .with_inner_size(PhysicalSize::new(640, 480))
+        .with_inner_size(PhysicalSize::new(640 * 3, 480 * 3))
         .with_title("dingus_mesh");
 
     VEToolkit::start(

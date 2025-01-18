@@ -18,7 +18,5 @@ void main() {
 
     vec3 color = bbdata.rgb * (1.0 - alpha.a) + additive.rgb + alpha.rgb;
 
-    color.r += 1.0;
-
     imageStore(outColor, iUV, vec4(color, 1.0));
 }

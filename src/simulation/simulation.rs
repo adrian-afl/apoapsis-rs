@@ -227,6 +227,7 @@ impl Simulation {
             match body.body.dynamics.motion {
                 BodyMotion::Static(_) => {
                     let hierarchy = self.resolve_hierarchy_down(body);
+                    schedule.push(body.id);
                     for body in hierarchy {
                         schedule.push(body.id);
                     }
@@ -254,10 +255,9 @@ impl Simulation {
                 BodyMotion::Orbiting(_) => self.find_closest_static(&body.position),
             };
             let star_radiance = match &closest_static.body.star_emission {
-                None => DVec3::new(0.0, 0.0, 0.0),
+                None => DVec3::new(1.0, 1.0, 1.0),
                 Some(emission) => emission.radiance,
             };
-            let body_clone = &body.clone();
             body.celestial_body_buffer
                 .lock()
                 .unwrap()
@@ -265,7 +265,7 @@ impl Simulation {
                     &camera_position,
                     &closest_static.position,
                     star_radiance,
-                    body_clone,
+                    body,
                 )
                 .unwrap();
             event!(Level::WARN, "Recording terrain_drawer");

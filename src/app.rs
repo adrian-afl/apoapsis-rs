@@ -11,10 +11,12 @@ use crate::celestial_rendering::geometry::mesh_drawer::MeshDrawer;
 use crate::celestial_rendering::scene::camera::Camera;
 use crate::celestial_rendering::scene::mesh::Mesh;
 use crate::config::Config;
+use crate::math::decimal_vector_3d::DecimalVector3d;
 use crate::simulation::simulation::Simulation;
 use crate::util::empty_textures::EMPTY_TEXTURES;
 use dashu_float::DBig;
-use glam::DVec4;
+use glam::{DMat3, DMat4, DQuat, DVec3, DVec4};
+use std::f64::consts::PI;
 use std::sync::{Arc, Mutex};
 use std::time::SystemTime;
 use tracing::{event, Level};
@@ -150,6 +152,23 @@ impl App for CelestialRendererApp {
         let delta_time = now - self.last_time;
         self.last_time = now;
 
+        self.camera
+            .set_perspective(90.0 * (PI / 180.0), 640.0 / 480.0, 0.1, 63780000.0);
+
+        self.camera.position = DecimalVector3d::from_str(
+            "64959787070023434667.0",
+            "23454569021239234304.0",
+            "29349283489.0",
+        ) - DecimalVector3d::from_str("0.0", "0.0", "12756000.0");
+
+        self.camera.orientation = DQuat::from_mat4(&DMat4::look_to_rh(
+            DVec3::new(0.0, 0.0, 0.0),
+            DVec3::new(0.0, 0.0, 1.0),
+            DVec3::new(0.0, 1.0, 0.0),
+        )); // * DQuat::from_axis_angle(DVec3::new(0.0, 1.0, 0.0), elapsed);
+
+        self.camera.update();
+
         self.common_buffer
             .update(&self.camera, elapsed)
             .expect("Failed to update common_buffer");
@@ -160,7 +179,7 @@ impl App for CelestialRendererApp {
             .expect("Failed to record mesh_drawer");
 
         self.simulation
-            .update(&self.camera.position, &DBig::from(0)); // TODO use some game time!!
+            .update(&self.camera.position, &DBig::from(1)); // TODO use some game time!!
 
         let closest_hierarchy = self
             .simulation

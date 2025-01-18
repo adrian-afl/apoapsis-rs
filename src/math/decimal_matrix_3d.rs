@@ -108,7 +108,7 @@ impl DecimalMatrix3d {
         let mut data: [[f64; 3]; 3] = [[0.0; 3]; 3];
         for x in 0..3 {
             for y in 0..3 {
-                data[x][y] = self.data[x][y].to_f64().unwrap();
+                data[x][y] = self.data[x][y].to_f64().value();
             }
         }
         DMat4::from_mat3(DMat3::from_cols_array_2d(&data))
