@@ -162,7 +162,7 @@ impl Icosphere {
         name: &str,
         level: u8,
     ) -> Result<VEVertexBuffer, CelestialRendererError> {
-        let path = format!("{}/{name}.l${level}.raw", self.dir_path);
+        let path = format!("{}/{name}.l{level}.raw", self.dir_path);
         println!("LOADING {}", path);
         let file = File::open(path)?;
         let mut brotli_stream = brotli::Decompressor::new(file, 40960);

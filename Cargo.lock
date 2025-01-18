@@ -2066,7 +2066,7 @@ checksum = "830b7e5d4d90034032940e4ace0d9a9a057e7a45cd94e6c007832e39edb82f6d"
 [[package]]
 name = "vengine-rs"
 version = "0.1.0"
-source = "git+ssh://git@github.com/adrian-afl/vengine-rs.git?rev=31128fefcdcbf68f5ff6b2feafcb7e77c29d9f85#31128fefcdcbf68f5ff6b2feafcb7e77c29d9f85"
+source = "git+ssh://git@github.com/adrian-afl/vengine-rs.git?rev=b4eea7c94cddf7ac752a6b032b9e5bd656b004c0#b4eea7c94cddf7ac752a6b032b9e5bd656b004c0"
 dependencies = [
  "ash",
  "ash-window",

@@ -3,6 +3,7 @@ use crate::celestial_rendering::buffers::output_buffer::OutputBuffer;
 use crate::celestial_rendering::errors::CelestialRendererError;
 use crate::celestial_rendering::finalization::multi_merger::MultiMerger;
 use crate::config::Config;
+use ash::vk;
 use glam::DVec4;
 use vengine_rs::compute::compute_stage::VEComputeStage;
 use vengine_rs::core::descriptor_set::VEDescriptorSet;
@@ -10,6 +11,7 @@ use vengine_rs::core::descriptor_set_layout::{
     VEDescriptorSetFieldStage, VEDescriptorSetFieldType, VEDescriptorSetLayout,
     VEDescriptorSetLayoutField,
 };
+use vengine_rs::core::helpers::clear_color_f32;
 use vengine_rs::core::shader_module::VEShaderModuleType;
 use vengine_rs::core::toolkit::VEToolkit;
 use vengine_rs::image::filtering::VEFiltering;
@@ -101,6 +103,22 @@ impl Output {
             config.height / WORKGROUP_SIZE,
             1,
         );
+        unsafe {
+            toolkit.device.device.cmd_clear_color_image(
+                compute_stage.command_buffer.handle,
+                multi_merger.output.handle,
+                multi_merger.output.current_layout,
+                &vk::ClearColorValue {
+                    float32: [0.0, 0.0, 0.0, 0.0],
+                },
+                &[vk::ImageSubresourceRange::default()
+                    .aspect_mask(vk::ImageAspectFlags::COLOR)
+                    .base_mip_level(0)
+                    .level_count(1) // TODO mip mapping
+                    .base_array_layer(0)
+                    .layer_count(1)],
+            )
+        }
         compute_stage.end_recording()?;
 
         Ok(Output {
