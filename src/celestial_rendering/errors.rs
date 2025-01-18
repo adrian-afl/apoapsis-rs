@@ -1,6 +1,7 @@
 use std::io;
 use thiserror::Error;
 use vengine_rs::buffer::buffer::VEBufferError;
+use vengine_rs::compute::compute_stage::VEComputeStageError;
 use vengine_rs::core::descriptor_set::VEDescriptorSetError;
 use vengine_rs::core::descriptor_set_layout::VEDescriptorSetLayoutError;
 use vengine_rs::core::shader_module::VEShaderModuleError;
@@ -32,6 +33,9 @@ pub enum CelestialRendererError {
 
     #[error("render stage error")]
     RenderStageError(#[from] VERenderStageError),
+
+    #[error("compute stage error")]
+    ComputeStageError(#[from] VEComputeStageError),
 
     #[error("buffer error")]
     BufferError(#[from] VEBufferError),

@@ -5,13 +5,15 @@ use vengine_rs::buffer::buffer::{VEBuffer, VEBufferType};
 use vengine_rs::core::memory_properties::VEMemoryProperties;
 use vengine_rs::core::toolkit::VEToolkit;
 
-pub struct CloudGeneratorBuffer {
+pub struct CloudGeneratorHighFreqBuffer {
     pub buffer: VEBuffer,
 }
 
-impl CloudGeneratorBuffer {
-    pub fn new(toolkit: &VEToolkit) -> Result<CloudGeneratorBuffer, CelestialRendererError> {
-        Ok(CloudGeneratorBuffer {
+impl CloudGeneratorHighFreqBuffer {
+    pub fn new(
+        toolkit: &VEToolkit,
+    ) -> Result<CloudGeneratorHighFreqBuffer, CelestialRendererError> {
+        Ok(CloudGeneratorHighFreqBuffer {
             buffer: toolkit.create_buffer(
                 VEBufferType::Uniform,
                 128,

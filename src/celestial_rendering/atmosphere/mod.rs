@@ -1,1 +1,2 @@
-mod clouds_generator;
+mod clouds_generator_high_freq;
+mod clouds_generator_low_freq;

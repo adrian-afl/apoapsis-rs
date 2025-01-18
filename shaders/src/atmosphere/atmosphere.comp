@@ -1,7 +1,11 @@
 #version 460
 #extension GL_ARB_separate_shader_objects : enable
 
-layout(location = 0) in vec2 UV;
+layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+
+uvec3 executionSize = gl_NumWorkGroups * gl_WorkGroupSize;
+ivec2 iUV = ivec2(gl_GlobalInvocationID.xy);
+vec2 UV = vec2(gl_GlobalInvocationID.xy) / vec2(executionSize.xy);
 
 #define COMMON_BUFFER_SET 0
 #define COMMON_BUFFER_BINDING 0
@@ -18,8 +22,8 @@ layout(set = 1, binding = 3) uniform sampler2D gBufferEmissionRGBmetalnessA;
 layout(set = 1, binding = 4) uniform sampler2D cloudsLowFreqTextureDensityR;
 layout(set = 1, binding = 5) uniform sampler2D cloudsHighFreqTextureDensityR;
 
-layout (location = 0) out vec4 outAdditiveRGB;
-layout (location = 1) out vec4 outAlphaRGBA;
+layout(set = 1, binding = 6, rgba16f) uniform restrict image2D outAdditiveRGB; // the restrict might bite my ass
+layout(set = 1, binding = 7, rgba16f) uniform restrict image2D outAlphaRGBA; // the restrict might bite my ass
 
 #include "include/frustum-cone.glsl"
 #include "include/sphere-raytracing.glsl"
@@ -144,14 +148,13 @@ void main() {
     float hitsGeometry = step(0.001, geometryHit);
     vec3 meshFinal = meshIncoming * hitsGeometry;
 
-    outAdditiveRGB = vec4(atmosphereAdditive.rgb, 0.0);
-    outAlphaRGBA = vec4(
+    
+    imageStore(outAdditiveRGB, iUV, vec4(atmosphereAdditive.rgb, 0.0));
+    imageStore(outAlphaRGBA, iUV, vec4(
         mix(meshFinal, 
             atmosphereAlpha.rgb, 
             atmosphereAlpha.a
         ),
         min(1.0, hitsGeometry + atmosphereAlpha.a)
-    );
-    // outAdditiveRGB = vec4(0.0);
-    // outAlphaRGBA = vec4(atmosphereAlpha.rgb, 1.0);
+    ));
 }
