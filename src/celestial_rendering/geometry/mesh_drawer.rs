@@ -3,6 +3,7 @@ use crate::celestial_rendering::errors::CelestialRendererError;
 use crate::celestial_rendering::geometry::g_buffer::GBuffer;
 use crate::celestial_rendering::scene::mesh::Mesh;
 use crate::config::Config;
+use std::cell::Cell;
 use vengine_rs::core::descriptor_set::VEDescriptorSet;
 use vengine_rs::core::descriptor_set_layout::{
     VEDescriptorSetFieldStage, VEDescriptorSetFieldType, VEDescriptorSetLayout,
@@ -173,7 +174,7 @@ impl MeshDrawer {
         })
     }
 
-    pub fn record(&self, meshes: &[&mut Mesh]) -> Result<(), CelestialRendererError> {
+    pub fn record(&self, meshes: &[Mesh]) -> Result<(), CelestialRendererError> {
         self.render_stage.begin_recording()?;
 
         self.render_stage.set_descriptor_set(1, &self.common_set);

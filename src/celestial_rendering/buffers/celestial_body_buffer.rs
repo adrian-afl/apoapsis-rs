@@ -6,12 +6,19 @@ use crate::celestial_rendering::errors::CelestialRendererError;
 use crate::math::decimal_vector_3d::DecimalVector3d;
 use crate::simulation::simulation::{SimulatedBody, Simulation};
 use glam::DVec3;
+use std::fmt::{Debug, Formatter, Write};
 use vengine_rs::buffer::buffer::{VEBuffer, VEBufferType};
 use vengine_rs::core::memory_properties::VEMemoryProperties;
 use vengine_rs::core::toolkit::VEToolkit;
 
 pub struct CelestialBodyBuffer {
     pub buffer: VEBuffer,
+}
+
+impl Debug for CelestialBodyBuffer {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_fmt(format_args!("CelestialBodyBuffer {:?}", self.buffer.buffer))
+    }
 }
 
 impl CelestialBodyBuffer {
@@ -48,8 +55,8 @@ impl CelestialBodyBuffer {
     */
     pub fn update(
         &mut self,
-        camera_position: DecimalVector3d,
-        star_position: DecimalVector3d,
+        camera_position: &DecimalVector3d,
+        star_position: &DecimalVector3d,
         star_radiance: DVec3,
         body: &SimulatedBody,
     ) -> Result<(), CelestialRendererError> {

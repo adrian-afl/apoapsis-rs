@@ -1,3 +1,4 @@
+use crate::celestial_rendering::buffers::celestial_body_buffer::CelestialBodyBuffer;
 use crate::celestial_rendering::buffers::common_buffer::CommonBuffer;
 use crate::celestial_rendering::buffers::water_icosphere_data_buffer::WaterIcosphereDataBuffer;
 use crate::celestial_rendering::errors::CelestialRendererError;
@@ -7,6 +8,7 @@ use crate::celestial_rendering::scene::camera::Camera;
 use crate::config::Config;
 use crate::simulation::simulation::SimulatedBody;
 use glam::{DQuat, DVec3};
+use std::fmt::{Debug, Formatter};
 use vengine_rs::core::descriptor_set::VEDescriptorSet;
 use vengine_rs::core::descriptor_set_layout::{
     VEDescriptorSetFieldStage, VEDescriptorSetFieldType, VEDescriptorSetLayout,
@@ -21,7 +23,7 @@ use vengine_rs::image::image::VEImageViewCreateInfo;
 
 pub struct WaterIcosphereDrawer {
     icosphere: Icosphere,
-    render_stage: VERenderStage,
+    pub render_stage: VERenderStage,
 
     buffer: WaterIcosphereDataBuffer,
 
@@ -32,6 +34,12 @@ pub struct WaterIcosphereDrawer {
     common_set: VEDescriptorSet,
 
     water_color: DVec3,
+}
+
+impl Debug for WaterIcosphereDrawer {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_str("WaterIcosphereDrawer")
+    }
 }
 
 impl WaterIcosphereDrawer {

@@ -1,11 +1,21 @@
-use crate::body::body_definitions::{BodyCelestialBodyDefinition, BodyMotion};
+use crate::app::CelestialRendererApp;
+use crate::body::body_definitions::{
+    BodyCelestialBodyDefinition, BodyMotion, BodyStarEmission, BodyWater,
+};
+use crate::celestial_rendering::buffers::celestial_body_buffer::CelestialBodyBuffer;
+use crate::celestial_rendering::errors::CelestialRendererError;
+use crate::celestial_rendering::geometry::icosphere::Icosphere;
+use crate::celestial_rendering::geometry::terrain_icosphere_drawer::TerrainIcosphereDrawer;
+use crate::celestial_rendering::geometry::water_icosphere_drawer::WaterIcosphereDrawer;
 use crate::math::decimal_matrix_3d::DecimalMatrix3d;
 use crate::math::decimal_vector_3d::DecimalVector3d;
 use crate::math::sin_cos::PIMUL2;
 use dashu_float::ops::SquareRoot;
 use dashu_float::DBig;
+use glam::DVec3;
 use std::str::FromStr;
-use std::sync::LazyLock;
+use std::sync::{Arc, LazyLock, Mutex};
+use vengine_rs::core::toolkit::VEToolkit;
 
 static G_CONSTANT: LazyLock<DBig> = LazyLock::new(|| DBig::from_str("0.0000000000667408").unwrap());
 
@@ -18,35 +28,60 @@ pub struct SimulatedBody {
     pub orientation: DecimalMatrix3d,
     parent: Option<i32>, // -1 means no
     satellites: Vec<i32>,
+    pub water_drawer: Option<Arc<Mutex<WaterIcosphereDrawer>>>,
+    pub terrain_drawer: Option<Arc<Mutex<TerrainIcosphereDrawer>>>,
+    pub celestial_body_buffer: Arc<Mutex<CelestialBodyBuffer>>,
 }
 
-#[derive(Debug)]
 pub struct Simulation {
     pub bodies: Vec<SimulatedBody>,
     id_counter: i32,
-}
-
-impl Default for Simulation {
-    fn default() -> Self {
-        Self::new()
-    }
+    toolkit: Arc<VEToolkit>,
 }
 
 impl Simulation {
-    pub fn new() -> Self {
+    pub fn new(toolkit: Arc<VEToolkit>) -> Self {
         Simulation {
             bodies: vec![],
             id_counter: 0,
+            toolkit,
         }
     }
 
     pub fn add_hierarchy(
         &mut self,
+        renderer: &mut CelestialRendererApp,
         body: &BodyCelestialBodyDefinition,
         parent: Option<i32>,
-    ) -> i32 {
+    ) -> Result<i32, CelestialRendererError> {
         let new_id = self.id_counter;
         self.id_counter += 1;
+
+        let terrain_drawer = match &body.terrain {
+            None => None,
+            Some(terrain_icosphere) => Some(Arc::new(Mutex::from(TerrainIcosphereDrawer::new(
+                &renderer.config,
+                &renderer.toolkit,
+                &mut renderer.g_buffer,
+                &renderer.common_buffer,
+                terrain_icosphere.icosphere_path.to_owned(),
+                vec![2000000.0, 5000000.0],
+            )?))),
+        };
+
+        let water_drawer = match &body.water {
+            None => None,
+            Some(water) => Some(Arc::new(Mutex::from(WaterIcosphereDrawer::new(
+                &renderer.config,
+                &renderer.toolkit,
+                &mut renderer.g_buffer,
+                &renderer.common_buffer,
+                water.icosphere_path.to_owned(),
+                vec![2000000.0, 5000000.0],
+                water.color,
+            )?))),
+        };
+
         let mut simulated_body = SimulatedBody {
             id: new_id,
             parent,
@@ -55,14 +90,21 @@ impl Simulation {
             position: DecimalVector3d::zero(),
             velocity: DecimalVector3d::zero(),
             orientation: DecimalMatrix3d::identity(),
+            celestial_body_buffer: Arc::new(Mutex::from(CelestialBodyBuffer::new(
+                &renderer.toolkit,
+            )?)),
+            terrain_drawer,
+            water_drawer,
         };
         for i in 0..body.dynamics.satellites.len() {
-            simulated_body
-                .satellites
-                .push(self.add_hierarchy(&body.dynamics.satellites[i], Some(new_id)));
+            simulated_body.satellites.push(self.add_hierarchy(
+                renderer,
+                &body.dynamics.satellites[i],
+                Some(new_id),
+            )?);
         }
         self.bodies.push(simulated_body);
-        new_id
+        Ok(new_id)
     }
 
     fn get_body_by_name(&self, name: &str) -> Option<&SimulatedBody> {
@@ -172,7 +214,7 @@ impl Simulation {
         DecimalMatrix3d::axis_angle(&body.body.dynamics.rotation_axis, angle)
     }
 
-    pub fn update(&mut self, time: &DBig) {
+    pub fn update(&mut self, camera_position: &DecimalVector3d, time: &DBig) {
         let mut schedule: Vec<i32> = vec![];
         for i in 0..self.bodies.len() {
             let body = &self.bodies[i];
@@ -199,6 +241,40 @@ impl Simulation {
             body.velocity = velocity;
             body.orientation = orientation;
         }
+        for i in 0..self.bodies.len() {
+            let mut body = &self.bodies[i];
+            let closest_static = self.find_closest_static(&body.position);
+            let star_radiance = match &closest_static.body.star_emission {
+                None => DVec3::new(0.0, 0.0, 0.0),
+                Some(emission) => emission.radiance,
+            };
+            let body_clone = &body.clone();
+            body.celestial_body_buffer
+                .lock()
+                .unwrap()
+                .update(
+                    &camera_position,
+                    &closest_static.position,
+                    star_radiance,
+                    body_clone,
+                )
+                .unwrap();
+            match &body.terrain_drawer {
+                None => (),
+                Some(drawer) => drawer.lock().unwrap().record(&self.toolkit).unwrap(),
+            }
+            match &body.water_drawer {
+                None => (),
+                Some(drawer) => drawer.lock().unwrap().record(&self.toolkit).unwrap(),
+            }
+        }
+
+        self.bodies.sort_by(|a, b| {
+            a.position
+                .distance_to(&camera_position)
+                .partial_cmp(&b.position.distance_to(&camera_position))
+                .unwrap()
+        });
     }
 
     pub fn get_body(&self, body_name: &str) -> &SimulatedBody {
@@ -233,6 +309,13 @@ impl Simulation {
             }
         }
         closest
+    }
+
+    pub fn find_closest_hierarchy(&self, point: &DecimalVector3d) -> Vec<&SimulatedBody> {
+        let closest_static = self.find_closest_static(point);
+        let mut hierarchy = self.resolve_hierarchy_down(closest_static);
+        hierarchy.splice(..0, vec![closest_static]);
+        hierarchy
     }
 
     pub fn find_closest_body(&self, point: &DecimalVector3d) -> &SimulatedBody {

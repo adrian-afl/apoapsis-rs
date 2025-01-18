@@ -3,11 +3,13 @@ use crate::celestial_rendering::buffers::terrain_icosphere_data_buffer::TerrainI
 use crate::celestial_rendering::errors::CelestialRendererError;
 use crate::celestial_rendering::geometry::g_buffer::GBuffer;
 use crate::celestial_rendering::geometry::icosphere::Icosphere;
+use crate::celestial_rendering::geometry::water_icosphere_drawer::WaterIcosphereDrawer;
 use crate::celestial_rendering::scene::camera::Camera;
 use crate::config::Config;
 use crate::math::decimal_vector_3d::DecimalVector3d;
 use crate::simulation::simulation::SimulatedBody;
 use glam::{DQuat, DVec3, Quat};
+use std::fmt::{Debug, Formatter};
 use vengine_rs::core::descriptor_set::VEDescriptorSet;
 use vengine_rs::core::descriptor_set_layout::{
     VEDescriptorSetFieldStage, VEDescriptorSetFieldType, VEDescriptorSetLayout,
@@ -23,7 +25,7 @@ use vengine_rs::image::image::VEImageViewCreateInfo;
 
 pub struct TerrainIcosphereDrawer {
     icosphere: Icosphere,
-    render_stage: VERenderStage,
+    pub render_stage: VERenderStage,
 
     buffer: TerrainIcosphereDataBuffer,
 
@@ -32,6 +34,12 @@ pub struct TerrainIcosphereDrawer {
 
     common_set_layout: VEDescriptorSetLayout,
     common_set: VEDescriptorSet,
+}
+
+impl Debug for TerrainIcosphereDrawer {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_str("TerrainIcosphereDrawer")
+    }
 }
 
 impl TerrainIcosphereDrawer {

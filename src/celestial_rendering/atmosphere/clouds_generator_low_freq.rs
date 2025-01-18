@@ -1,5 +1,6 @@
 use crate::celestial_rendering::buffers::cloud_generator_low_freq_buffer::CloudGeneratorLowFreqBuffer;
 use crate::celestial_rendering::errors::CelestialRendererError;
+use glam::DVec4;
 use vengine_rs::compute::compute_stage::VEComputeStage;
 use vengine_rs::core::descriptor_set::VEDescriptorSet;
 use vengine_rs::core::descriptor_set_layout::{
@@ -83,5 +84,14 @@ impl CloudGeneratorLowFreq {
             buffer,
             low_freq_data_r,
         })
+    }
+
+    pub fn update_buffer(
+        &mut self,
+        seed: DVec4,
+        elapsed: f64,
+    ) -> Result<(), CelestialRendererError> {
+        self.buffer.update(seed, elapsed)?;
+        Ok(())
     }
 }

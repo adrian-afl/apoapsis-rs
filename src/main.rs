@@ -1,3 +1,4 @@
+mod app;
 mod body;
 mod celestial_rendering;
 mod config;

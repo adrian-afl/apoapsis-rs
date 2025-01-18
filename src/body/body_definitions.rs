@@ -73,6 +73,7 @@ pub struct BodyTerrain {
     pub biome_modifier: BodyBiomeModifier,
     pub biomes: Vec<BodyBiome>,
     pub terrain_generation: BodyTerrainGeneration,
+    pub icosphere_path: String,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -81,6 +82,7 @@ pub struct BodyWater {
     pub radius: f64,
     pub waves_height: f64,
     pub color: DVec3,
+    pub icosphere_path: String,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -164,6 +166,12 @@ pub struct BodyPlanetGenConfig {
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct BodyStarEmission {
+    pub radiance: DVec3,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct BodyCelestialBodyDefinition {
     pub name: String,
     pub terrain: Option<BodyTerrain>,
@@ -171,6 +179,7 @@ pub struct BodyCelestialBodyDefinition {
     pub atmosphere: Option<BodyAtmosphere>,
     pub generator_config: BodyPlanetGenConfig,
     pub dynamics: BodyDynamics,
+    pub star_emission: Option<BodyStarEmission>,
 }
 
 fn parse_body_data(str: &str) -> BodyCelestialBodyDefinition {

@@ -34,7 +34,6 @@ impl AtmosphereDrawer {
         config: &Config,
         toolkit: &VEToolkit,
         common_buffer: &CommonBuffer,
-        celestial_buffer: &CelestialBodyBuffer,
         clouds_data_low_freq: &mut VEImage,
         clouds_data_high_freq: &mut VEImage,
         g_buffer: &mut GBuffer,
@@ -134,7 +133,6 @@ impl AtmosphereDrawer {
         let data_set = data_set_layout.create_descriptor_set()?;
 
         data_set.bind_buffer(0, &common_buffer.buffer)?;
-        data_set.bind_buffer(1, &celestial_buffer.buffer)?;
 
         let view = g_buffer
             .color_rgb_roughness_a
@@ -187,5 +185,13 @@ impl AtmosphereDrawer {
             out_additive_rgb,
             out_alpha_rgba,
         })
+    }
+
+    pub fn set_celestial_buffer(
+        &self,
+        celestial_buffer: &CelestialBodyBuffer,
+    ) -> Result<(), CelestialRendererError> {
+        self.data_set.bind_buffer(1, &celestial_buffer.buffer)?;
+        Ok(())
     }
 }
