@@ -5,6 +5,7 @@ use crate::celestial_rendering::buffers::buffer_writers::{
 use crate::celestial_rendering::errors::CelestialRendererError;
 use crate::math::decimal_vector_3d::DecimalVector3d;
 use crate::simulation::simulation::{SimulatedBody, Simulation};
+use dashu_float::DBig;
 use glam::DVec3;
 use std::fmt::{Debug, Formatter, Write};
 use vengine_rs::buffer::buffer::{VEBuffer, VEBufferType};
@@ -180,7 +181,12 @@ impl CelestialBodyBuffer {
             },
         );
 
-        let star_direction = (star_position - &body.position).normalized();
+        let star_vector = star_position - &body.position;
+        let star_direction = if star_vector.length().eq(&DBig::ZERO) {
+            DecimalVector3d::from_f64(0.0, 1.0, 0.0) // failsafe, for now, TODO
+        } else {
+            star_vector.normalized()
+        };
 
         offset += write_vec3_zero(ptr, offset, star_direction.to_dvec3());
         offset += write_vec3_zero(ptr, offset, star_radiance);

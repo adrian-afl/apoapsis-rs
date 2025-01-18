@@ -135,7 +135,6 @@ fn empty_sat_vec() -> Vec<BodyCelestialBodyDefinition> {
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct BodyDynamics {
-    pub name: String,
     pub rotation_axis: DecimalVector3d,
     pub rotation_period: u64,     // in seconds
     pub mass: DeserializableDBig, // in kg

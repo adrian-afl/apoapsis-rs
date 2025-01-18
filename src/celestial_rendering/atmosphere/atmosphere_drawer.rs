@@ -55,7 +55,7 @@ impl AtmosphereDrawer {
         )?;
 
         let low_freq_compute_shader = toolkit.create_shader_module(
-            "shaders/compiled/atmosphere/atmosphere.comp",
+            "shaders/compiled/atmosphere/atmosphere.comp.spv",
             VEShaderModuleType::Compute,
         )?;
 

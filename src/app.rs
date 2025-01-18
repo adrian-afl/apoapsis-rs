@@ -1,4 +1,4 @@
-use crate::body::body_definitions::BodyTerrain;
+use crate::body::body_definitions::{load_body_data, BodyTerrain};
 use crate::celestial_rendering::atmosphere::atmosphere_drawer::AtmosphereDrawer;
 use crate::celestial_rendering::atmosphere::clouds_generator_high_freq::CloudGeneratorHighFreq;
 use crate::celestial_rendering::atmosphere::clouds_generator_low_freq::CloudGeneratorLowFreq;
@@ -91,7 +91,13 @@ impl CelestialRendererApp {
         )
         .expect("Failed to create AtmosphereDrawer");
 
-        let simulation = Simulation::new(toolkit.clone());
+        let mut simulation = Simulation::new(toolkit.clone());
+
+        let snowball = load_body_data("universe/snowball/body.json");
+
+        simulation
+            .add_hierarchy(&config, &mut g_buffer, &common_buffer, &snowball, None)
+            .expect("Failed to add a body to the simulation");
 
         CelestialRendererApp {
             start_time,

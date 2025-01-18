@@ -65,7 +65,12 @@ impl DecimalVector3d {
     }
 
     pub fn length(&self) -> DBig {
-        (&self.x * &self.x + &self.y * &self.y + &self.z * &self.z).sqrt()
+        let squared = self.length_squared();
+        if squared.eq(&DBig::ZERO) {
+            DBig::ZERO.clone()
+        } else {
+            squared.sqrt()
+        }
     }
 
     pub fn distance_to(&self, rhs: &Self) -> DBig {

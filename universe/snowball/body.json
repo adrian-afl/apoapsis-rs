@@ -1,0 +1,146 @@
+{
+  "name": "snowball",
+  "terrain": {
+    "icospherePath": "universe/snowball/terrain/icosphere",
+    "radius": 6378000,
+    "minHeight": -127000,
+    "maxHeight": 127000,
+    "terrainGeneration": {
+      "seed": 123324.0,
+      "cratersCount": 256,
+      "fbmScale": 1,
+      "fbmIterations": 20,
+      "fbmFinalPower": 1.0,
+      "fbmIterationScaleCoefficient": 2,
+      "fbmIterationWeightCoefficient": 0.5,
+      "heightModifiers": [],
+      "colorModifiers": []
+    },
+    "biomeModifier": "latitude",
+    "biomes": [
+      {
+        "id": 0,
+        "name": "snow",
+        "color": [
+          1,
+          1,
+          1
+        ],
+        "roughness": 0.2,
+        "erosionStrength": 1.1,
+        "depositionStrength": 1.1,
+        "minAltitude": 127000,
+        "maxAltitude": 0,
+        "minModifier": 90,
+        "maxModifier": 0,
+        "cratersProbability": 0.02,
+        "minCraterSize": 1000.0,
+        "maxCraterSize": 100000.0,
+        "seed": 123324.0
+      },
+      {
+        "id": 1,
+        "name": "ice",
+        "color": [
+          0.90,
+          0.96,
+          1
+        ],
+        "roughness": 0.05,
+        "erosionStrength": 0.1,
+        "depositionStrength": 1,
+        "minAltitude": 127000,
+        "maxAltitude": 0,
+        "minModifier": 70,
+        "maxModifier": 390,
+        "cratersProbability": 0.1,
+        "minCraterSize": 1000.0,
+        "maxCraterSize": 100000.0,
+        "seed": 123324.0
+      },
+      {
+        "id": 2,
+        "name": "bare",
+        "color": [
+          0.5,
+          0.4,
+          0.3
+        ],
+        "roughness": 0.05,
+        "erosionStrength": 2.0,
+        "depositionStrength": 1,
+        "minAltitude": 5000,
+        "maxAltitude": 127000,
+        "minModifier": -99999,
+        "maxModifier": 99999,
+        "cratersProbability": 0.1,
+        "minCraterSize": 1000.0,
+        "maxCraterSize": 100000.0,
+        "seed": 123324.0
+      }
+    ]
+  },
+  "water": {
+    "icospherePath": "universe/snowball/water/icosphere",
+    "color": [
+      0,
+      0.3,
+      0.6
+    ],
+    "radius": 6398000,
+    "wavesHeight": 2
+  },
+  "atmosphere": {
+    "seed": 12.0,
+    "start": 6398000,
+    "rayleighDensity": 1.225,
+    "rayleighHeight": 100000,
+    "mieDensity": 0.011632,
+    "mieHeight": 15000,
+    "mieColor": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "clouds": {
+      "color": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "minHeight": 1500,
+      "maxHeight": 22500
+    }
+  },
+  "dynamics": {
+    "rotationAxis": {
+      "x": "0.0",
+      "y": "1.0",
+      "z": "0.0"
+    },
+    "rotationPeriod": 86400,
+    "mass": "5972190000000000000000000",
+    "motion": {
+      "Static": {
+        "position": {
+          "x": "64959787070023434667",
+          "y": "23454569021239234304",
+          "z": "29349283489"
+        }
+      }
+    },
+    "satellitePaths": []
+  },
+  "generatorConfig": {
+    "outDir": "test-out-dir",
+    "subdivideInitial": 2,
+    "subdivideLevel1": 5,
+    "subdivideLevel2": 6,
+    "subdivideLevel3": 7,
+    "erosionIterations": 30,
+    "erosionDropletsCount": 400,
+    "erosionDropletVelocityCoefficient": 5.0,
+    "erosionDropletEvaporationCoefficient": 2.0,
+    "cubeMapResolution": 2048
+  }
+}

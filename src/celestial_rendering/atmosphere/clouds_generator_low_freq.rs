@@ -38,7 +38,7 @@ impl CloudGeneratorLowFreq {
         )?;
 
         let low_freq_compute_shader = toolkit.create_shader_module(
-            "shaders/compiled/atmosphere/gen-clouds.comp",
+            "shaders/compiled/atmosphere/gen-clouds.comp.spv",
             VEShaderModuleType::Compute,
         )?;
 

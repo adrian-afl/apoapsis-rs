@@ -3,10 +3,13 @@ use crate::body::body_definitions::{
     BodyCelestialBodyDefinition, BodyMotion, BodyStarEmission, BodyWater,
 };
 use crate::celestial_rendering::buffers::celestial_body_buffer::CelestialBodyBuffer;
+use crate::celestial_rendering::buffers::common_buffer::CommonBuffer;
 use crate::celestial_rendering::errors::CelestialRendererError;
+use crate::celestial_rendering::geometry::g_buffer::GBuffer;
 use crate::celestial_rendering::geometry::icosphere::Icosphere;
 use crate::celestial_rendering::geometry::terrain_icosphere_drawer::TerrainIcosphereDrawer;
 use crate::celestial_rendering::geometry::water_icosphere_drawer::WaterIcosphereDrawer;
+use crate::config::Config;
 use crate::math::decimal_matrix_3d::DecimalMatrix3d;
 use crate::math::decimal_vector_3d::DecimalVector3d;
 use crate::math::sin_cos::PIMUL2;
@@ -50,7 +53,9 @@ impl Simulation {
 
     pub fn add_hierarchy(
         &mut self,
-        renderer: &mut CelestialRendererApp,
+        config: &Config,
+        g_buffer: &mut GBuffer,
+        common_buffer: &CommonBuffer,
         body: &BodyCelestialBodyDefinition,
         parent: Option<i32>,
     ) -> Result<i32, CelestialRendererError> {
@@ -60,10 +65,10 @@ impl Simulation {
         let terrain_drawer = match &body.terrain {
             None => None,
             Some(terrain_icosphere) => Some(Arc::new(Mutex::from(TerrainIcosphereDrawer::new(
-                &renderer.config,
-                &renderer.toolkit,
-                &mut renderer.g_buffer,
-                &renderer.common_buffer,
+                config,
+                &self.toolkit,
+                g_buffer,
+                common_buffer,
                 terrain_icosphere.icosphere_path.to_owned(),
                 vec![2000000.0, 5000000.0],
             )?))),
@@ -72,10 +77,10 @@ impl Simulation {
         let water_drawer = match &body.water {
             None => None,
             Some(water) => Some(Arc::new(Mutex::from(WaterIcosphereDrawer::new(
-                &renderer.config,
-                &renderer.toolkit,
-                &mut renderer.g_buffer,
-                &renderer.common_buffer,
+                config,
+                &self.toolkit,
+                g_buffer,
+                common_buffer,
                 water.icosphere_path.to_owned(),
                 vec![2000000.0, 5000000.0],
                 water.color,
@@ -90,15 +95,15 @@ impl Simulation {
             position: DecimalVector3d::zero(),
             velocity: DecimalVector3d::zero(),
             orientation: DecimalMatrix3d::identity(),
-            celestial_body_buffer: Arc::new(Mutex::from(CelestialBodyBuffer::new(
-                &renderer.toolkit,
-            )?)),
+            celestial_body_buffer: Arc::new(Mutex::from(CelestialBodyBuffer::new(&self.toolkit)?)),
             terrain_drawer,
             water_drawer,
         };
         for i in 0..body.dynamics.satellites.len() {
             simulated_body.satellites.push(self.add_hierarchy(
-                renderer,
+                config,
+                g_buffer,
+                common_buffer,
                 &body.dynamics.satellites[i],
                 Some(new_id),
             )?);
@@ -243,7 +248,10 @@ impl Simulation {
         }
         for i in 0..self.bodies.len() {
             let mut body = &self.bodies[i];
-            let closest_static = self.find_closest_static(&body.position);
+            let closest_static = match &body.body.dynamics.motion {
+                BodyMotion::Static(_) => body,
+                BodyMotion::Orbiting(_) => self.find_closest_static(&body.position),
+            };
             let star_radiance = match &closest_static.body.star_emission {
                 None => DVec3::new(0.0, 0.0, 0.0),
                 Some(emission) => emission.radiance,

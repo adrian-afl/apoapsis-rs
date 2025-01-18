@@ -42,7 +42,7 @@ impl MultiMerger {
         )?;
 
         let hi_freq_compute_shader = toolkit.create_shader_module(
-            "shaders/compiled/output/multi-merger.comp",
+            "shaders/compiled/output/multi-merger.comp.spv",
             VEShaderModuleType::Compute,
         )?;
 

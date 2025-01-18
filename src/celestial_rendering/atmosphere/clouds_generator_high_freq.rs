@@ -37,7 +37,7 @@ impl CloudGeneratorHighFreq {
         )?;
 
         let hi_freq_compute_shader = toolkit.create_shader_module(
-            "shaders/compiled/atmosphere/gen-clouds-3d-fbm.comp",
+            "shaders/compiled/atmosphere/gen-clouds-3d-fbm.comp.spv",
             VEShaderModuleType::Compute,
         )?;
 
