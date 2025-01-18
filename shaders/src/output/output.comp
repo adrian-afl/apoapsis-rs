@@ -5,18 +5,12 @@ layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
 layout(set = 0, binding = 0) uniform ubo {
     float exposure;
-    int debugTextureIndex;
 } uniforms;
 
 float exposure = uniforms.exposure;
-int debugTextureIndex = uniforms.debugTextureIndex;
 
 layout(set = 0, binding = 1) uniform sampler2D celestialResultTexture;
 layout(set = 0, binding = 2, rgba16f) uniform restrict image2D outColor; // the restrict might bite my ass
-layout(set = 0, binding = 3) uniform sampler2D debugTexture1;
-layout(set = 0, binding = 4) uniform sampler2D debugTexture2;
-layout(set = 0, binding = 5) uniform sampler2D debugTexture3;
-layout(set = 0, binding = 6) uniform sampler2D debugTexture4;
 
 vec3 aces_tonemap(vec3 color){	
 	mat3 m1 = mat3(
@@ -40,16 +34,8 @@ void main() {
     ivec2 iUV = ivec2(gl_GlobalInvocationID.xy);
     vec2 UV = vec2(gl_GlobalInvocationID.xy) / vec2(executionSize.xy);
 
-    vec4 color = vec4(0.0);
-
-    if(debugTextureIndex == 1) { color = vec4(texture(debugTexture1, UV).rgb, 1.0); }
-    else if(debugTextureIndex == 2) { color = vec4(texture(debugTexture2, UV).rgb, 1.0); }
-    else if(debugTextureIndex == 3) { color = vec4(texture(debugTexture3, UV).rgb, 1.0); }
-    else if(debugTextureIndex == 4) { color = vec4(texture(debugTexture4, UV).rgb, 1.0); }
-    else { 
-        vec4 celestialResult = texture(celestialResultTexture, UV);
-        color = vec4(aces_tonemap(celestialResult.rgb * exposure), 1.0);
-    }
+    vec4 celestialResult = texture(celestialResultTexture, UV);
+    vec4 color = vec4(aces_tonemap(celestialResult.rgb * exposure), 1.0);
     
     imageStore(outColor, iUV, color);
 }

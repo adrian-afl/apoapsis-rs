@@ -157,10 +157,10 @@ impl AtmosphereDrawer {
         )?;
 
         let view = clouds_data_low_freq.get_view(VEImageViewCreateInfo::simple_2d())?;
-        data_set.bind_image_sampler(5, &clouds_data_low_freq, view, &linear_sampler)?;
+        data_set.bind_image_sampler(5, clouds_data_low_freq, view, &linear_sampler)?;
 
         let view = clouds_data_high_freq.get_view(VEImageViewCreateInfo::simple_2d())?;
-        data_set.bind_image_sampler(6, &clouds_data_high_freq, view, &linear_sampler)?;
+        data_set.bind_image_sampler(6, clouds_data_high_freq, view, &linear_sampler)?;
 
         let view = out_additive_rgb.get_view(VEImageViewCreateInfo::simple_2d())?;
         data_set.bind_image_storage(7, &out_additive_rgb, view)?;

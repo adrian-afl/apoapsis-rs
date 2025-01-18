@@ -29,6 +29,16 @@ impl<'de> Deserialize<'de> for DeserializableDBig {
 
                 Ok(DeserializableDBig(dbig))
             }
+
+            fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+            where
+                E: Error,
+            {
+                let dbig = DBig::from_str(v)
+                    .map_err(|_| E::custom(format!("failed to parse {} as DBig", v)))?;
+
+                Ok(DeserializableDBig(dbig))
+            }
         }
         deserializer.deserialize_string(DeserializableDBigVisitor)
     }
