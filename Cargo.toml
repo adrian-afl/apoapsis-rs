@@ -6,7 +6,7 @@ edition = "2021"
 [dependencies]
 glam = { version = "0.29.2", features = ["serde"] }
 thiserror = "2.0.11"
-vengine-rs = { git = "ssh://git@github.com/adrian-afl/vengine-rs.git", rev = "b4eea7c94cddf7ac752a6b032b9e5bd656b004c0" }
+vengine-rs = { git = "ssh://git@github.com/adrian-afl/vengine-rs.git", rev = "f1509135bf91a9c545142dad4f5fb7064f009fdd" }
 dashu-float = "0.4.3"
 ash = { version = "0.38.0", features = ["linked"] }
 serde = { version = "1.0.217", features = ["derive"] }

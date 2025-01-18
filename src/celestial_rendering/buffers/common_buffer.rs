@@ -3,7 +3,7 @@ use crate::celestial_rendering::buffers::buffer_writers::{
 };
 use crate::celestial_rendering::errors::CelestialRendererError;
 use crate::celestial_rendering::scene::camera::Camera;
-use vengine_rs::buffer::buffer::{VEBuffer, VEBufferType};
+use vengine_rs::buffer::buffer::{VEBuffer, VEBufferUsage};
 use vengine_rs::core::memory_properties::VEMemoryProperties;
 use vengine_rs::core::toolkit::VEToolkit;
 
@@ -15,7 +15,7 @@ impl CommonBuffer {
     pub fn new(toolkit: &VEToolkit) -> Result<CommonBuffer, CelestialRendererError> {
         Ok(CommonBuffer {
             buffer: toolkit.create_buffer(
-                VEBufferType::Uniform,
+                &[VEBufferUsage::Uniform],
                 512,
                 Some(VEMemoryProperties::HostCoherent),
             )?,

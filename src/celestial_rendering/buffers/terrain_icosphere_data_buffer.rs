@@ -3,7 +3,7 @@ use crate::celestial_rendering::buffers::buffer_writers::{
 };
 use crate::celestial_rendering::errors::CelestialRendererError;
 use glam::DMat4;
-use vengine_rs::buffer::buffer::{VEBuffer, VEBufferType};
+use vengine_rs::buffer::buffer::{VEBuffer, VEBufferUsage};
 use vengine_rs::core::memory_properties::VEMemoryProperties;
 use vengine_rs::core::toolkit::VEToolkit;
 
@@ -15,7 +15,7 @@ impl TerrainIcosphereDataBuffer {
     pub fn new(toolkit: &VEToolkit) -> Result<TerrainIcosphereDataBuffer, CelestialRendererError> {
         Ok(TerrainIcosphereDataBuffer {
             buffer: toolkit.create_buffer(
-                VEBufferType::Storage,
+                &[VEBufferUsage::Storage],
                 64 * 1024,
                 Some(VEMemoryProperties::HostCoherent), // should REALLY be device local...
             )?,

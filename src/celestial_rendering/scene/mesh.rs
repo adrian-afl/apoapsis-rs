@@ -77,8 +77,8 @@ impl Mesh {
             ColorOrTexture::Color(_) => {
                 self.descriptor_set.bind_image_sampler(
                     1,
-                    &empty_image,
-                    empty_view,
+                    &empty_image.lock().unwrap().as_ref().unwrap(),
+                    empty_view.lock().unwrap().unwrap(),
                     &self.sampler,
                 )?;
             }
@@ -95,8 +95,8 @@ impl Mesh {
             ValueOrTexture::Value(_) => {
                 self.descriptor_set.bind_image_sampler(
                     2,
-                    &empty_image,
-                    empty_view,
+                    &empty_image.lock().unwrap().as_ref().unwrap(),
+                    empty_view.lock().unwrap().unwrap(),
                     &self.sampler,
                 )?;
             }
@@ -113,8 +113,8 @@ impl Mesh {
             ValueOrTexture::Value(_) => {
                 self.descriptor_set.bind_image_sampler(
                     3,
-                    &empty_image,
-                    empty_view,
+                    &empty_image.lock().unwrap().as_ref().unwrap(),
+                    empty_view.lock().unwrap().unwrap(),
                     &self.sampler,
                 )?;
             }
@@ -131,8 +131,8 @@ impl Mesh {
             ColorOrTexture::Color(_) => {
                 self.descriptor_set.bind_image_sampler(
                     4,
-                    &empty_image,
-                    empty_view,
+                    &empty_image.lock().unwrap().as_ref().unwrap(),
+                    empty_view.lock().unwrap().unwrap(),
                     &self.sampler,
                 )?;
             }
@@ -149,8 +149,8 @@ impl Mesh {
             None => {
                 self.descriptor_set.bind_image_sampler(
                     5,
-                    &empty_image,
-                    empty_view,
+                    &empty_image.lock().unwrap().as_ref().unwrap(),
+                    empty_view.lock().unwrap().unwrap(),
                     &self.sampler,
                 )?;
             }
@@ -167,8 +167,8 @@ impl Mesh {
             None => {
                 self.descriptor_set.bind_image_sampler(
                     6,
-                    &empty_image,
-                    empty_view,
+                    &empty_image.lock().unwrap().as_ref().unwrap(),
+                    empty_view.lock().unwrap().unwrap(),
                     &self.sampler,
                 )?;
             }

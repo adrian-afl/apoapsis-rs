@@ -19,7 +19,7 @@ mod util;
 fn main() {
     let subscriber = FmtSubscriber::builder()
         .with_ansi(false)
-        .with_writer(File::create("../log.txt").unwrap())
+        .with_writer(File::create("./log.txt").unwrap())
         .with_span_events(FmtSpan::FULL)
         .with_max_level(Level::WARN)
         .finish();

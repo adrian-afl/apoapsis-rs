@@ -12,10 +12,12 @@ use crate::celestial_rendering::scene::camera::Camera;
 use crate::celestial_rendering::scene::mesh::Mesh;
 use crate::config::Config;
 use crate::simulation::simulation::Simulation;
+use crate::util::empty_textures::EMPTY_TEXTURES;
 use dashu_float::DBig;
 use glam::DVec4;
 use std::sync::{Arc, Mutex};
 use std::time::SystemTime;
+use tracing::{event, Level};
 use vengine_rs::core::semaphore::VESemaphore;
 use vengine_rs::core::toolkit::{App, VEToolkit};
 
@@ -55,6 +57,8 @@ pub struct CelestialRendererApp {
 #[allow(clippy::unwrap_used)]
 impl CelestialRendererApp {
     pub fn new(toolkit: Arc<VEToolkit>) -> CelestialRendererApp {
+        EMPTY_TEXTURES.generate(&toolkit);
+
         let start_time = SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)
             .unwrap()
@@ -150,6 +154,7 @@ impl App for CelestialRendererApp {
             .update(&self.camera, elapsed)
             .expect("Failed to update common_buffer");
 
+        event!(Level::WARN, "Recording mesh_drawer");
         self.mesh_drawer
             .record(self.meshes.as_slice())
             .expect("Failed to record mesh_drawer");
@@ -163,6 +168,7 @@ impl App for CelestialRendererApp {
 
         let mut swapchain = self.toolkit.swapchain.lock().unwrap();
 
+        event!(Level::WARN, "Submitting mesh_drawer");
         self.mesh_drawer
             .render_stage
             .command_buffer
@@ -227,11 +233,15 @@ impl App for CelestialRendererApp {
                         }
                     }
                     self.atmosphere_drawer
-                        .set_celestial_buffer(&body.celestial_body_buffer.lock().unwrap())
+                        .set_celestial_buffer(
+                            &body.celestial_body_buffer.lock().unwrap(),
+                            &self.config,
+                        )
                         .expect("Failed to set_celestial_buffer for atmosphere_drawer");
                 }
             }
 
+            event!(Level::WARN, "Submitting terrain_drawer");
             match &body.terrain_drawer {
                 None => (),
                 Some(drawer) => {
@@ -250,6 +260,7 @@ impl App for CelestialRendererApp {
                 }
             }
 
+            event!(Level::WARN, "Submitting water_drawer");
             match &body.water_drawer {
                 None => (),
                 Some(drawer) => {
@@ -268,6 +279,7 @@ impl App for CelestialRendererApp {
                 }
             }
 
+            event!(Level::WARN, "Submitting atmosphere");
             match &body.body.atmosphere {
                 None => (),
                 Some(_) => {
@@ -292,9 +304,11 @@ impl App for CelestialRendererApp {
                 .update_inputs(
                     &mut self.atmosphere_drawer.out_additive_rgb,
                     &mut self.atmosphere_drawer.out_alpha_rgba,
+                    &self.config,
                 )
                 .expect("Failed to update multi_merger inputs");
 
+            event!(Level::WARN, "Submitting multi_merger");
             self.multi_merger
                 .compute_stage
                 .command_buffer
@@ -307,6 +321,7 @@ impl App for CelestialRendererApp {
             wait_for_semaphores = vec![self.multi_merging_semaphore.clone()]
         }
 
+        event!(Level::WARN, "Submitting output");
         self.output
             .update_buffer(1.0)
             .expect("Failed to update output buffer");
@@ -320,6 +335,7 @@ impl App for CelestialRendererApp {
             )
             .expect("Failed to compute output");
 
+        event!(Level::WARN, "Submitting blit");
         swapchain
             .blit(&self.output.output, vec![self.outputting_semaphore.clone()])
             .expect("Failed to blit to swapchain");

@@ -5,6 +5,7 @@ use crate::celestial_rendering::finalization::multi_merger::MultiMerger;
 use crate::config::Config;
 use ash::vk;
 use glam::DVec4;
+use tracing::{event, Level};
 use vengine_rs::compute::compute_stage::VEComputeStage;
 use vengine_rs::core::descriptor_set::VEDescriptorSet;
 use vengine_rs::core::descriptor_set_layout::{
@@ -28,6 +29,8 @@ pub struct Output {
     buffer: OutputBuffer,
 
     pub output: VEImage,
+
+    nearest_sampler: VESampler,
 }
 
 static WORKGROUP_SIZE: u32 = 8; // from the shader!!! its 8x8x1
@@ -38,12 +41,17 @@ impl Output {
         multi_merger: &mut MultiMerger,
         toolkit: &VEToolkit,
     ) -> Result<Output, CelestialRendererError> {
+        event!(Level::WARN, "Creating Output");
         let mut output = toolkit.create_image_full(
             config.width,
             config.height,
             1,
             VEImageFormat::RGBA16f,
-            &[VEImageUsage::Storage, VEImageUsage::Sampled],
+            &[
+                VEImageUsage::Storage,
+                VEImageUsage::Sampled,
+                VEImageUsage::TransferSource,
+            ],
         )?;
 
         let hi_freq_compute_shader = toolkit.create_shader_module(
@@ -88,7 +96,7 @@ impl Output {
         let view = multi_merger
             .output
             .get_view(VEImageViewCreateInfo::simple_2d())?;
-        data_set.bind_image_sampler(5, &multi_merger.output, view, &nearest_sampler)?;
+        data_set.bind_image_sampler(1, &multi_merger.output, view, &nearest_sampler)?;
 
         let view = output.get_view(VEImageViewCreateInfo::simple_2d())?;
         data_set.bind_image_storage(2, &output, view)?;
@@ -103,6 +111,9 @@ impl Output {
             config.height / WORKGROUP_SIZE,
             1,
         );
+
+        // this here is unhinged
+        // its to clear the multimerger
         unsafe {
             toolkit.device.device.cmd_clear_color_image(
                 compute_stage.command_buffer.handle,
@@ -127,6 +138,7 @@ impl Output {
             data_set,
             output,
             buffer,
+            nearest_sampler,
         })
     }
 

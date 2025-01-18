@@ -147,6 +147,7 @@ impl WaterIcosphereDrawer {
                 &color_rgb_roughness_a_attachment,
                 &normal_rgb_distance_a_attachment,
                 &emission_rgb_metalness_a_attachment,
+                &shared_depth_buffer_attachment,
             ],
             &[&data_set_layout, &common_set_layout],
             &vertex_shader,
@@ -161,9 +162,9 @@ impl WaterIcosphereDrawer {
             buffer: data_buffer,
             render_stage,
             data_set_layout,
+            data_set,
             common_set_layout,
             common_set,
-            data_set,
             water_color,
         })
     }
@@ -193,6 +194,8 @@ impl WaterIcosphereDrawer {
     pub fn record(&mut self, toolkit: &VEToolkit) -> Result<(), CelestialRendererError> {
         self.render_stage.begin_recording()?;
 
+        self.render_stage.set_descriptor_set(0, &self.data_set);
+        self.render_stage.set_descriptor_set(1, &self.common_set);
         self.icosphere.draw(toolkit, &self.render_stage)?;
 
         self.render_stage.end_recording()?;

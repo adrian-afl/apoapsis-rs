@@ -1,7 +1,7 @@
 use crate::celestial_rendering::buffers::buffer_writers::{write_float, write_int, write_vec4};
 use crate::celestial_rendering::errors::CelestialRendererError;
 use glam::DVec4;
-use vengine_rs::buffer::buffer::{VEBuffer, VEBufferType};
+use vengine_rs::buffer::buffer::{VEBuffer, VEBufferUsage};
 use vengine_rs::core::memory_properties::VEMemoryProperties;
 use vengine_rs::core::toolkit::VEToolkit;
 
@@ -13,7 +13,7 @@ impl OutputBuffer {
     pub fn new(toolkit: &VEToolkit) -> Result<OutputBuffer, CelestialRendererError> {
         Ok(OutputBuffer {
             buffer: toolkit.create_buffer(
-                VEBufferType::Uniform,
+                &[VEBufferUsage::Uniform],
                 16,
                 Some(VEMemoryProperties::HostCoherent),
             )?,

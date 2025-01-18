@@ -2,6 +2,7 @@ use crate::celestial_rendering::buffers::cloud_generator_high_freq_buffer::Cloud
 use crate::celestial_rendering::errors::CelestialRendererError;
 use crate::config::Config;
 use glam::DVec4;
+use tracing::{event, Level};
 use vengine_rs::compute::compute_stage::VEComputeStage;
 use vengine_rs::core::descriptor_set::VEDescriptorSet;
 use vengine_rs::core::descriptor_set_layout::{
@@ -33,12 +34,17 @@ impl MultiMerger {
         config: &Config,
         toolkit: &VEToolkit,
     ) -> Result<MultiMerger, CelestialRendererError> {
+        event!(Level::WARN, "Creating MultiMerger");
         let mut output = toolkit.create_image_full(
             config.width,
             config.height,
             1,
             VEImageFormat::RGBA16f,
-            &[VEImageUsage::Storage, VEImageUsage::Sampled],
+            &[
+                VEImageUsage::Storage,
+                VEImageUsage::Sampled,
+                VEImageUsage::TransferDestination,
+            ],
         )?;
 
         let hi_freq_compute_shader = toolkit.create_shader_module(
@@ -82,15 +88,6 @@ impl MultiMerger {
         let compute_stage =
             toolkit.create_compute_stage(&[&data_set_layout], &hi_freq_compute_shader)?;
 
-        compute_stage.begin_recording()?;
-        compute_stage.set_descriptor_set(0, &data_set);
-        compute_stage.dispatch(
-            config.width / WORKGROUP_SIZE,
-            config.height / WORKGROUP_SIZE,
-            1,
-        );
-        compute_stage.end_recording()?;
-
         Ok(MultiMerger {
             compute_stage,
             data_set_layout,
@@ -104,6 +101,7 @@ impl MultiMerger {
         &mut self,
         additive: &mut VEImage,
         alpha: &mut VEImage,
+        config: &Config,
     ) -> Result<(), CelestialRendererError> {
         let view = additive.get_view(VEImageViewCreateInfo::simple_2d())?;
         self.data_set
@@ -112,6 +110,15 @@ impl MultiMerger {
         let view = alpha.get_view(VEImageViewCreateInfo::simple_2d())?;
         self.data_set
             .bind_image_sampler(1, alpha, view, &self.nearest_sampler)?;
+
+        self.compute_stage.begin_recording()?;
+        self.compute_stage.set_descriptor_set(0, &self.data_set);
+        self.compute_stage.dispatch(
+            config.width / WORKGROUP_SIZE,
+            config.height / WORKGROUP_SIZE,
+            1,
+        );
+        self.compute_stage.end_recording()?;
 
         Ok(())
     }

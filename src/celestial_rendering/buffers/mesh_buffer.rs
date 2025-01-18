@@ -5,7 +5,7 @@ use crate::celestial_rendering::errors::CelestialRendererError;
 use crate::celestial_rendering::scene::material::{ColorOrTexture, ValueOrTexture};
 use crate::celestial_rendering::scene::mesh::Mesh;
 use glam::DVec3;
-use vengine_rs::buffer::buffer::{VEBuffer, VEBufferType};
+use vengine_rs::buffer::buffer::{VEBuffer, VEBufferUsage};
 use vengine_rs::core::memory_properties::VEMemoryProperties;
 use vengine_rs::core::toolkit::VEToolkit;
 
@@ -17,7 +17,7 @@ impl MeshBuffer {
     pub fn new(toolkit: &VEToolkit) -> Result<MeshBuffer, CelestialRendererError> {
         Ok(MeshBuffer {
             buffer: toolkit.create_buffer(
-                VEBufferType::Uniform,
+                &[VEBufferUsage::Uniform],
                 8 * 1024,
                 Some(VEMemoryProperties::HostCoherent),
             )?,

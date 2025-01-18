@@ -18,6 +18,7 @@ use dashu_float::DBig;
 use glam::DVec3;
 use std::str::FromStr;
 use std::sync::{Arc, LazyLock, Mutex};
+use tracing::{event, Level};
 use vengine_rs::core::toolkit::VEToolkit;
 
 static G_CONSTANT: LazyLock<DBig> = LazyLock::new(|| DBig::from_str("0.0000000000667408").unwrap());
@@ -267,10 +268,12 @@ impl Simulation {
                     body_clone,
                 )
                 .unwrap();
+            event!(Level::WARN, "Recording terrain_drawer");
             match &body.terrain_drawer {
                 None => (),
                 Some(drawer) => drawer.lock().unwrap().record(&self.toolkit).unwrap(),
             }
+            event!(Level::WARN, "Recording water_drawer");
             match &body.water_drawer {
                 None => (),
                 Some(drawer) => drawer.lock().unwrap().record(&self.toolkit).unwrap(),

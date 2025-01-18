@@ -26,24 +26,24 @@ vec2 cloudsDensity3D(vec3 pos, bool lowRes){
     float density = lowFreq;
 
     if(dist < 5000000.0){
-        density += 0.05 * (texture2Das3D(cloudsHighFreqTextureDensityR, spherespace * 0.000001 + elapsed * 0.001, 64.0).r * 2.0 - 1.0);
+        density += 0.05 * (texture(cloudsHighFreqTextureDensityR, spherespace * 0.000001 + elapsed * 0.001).r * 2.0 - 1.0);
     }
 
     if(dist < 2000000.0){
-        density += 0.02 * (texture2Das3D(cloudsHighFreqTextureDensityR, spherespace * 0.000008 + elapsed * 0.001, 64.0).r * 2.0 - 1.0);
+        density += 0.02 * (texture(cloudsHighFreqTextureDensityR, spherespace * 0.000008 + elapsed * 0.001).r * 2.0 - 1.0);
     }
 
     if(!lowRes){
         if(dist < 500000.0){
-            density += 0.01 * (texture2Das3D(cloudsHighFreqTextureDensityR, spherespace * 0.000019 + elapsed * 0.001, 64.0).r * 2.0 - 1.0);
+            density += 0.01 * (texture(cloudsHighFreqTextureDensityR, spherespace * 0.000019 + elapsed * 0.001).r * 2.0 - 1.0);
         }
         
         if(dist < 100000.0){
-            density += 0.005 * (texture2Das3D(cloudsHighFreqTextureDensityR, spherespace * 0.000147 + elapsed * 0.001, 64.0).r * 2.0 - 1.0);
+            density += 0.005 * (texture(cloudsHighFreqTextureDensityR, spherespace * 0.000147 + elapsed * 0.001).r * 2.0 - 1.0);
         }
 
         if(dist < 10000.0){
-            density += 0.002 * (texture2Das3D(cloudsHighFreqTextureDensityR, spherespace * 0.001147 + elapsed * 0.001, 64.0).r * 2.0 - 1.0);
+            density += 0.002 * (texture(cloudsHighFreqTextureDensityR, spherespace * 0.001147 + elapsed * 0.001).r * 2.0 - 1.0);
         }
     }
 

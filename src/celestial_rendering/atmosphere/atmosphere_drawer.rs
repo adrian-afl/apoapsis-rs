@@ -4,6 +4,7 @@ use crate::celestial_rendering::buffers::common_buffer::CommonBuffer;
 use crate::celestial_rendering::errors::CelestialRendererError;
 use crate::celestial_rendering::geometry::g_buffer::GBuffer;
 use crate::config::Config;
+use tracing::{event, Level};
 use vengine_rs::compute::compute_stage::VEComputeStage;
 use vengine_rs::core::descriptor_set::VEDescriptorSet;
 use vengine_rs::core::descriptor_set_layout::{
@@ -15,7 +16,7 @@ use vengine_rs::core::toolkit::VEToolkit;
 use vengine_rs::image::filtering::VEFiltering;
 use vengine_rs::image::image::{VEImage, VEImageUsage, VEImageViewCreateInfo};
 use vengine_rs::image::image_format::VEImageFormat;
-use vengine_rs::image::sampler::VESamplerAddressMode;
+use vengine_rs::image::sampler::{VESampler, VESamplerAddressMode};
 
 pub struct AtmosphereDrawer {
     pub compute_stage: VEComputeStage,
@@ -25,6 +26,9 @@ pub struct AtmosphereDrawer {
 
     pub out_additive_rgb: VEImage,
     pub out_alpha_rgba: VEImage,
+
+    nearest_sampler: VESampler,
+    linear_sampler: VESampler,
 }
 
 static WORKGROUP_SIZE: u32 = 8; // from the shader!!! its 8x8x1
@@ -38,6 +42,7 @@ impl AtmosphereDrawer {
         clouds_data_high_freq: &mut VEImage,
         g_buffer: &mut GBuffer,
     ) -> Result<AtmosphereDrawer, CelestialRendererError> {
+        event!(Level::WARN, "Creating AtmosphereDrawer");
         let mut out_additive_rgb = toolkit.create_image_full(
             config.width,
             config.height,
@@ -157,7 +162,7 @@ impl AtmosphereDrawer {
         let view = clouds_data_low_freq.get_view(VEImageViewCreateInfo::simple_2d())?;
         data_set.bind_image_sampler(5, clouds_data_low_freq, view, &linear_sampler)?;
 
-        let view = clouds_data_high_freq.get_view(VEImageViewCreateInfo::simple_2d())?;
+        let view = clouds_data_high_freq.get_view(VEImageViewCreateInfo::simple_3d())?;
         data_set.bind_image_sampler(6, clouds_data_high_freq, view, &linear_sampler)?;
 
         let view = out_additive_rgb.get_view(VEImageViewCreateInfo::simple_2d())?;
@@ -169,29 +174,33 @@ impl AtmosphereDrawer {
         let compute_stage =
             toolkit.create_compute_stage(&[&data_set_layout], &low_freq_compute_shader)?;
 
-        compute_stage.begin_recording()?;
-        compute_stage.set_descriptor_set(0, &data_set);
-        compute_stage.dispatch(
-            config.width / WORKGROUP_SIZE,
-            config.height / WORKGROUP_SIZE,
-            1,
-        );
-        compute_stage.end_recording()?;
-
         Ok(AtmosphereDrawer {
             compute_stage,
             data_set_layout,
             data_set,
             out_additive_rgb,
             out_alpha_rgba,
+            nearest_sampler,
+            linear_sampler,
         })
     }
 
     pub fn set_celestial_buffer(
         &self,
         celestial_buffer: &CelestialBodyBuffer,
+        config: &Config,
     ) -> Result<(), CelestialRendererError> {
         self.data_set.bind_buffer(1, &celestial_buffer.buffer)?;
+
+        self.compute_stage.begin_recording()?;
+        self.compute_stage.set_descriptor_set(0, &self.data_set);
+        self.compute_stage.dispatch(
+            config.width / WORKGROUP_SIZE,
+            config.height / WORKGROUP_SIZE,
+            1,
+        );
+        self.compute_stage.end_recording()?;
+
         Ok(())
     }
 }

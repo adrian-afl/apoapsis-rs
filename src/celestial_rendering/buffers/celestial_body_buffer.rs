@@ -8,7 +8,7 @@ use crate::simulation::simulation::{SimulatedBody, Simulation};
 use dashu_float::DBig;
 use glam::DVec3;
 use std::fmt::{Debug, Formatter, Write};
-use vengine_rs::buffer::buffer::{VEBuffer, VEBufferType};
+use vengine_rs::buffer::buffer::{VEBuffer, VEBufferUsage};
 use vengine_rs::core::memory_properties::VEMemoryProperties;
 use vengine_rs::core::toolkit::VEToolkit;
 
@@ -26,7 +26,7 @@ impl CelestialBodyBuffer {
     pub fn new(toolkit: &VEToolkit) -> Result<CelestialBodyBuffer, CelestialRendererError> {
         Ok(CelestialBodyBuffer {
             buffer: toolkit.create_buffer(
-                VEBufferType::Uniform,
+                &[VEBufferUsage::Uniform],
                 8 * 1024,
                 Some(VEMemoryProperties::HostCoherent),
             )?,
