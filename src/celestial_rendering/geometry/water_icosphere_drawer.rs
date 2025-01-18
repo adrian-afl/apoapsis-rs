@@ -6,6 +6,7 @@ use crate::celestial_rendering::geometry::g_buffer::GBuffer;
 use crate::celestial_rendering::geometry::icosphere::Icosphere;
 use crate::celestial_rendering::scene::camera::Camera;
 use crate::config::Config;
+use crate::math::decimal_vector_3d::DecimalVector3d;
 use crate::simulation::simulation::SimulatedBody;
 use glam::{DQuat, DVec3};
 use std::fmt::{Debug, Formatter};
@@ -171,16 +172,16 @@ impl WaterIcosphereDrawer {
 
     pub fn update_buffer(
         &mut self,
-        camera: &Camera,
+        camera_position: &DecimalVector3d,
         simulated_body: &SimulatedBody,
     ) -> Result<(), CelestialRendererError> {
         let matrices = self.icosphere.update_and_get_part_matrices(
-            &camera.position,
+            &camera_position,
             &simulated_body.position,
             DQuat::from_mat4(&simulated_body.orientation.as_dmat4()),
         );
 
-        let body_center_camera_space = &simulated_body.position - &camera.position;
+        let body_center_camera_space = &simulated_body.position - camera_position;
 
         self.buffer.update(
             self.water_color,

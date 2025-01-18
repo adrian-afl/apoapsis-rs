@@ -165,7 +165,7 @@ impl App for CelestialRendererApp {
             DVec3::new(0.0, 0.0, 0.0),
             DVec3::new(0.0, 0.0, 1.0),
             DVec3::new(0.0, 1.0, 0.0),
-        )); // * DQuat::from_axis_angle(DVec3::new(0.0, 1.0, 0.0), elapsed);
+        )) * DQuat::from_axis_angle(DVec3::new(0.0, 1.0, 0.0), elapsed);
 
         self.camera.update();
 

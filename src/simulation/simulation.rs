@@ -271,12 +271,26 @@ impl Simulation {
             event!(Level::WARN, "Recording terrain_drawer");
             match &body.terrain_drawer {
                 None => (),
-                Some(drawer) => drawer.lock().unwrap().record(&self.toolkit).unwrap(),
+                Some(drawer) => {
+                    drawer
+                        .lock()
+                        .unwrap()
+                        .update_buffer(camera_position, body)
+                        .unwrap();
+                    drawer.lock().unwrap().record(&self.toolkit).unwrap();
+                }
             }
             event!(Level::WARN, "Recording water_drawer");
             match &body.water_drawer {
                 None => (),
-                Some(drawer) => drawer.lock().unwrap().record(&self.toolkit).unwrap(),
+                Some(drawer) => {
+                    drawer
+                        .lock()
+                        .unwrap()
+                        .update_buffer(camera_position, body)
+                        .unwrap();
+                    drawer.lock().unwrap().record(&self.toolkit).unwrap();
+                }
             }
         }
 

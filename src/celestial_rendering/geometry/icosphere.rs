@@ -93,6 +93,7 @@ impl Icosphere {
         sphere_orientation: DQuat,
     ) -> &'a [DMat4] {
         let relative_camera_position = sphere_position - camera_position;
+
         let rotation_matrix = DMat4::from_quat(sphere_orientation).inverse();
         let world_translation_matrix = DMat4::from_translation(relative_camera_position.to_dvec3());
         let pre_final_matrix = world_translation_matrix * rotation_matrix;

@@ -172,11 +172,11 @@ impl TerrainIcosphereDrawer {
 
     pub fn update_buffer(
         &mut self,
-        camera: &Camera,
+        camera_position: &DecimalVector3d,
         simulated_body: &SimulatedBody,
     ) -> Result<(), CelestialRendererError> {
         let matrices = self.icosphere.update_and_get_part_matrices(
-            &camera.position,
+            &camera_position,
             &simulated_body.position,
             DQuat::from_mat4(&simulated_body.orientation.as_dmat4()),
         );
