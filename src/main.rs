@@ -12,6 +12,7 @@ mod app;
 mod body;
 mod celestial_rendering;
 mod config;
+mod core;
 mod math;
 mod simulation;
 mod util;

@@ -23,6 +23,7 @@ use std::time::SystemTime;
 use tracing::{event, Level};
 use vengine_rs::core::semaphore::VESemaphore;
 use vengine_rs::core::toolkit::{App, VEToolkit};
+use winit::event::{DeviceEvent, DeviceId, WindowEvent};
 
 pub struct CelestialRendererApp {
     start_time: f64,
@@ -358,5 +359,13 @@ impl App for CelestialRendererApp {
         swapchain
             .blit(&self.output.output, vec![self.outputting_semaphore.clone()])
             .expect("Failed to blit to swapchain");
+    }
+
+    fn on_window_event(&self, event: WindowEvent) {
+        todo!()
+    }
+
+    fn on_device_event(&self, device_id: DeviceId, event: DeviceEvent) {
+        todo!()
     }
 }
