@@ -6,6 +6,7 @@ static COMPONENT_SEQ: AtomicU64 = AtomicU64::new(1);
 pub trait ComponentTrait: Any {
     fn id(&self) -> u64;
     fn allow_multiple(&self) -> bool;
+    fn as_any(&mut self) -> &mut dyn Any;
 }
 
 pub fn acquire_next_id() -> u64 {
