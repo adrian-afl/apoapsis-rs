@@ -92,8 +92,9 @@ impl CloudGeneratorLowFreq {
         &mut self,
         seed: DVec4,
         elapsed: f64,
+        frequency: f64,
     ) -> Result<(), CelestialRendererError> {
-        self.buffer.update(seed, elapsed)?;
+        self.buffer.update(seed, elapsed, frequency)?;
         Ok(())
     }
 }

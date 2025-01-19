@@ -29,8 +29,6 @@ pub struct Output {
     buffer: OutputBuffer,
 
     pub output: VEImage,
-
-    nearest_sampler: VESampler,
 }
 
 static WORKGROUP_SIZE: u32 = 8; // from the shader!!! its 8x8x1
@@ -61,13 +59,6 @@ impl Output {
 
         let buffer = OutputBuffer::new(toolkit)?;
 
-        let nearest_sampler = toolkit.create_sampler(
-            VESamplerAddressMode::Repeat,
-            VEFiltering::Nearest,
-            VEFiltering::Nearest,
-            false,
-        )?;
-
         let mut data_set_layout = toolkit.create_descriptor_set_layout(&[
             VEDescriptorSetLayoutField {
                 // output input buffer
@@ -78,7 +69,7 @@ impl Output {
             VEDescriptorSetLayoutField {
                 // celestialResultTexture input
                 binding: 1,
-                typ: VEDescriptorSetFieldType::Sampler,
+                typ: VEDescriptorSetFieldType::StorageImage,
                 stage: VEDescriptorSetFieldStage::Compute,
             },
             VEDescriptorSetLayoutField {
@@ -96,7 +87,7 @@ impl Output {
         let view = multi_merger
             .output
             .get_view(VEImageViewCreateInfo::simple_2d())?;
-        data_set.bind_image_sampler(1, &multi_merger.output, view, &nearest_sampler)?;
+        data_set.bind_image_storage(1, &multi_merger.output, view)?;
 
         let view = output.get_view(VEImageViewCreateInfo::simple_2d())?;
         data_set.bind_image_storage(2, &output, view)?;
@@ -138,7 +129,6 @@ impl Output {
             data_set,
             output,
             buffer,
-            nearest_sampler,
         })
     }
 

@@ -25,13 +25,19 @@ impl CloudGeneratorLowFreqBuffer {
     vec4 seed;
     vec4 elapsed_frequency_zero_zero;
     */
-    pub fn update(&mut self, seed: DVec4, elapsed: f64) -> Result<(), CelestialRendererError> {
+    pub fn update(
+        &mut self,
+        seed: DVec4,
+        elapsed: f64,
+        frequency: f64,
+    ) -> Result<(), CelestialRendererError> {
         let ptr = self.buffer.map()? as *mut f32;
 
         let mut offset = 0;
 
         offset += write_vec4(ptr, offset, seed);
         offset += write_float(ptr, offset, elapsed);
+        offset += write_float(ptr, offset, frequency);
 
         self.buffer.unmap()?;
         Ok(())

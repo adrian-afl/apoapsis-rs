@@ -27,7 +27,6 @@ pub struct AtmosphereDrawer {
     pub out_additive_rgb: VEImage,
     pub out_alpha_rgba: VEImage,
 
-    nearest_sampler: VESampler,
     linear_sampler: VESampler,
 }
 
@@ -64,13 +63,6 @@ impl AtmosphereDrawer {
             VEShaderModuleType::Compute,
         )?;
 
-        let nearest_sampler = toolkit.create_sampler(
-            VESamplerAddressMode::Repeat,
-            VEFiltering::Nearest,
-            VEFiltering::Nearest,
-            false,
-        )?;
-
         let linear_sampler = toolkit.create_sampler(
             VESamplerAddressMode::Repeat,
             VEFiltering::Linear,
@@ -94,19 +86,19 @@ impl AtmosphereDrawer {
             VEDescriptorSetLayoutField {
                 // gBufferColorRGBroughnessA image
                 binding: 2,
-                typ: VEDescriptorSetFieldType::Sampler,
+                typ: VEDescriptorSetFieldType::StorageImage,
                 stage: VEDescriptorSetFieldStage::Compute,
             },
             VEDescriptorSetLayoutField {
                 // gBufferNormalRGBdistanceA image
                 binding: 3,
-                typ: VEDescriptorSetFieldType::Sampler,
+                typ: VEDescriptorSetFieldType::StorageImage,
                 stage: VEDescriptorSetFieldStage::Compute,
             },
             VEDescriptorSetLayoutField {
                 // gBufferEmissionRGBmetalnessA image
                 binding: 4,
-                typ: VEDescriptorSetFieldType::Sampler,
+                typ: VEDescriptorSetFieldType::StorageImage,
                 stage: VEDescriptorSetFieldStage::Compute,
             },
             VEDescriptorSetLayoutField {
@@ -142,22 +134,17 @@ impl AtmosphereDrawer {
         let view = g_buffer
             .color_rgb_roughness_a
             .get_view(VEImageViewCreateInfo::simple_2d())?;
-        data_set.bind_image_sampler(2, &g_buffer.color_rgb_roughness_a, view, &nearest_sampler)?;
+        data_set.bind_image_storage(2, &g_buffer.color_rgb_roughness_a, view)?;
 
         let view = g_buffer
             .normal_rgb_distance_a
             .get_view(VEImageViewCreateInfo::simple_2d())?;
-        data_set.bind_image_sampler(3, &g_buffer.normal_rgb_distance_a, view, &nearest_sampler)?;
+        data_set.bind_image_storage(3, &g_buffer.normal_rgb_distance_a, view)?;
 
         let view = g_buffer
             .emission_rgb_metalness_a
             .get_view(VEImageViewCreateInfo::simple_2d())?;
-        data_set.bind_image_sampler(
-            4,
-            &g_buffer.emission_rgb_metalness_a,
-            view,
-            &nearest_sampler,
-        )?;
+        data_set.bind_image_storage(4, &g_buffer.emission_rgb_metalness_a, view)?;
 
         let view = clouds_data_low_freq.get_view(VEImageViewCreateInfo::simple_2d())?;
         data_set.bind_image_sampler(5, clouds_data_low_freq, view, &linear_sampler)?;
@@ -180,7 +167,6 @@ impl AtmosphereDrawer {
             data_set,
             out_additive_rgb,
             out_alpha_rgba,
-            nearest_sampler,
             linear_sampler,
         })
     }

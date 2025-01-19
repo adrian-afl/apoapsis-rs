@@ -11,7 +11,7 @@ layout(set = 0, binding = 0) uniform ubo {
 
 float exposure = uniforms.exposure;
 
-layout(set = 0, binding = 1) uniform sampler2D celestialResultTexture;
+layout(set = 0, binding = 1, rgba16f) uniform restrict image2D celestialResultTexture;
 layout(set = 0, binding = 2, rgba16f) uniform restrict image2D outColor; // the restrict might bite my ass
 
 vec3 aces_tonemap(vec3 color){	
@@ -32,7 +32,10 @@ vec3 aces_tonemap(vec3 color){
 }
 
 void main() {
-    vec4 celestialResult = texture(celestialResultTexture, UV);
+    // // make final flip
+    // vec4 celestialResult = texture(celestialResultTexture, vec2(UV.x, 1.0 - UV.y));
+    
+    vec4 celestialResult = imageLoad(celestialResultTexture, iUV);
     vec4 color = vec4(aces_tonemap(celestialResult.rgb * exposure), 1.0);
     
     imageStore(outColor, iUV, color);

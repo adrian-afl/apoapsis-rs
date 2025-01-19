@@ -214,6 +214,7 @@ impl App for CelestialRendererApp {
                                         atmosphere.seed,
                                     ),
                                     elapsed,
+                                    1.0,
                                 )
                                 .expect("Failed to update cloud_generator_high_freq");
                             self.cloud_generator_low_freq
@@ -225,6 +226,7 @@ impl App for CelestialRendererApp {
                                         atmosphere.seed,
                                     ),
                                     elapsed,
+                                    1.0,
                                 )
                                 .expect("Failed to update cloud_generator_low_freq");
 

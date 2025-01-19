@@ -22,8 +22,6 @@ pub struct MultiMerger {
     data_set_layout: VEDescriptorSetLayout,
     data_set: VEDescriptorSet,
 
-    nearest_sampler: VESampler,
-
     pub output: VEImage,
 }
 
@@ -52,24 +50,17 @@ impl MultiMerger {
             VEShaderModuleType::Compute,
         )?;
 
-        let nearest_sampler = toolkit.create_sampler(
-            VESamplerAddressMode::Repeat,
-            VEFiltering::Nearest,
-            VEFiltering::Nearest,
-            false,
-        )?;
-
         let mut data_set_layout = toolkit.create_descriptor_set_layout(&[
             VEDescriptorSetLayoutField {
                 // additiveRGB input
                 binding: 0,
-                typ: VEDescriptorSetFieldType::Sampler,
+                typ: VEDescriptorSetFieldType::StorageImage,
                 stage: VEDescriptorSetFieldStage::Compute,
             },
             VEDescriptorSetLayoutField {
                 // alphaRGBA input
                 binding: 1,
-                typ: VEDescriptorSetFieldType::Sampler,
+                typ: VEDescriptorSetFieldType::StorageImage,
                 stage: VEDescriptorSetFieldStage::Compute,
             },
             VEDescriptorSetLayoutField {
@@ -93,7 +84,6 @@ impl MultiMerger {
             data_set_layout,
             data_set,
             output,
-            nearest_sampler,
         })
     }
 
@@ -104,12 +94,10 @@ impl MultiMerger {
         config: &Config,
     ) -> Result<(), CelestialRendererError> {
         let view = additive.get_view(VEImageViewCreateInfo::simple_2d())?;
-        self.data_set
-            .bind_image_sampler(0, additive, view, &self.nearest_sampler)?;
+        self.data_set.bind_image_storage(0, additive, view)?;
 
         let view = alpha.get_view(VEImageViewCreateInfo::simple_2d())?;
-        self.data_set
-            .bind_image_sampler(1, alpha, view, &self.nearest_sampler)?;
+        self.data_set.bind_image_storage(1, alpha, view)?;
 
         self.compute_stage.begin_recording()?;
         self.compute_stage.set_descriptor_set(0, &self.data_set);
