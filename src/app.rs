@@ -12,6 +12,7 @@ use crate::celestial_rendering::scene::camera::Camera;
 use crate::celestial_rendering::scene::mesh::Mesh;
 use crate::config::Config;
 use crate::math::decimal_vector_3d::DecimalVector3d;
+use crate::math::sin_cos::f64_to_dbig;
 use crate::simulation::simulation::Simulation;
 use crate::util::empty_textures::EMPTY_TEXTURES;
 use dashu_float::DBig;
@@ -155,17 +156,14 @@ impl App for CelestialRendererApp {
         self.camera
             .set_perspective(90.0 * (PI / 180.0), 640.0 / 480.0, 0.1, 63780000.0);
 
-        self.camera.position = DecimalVector3d::from_str(
-            "64959787070023434667.0",
-            "23454569021239234304.0",
-            "29349283489.0",
-        ) - DecimalVector3d::from_str("0.0", "0.0", "12756000.0");
+        self.camera.position = DecimalVector3d::from_str("0.0", "0.0", "0.0")
+            - DecimalVector3d::from_str("0.0", "0.0", "12756000.0");
 
         self.camera.orientation = DQuat::from_mat4(&DMat4::look_to_rh(
             DVec3::new(0.0, 0.0, 0.0),
             DVec3::new(0.0, 0.0, 1.0),
             DVec3::new(0.0, 1.0, 0.0),
-        )) * DQuat::from_axis_angle(DVec3::new(0.0, 1.0, 0.0), elapsed);
+        )); // * DQuat::from_axis_angle(DVec3::new(0.0, 1.0, 0.0), elapsed);
 
         self.camera.update();
 
@@ -177,13 +175,6 @@ impl App for CelestialRendererApp {
         self.mesh_drawer
             .record(self.meshes.as_slice())
             .expect("Failed to record mesh_drawer");
-
-        self.simulation
-            .update(&self.camera.position, &DBig::from(1)); // TODO use some game time!!
-
-        let closest_hierarchy = self
-            .simulation
-            .find_closest_hierarchy(&self.camera.position);
 
         let mut swapchain = self.toolkit.swapchain.lock().unwrap();
 
@@ -197,6 +188,13 @@ impl App for CelestialRendererApp {
                 vec![self.mesh_drawing_semaphore.clone()],
             )
             .expect("Failed to draw mesh_drawer");
+
+        self.simulation
+            .update(&self.camera.position, &f64_to_dbig(now * 6000.0)); // TODO use some game time!!
+
+        let closest_hierarchy = self
+            .simulation
+            .find_closest_hierarchy(&self.camera.position);
 
         let mut wait_for_semaphores = vec![self.mesh_drawing_semaphore.clone()];
 

@@ -5,11 +5,15 @@ use glam::{DMat4, DVec3, DVec4};
 pub fn write_mat4(ptr: *mut f32, base_offset: isize, data: DMat4) -> isize {
     let mut offset = base_offset;
     unsafe {
-        for v in data.as_ref() {
-            ptr.offset(offset).write(*v as f32);
+        for v in data.to_cols_array() {
+            ptr.offset(offset).write(v as f32);
             offset += 1;
         }
     }
+    // offset += write_vec4(ptr, offset, data.x_axis);
+    // offset += write_vec4(ptr, offset, data.y_axis);
+    // offset += write_vec4(ptr, offset, data.z_axis);
+    // offset += write_vec4(ptr, offset, data.w_axis);
     16
 }
 

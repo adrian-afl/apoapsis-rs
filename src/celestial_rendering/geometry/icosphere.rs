@@ -140,13 +140,10 @@ impl Icosphere {
                 }
                 Some(mapped) => {
                     if (mapped.level != level) {
-                        self.currently_loaded.insert(
-                            m.name.clone(),
-                            LoadedGeometry {
-                                vertex_buffer: self.load_geometry(&toolkit, &m.name, level)?,
-                                level,
-                            },
-                        );
+                        let geometry = self.load_geometry(&toolkit, &m.name, level)?;
+                        let mut mapped_mut = self.currently_loaded.get_mut(&m.name).unwrap();
+                        mapped_mut.level = level;
+                        mapped_mut.vertex_buffer = geometry;
                     } else {
                         stage.draw_instanced(&mapped.vertex_buffer, 1);
                     }
@@ -164,7 +161,7 @@ impl Icosphere {
         level: u8,
     ) -> Result<VEVertexBuffer, CelestialRendererError> {
         let path = format!("{}/{name}.l{level}.raw", self.dir_path);
-        println!("LOADING {}", path);
+        //println!("LOADING {}", path);
         let file = File::open(path)?;
         let mut brotli_stream = brotli::Decompressor::new(file, 40960);
         let mut decompressed = vec![];

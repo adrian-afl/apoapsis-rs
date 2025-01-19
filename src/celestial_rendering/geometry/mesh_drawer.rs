@@ -157,6 +157,7 @@ impl MeshDrawer {
                 &color_rgb_roughness_a_attachment,
                 &normal_rgb_distance_a_attachment,
                 &emission_rgb_metalness_a_attachment,
+                &shared_depth_buffer_attachment,
             ],
             &[&mesh_set_layout, &common_set_layout],
             &vertex_shader,

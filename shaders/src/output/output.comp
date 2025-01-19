@@ -3,6 +3,8 @@
 
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
+#include "include/compute-uv-coordinates.glsl"
+
 layout(set = 0, binding = 0) uniform ubo {
     float exposure;
 } uniforms;
@@ -30,10 +32,6 @@ vec3 aces_tonemap(vec3 color){
 }
 
 void main() {
-    uvec3 executionSize = gl_NumWorkGroups * gl_WorkGroupSize;
-    ivec2 iUV = ivec2(gl_GlobalInvocationID.xy);
-    vec2 UV = vec2(gl_GlobalInvocationID.xy) / vec2(executionSize.xy);
-
     vec4 celestialResult = texture(celestialResultTexture, UV);
     vec4 color = vec4(aces_tonemap(celestialResult.rgb * exposure), 1.0);
     

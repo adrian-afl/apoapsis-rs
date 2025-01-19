@@ -3,6 +3,8 @@
 
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
+#include "include/compute-uv-coordinates.glsl"
+
 layout(set = 0, binding = 0) uniform ubo {
     vec4 seed;
     vec4 elapsed_frequency_zero_zero;
@@ -29,10 +31,6 @@ float cloudsFBM(vec3 p, int iterations){
 }
 
 void main() {
-    uvec3 executionSize = gl_NumWorkGroups * gl_WorkGroupSize;
-    ivec2 iUV = ivec2(gl_GlobalInvocationID.xy);
-    vec2 UV = vec2(gl_GlobalInvocationID.xy) / vec2(executionSize.xy);
-
     vec3 normal = normalize(polarToXyz(UV));
     float result = cloudsFBM(normal * frequency + seed.xyz + elapsed * 0.00001, 8);
     imageStore(outColor, iUV, vec4(result, 0.0, 0.0, 0.0));

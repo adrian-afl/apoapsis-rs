@@ -3,15 +3,13 @@
 
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
+#include "include/compute-uv-coordinates.glsl"
+
 layout(set = 0, binding = 0) uniform sampler2D additiveRGB;
 layout(set = 0, binding = 1) uniform sampler2D alphaRGBA;
 layout(set = 0, binding = 2, rgba16f) uniform restrict image2D outColor; // the restrict might bite my ass
 
 void main() {
-    uvec3 executionSize = gl_NumWorkGroups * gl_WorkGroupSize;
-    ivec2 iUV = ivec2(gl_GlobalInvocationID.xy);
-    vec2 UV = vec2(gl_GlobalInvocationID.xy) / vec2(executionSize.xy);
-
     vec4 bbdata = imageLoad(outColor, iUV);
     vec4 additive = texture(additiveRGB, UV).rgba;
     vec4 alpha = texture(alphaRGBA, UV).rgba;

@@ -3,9 +3,7 @@
 
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
-uvec3 executionSize = gl_NumWorkGroups * gl_WorkGroupSize;
-ivec2 iUV = ivec2(gl_GlobalInvocationID.xy);
-vec2 UV = vec2(gl_GlobalInvocationID.xy) / vec2(executionSize.xy);
+#include "include/compute-uv-coordinates.glsl"
 
 #define COMMON_BUFFER_SET 0
 #define COMMON_BUFFER_BINDING 0
@@ -110,7 +108,7 @@ void main() {
     vec4 geometryColorRoughness = texture(gBufferColorRGBroughnessA, UV).rgba;
 
     float meshLambertian = max(0.0, dot(geometryNormal, starDirection));
-    float meshPhong = pow(meshLambertian, 1.0 + 16.0 * (1.0 - geometryColorRoughness.a * geometryColorRoughness.a));
+    float meshPhong = meshLambertian;// TODO! roughness is fuced up pow(meshLambertian, 1.0 + 16.0 * (1.0 - geometryColorRoughness.a * geometryColorRoughness.a));
     
     vec2 atmosphereHitsFromMesh = rsi2X(cloudsResult.distance * dir, starDirection, atmoSphere);
     float atmosphereHitFromMesh = getForwardHitOrZero(atmosphereHitsFromClouds);
@@ -135,7 +133,6 @@ void main() {
         getAltitude(dir * getForwardHitOrZero(atmosphereHitsFromCamera)), 
         geometryHit - getForwardHitOrZero(atmosphereHitsFromCamera)
     );
-
     
     vec3 atmosphereAdditive = rayleighMieResult.rayleigh 
             + sun * (1.0 - step(0.001, geometryHit));
