@@ -55,3 +55,12 @@ pub enum PhysicsError {
     #[error("collider not found")]
     ColliderNotFound,
 }
+
+#[derive(Error, Debug)]
+pub enum ECSError {
+    #[error("component not found")]
+    ComponentNotFound,
+
+    #[error("failed to add duplicate component")]
+    FailedToAddDuplicateComponent,
+}

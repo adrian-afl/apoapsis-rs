@@ -362,10 +362,10 @@ impl App for CelestialRendererApp {
     }
 
     fn on_window_event(&self, event: WindowEvent) {
-        todo!()
+        // todo!()
     }
 
     fn on_device_event(&self, device_id: DeviceId, event: DeviceEvent) {
-        todo!()
+        // todo!()
     }
 }

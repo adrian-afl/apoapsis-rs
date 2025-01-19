@@ -13,6 +13,7 @@ mod body;
 mod celestial_rendering;
 mod config;
 mod core;
+mod ecs;
 mod math;
 mod simulation;
 mod util;
