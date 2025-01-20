@@ -7,8 +7,8 @@ use std::sync::atomic::{AtomicU64, Ordering};
 static ENTITY_SEQ: AtomicU64 = AtomicU64::new(1);
 
 pub struct Entity {
-    id: u64,
-    name: Option<String>,
+    pub id: u64,
+    pub name: Option<String>,
     components: HashMap<TypeId, Vec<Box<dyn ComponentTrait>>>,
 }
 

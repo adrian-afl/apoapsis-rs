@@ -63,4 +63,7 @@ pub enum ECSError {
 
     #[error("failed to add duplicate component")]
     FailedToAddDuplicateComponent,
+
+    #[error("failed to add duplicate entity")]
+    FailedToAddDuplicateEntity,
 }
