@@ -56,7 +56,7 @@ impl Entity {
         }
     }
 
-    pub fn has_component_of_type<T: ComponentTrait>(&mut self) -> bool {
+    pub fn has_component_of_type<T: ComponentTrait>(&self) -> bool {
         let typ = component_type::<T>();
         let existing_vector = self.components.get(&typ);
         match existing_vector {
@@ -65,7 +65,7 @@ impl Entity {
         }
     }
 
-    pub fn has_all_components_of_type(&mut self, types: &[&TypeId]) -> bool {
+    pub fn has_all_components_of_type(&self, types: &[&TypeId]) -> bool {
         for typ in types {
             let existing_vector = self.components.get(&typ);
             match existing_vector {

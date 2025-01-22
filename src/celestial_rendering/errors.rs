@@ -66,4 +66,7 @@ pub enum ECSError {
 
     #[error("failed to add duplicate entity")]
     FailedToAddDuplicateEntity,
+
+    #[error("entity not found")]
+    EntityNotFound,
 }

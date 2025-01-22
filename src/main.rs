@@ -14,6 +14,8 @@ mod celestial_rendering;
 mod config;
 mod core;
 mod ecs;
+mod ecs_components;
+mod ecs_systems;
 mod math;
 mod simulation;
 mod util;
