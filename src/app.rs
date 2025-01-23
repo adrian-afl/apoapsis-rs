@@ -23,7 +23,7 @@ use std::time::SystemTime;
 use tracing::{event, Level};
 use vengine_rs::core::semaphore::VESemaphore;
 use vengine_rs::core::toolkit::{App, VEToolkit};
-use winit::event::{DeviceEvent, DeviceId, WindowEvent};
+use winit::event::{DeviceEvent, DeviceId, KeyEvent, WindowEvent};
 
 pub struct CelestialRendererApp {
     start_time: f64,
@@ -362,10 +362,43 @@ impl App for CelestialRendererApp {
     }
 
     fn on_window_event(&self, event: WindowEvent) {
-        // todo!()
+        match event {
+            WindowEvent::ActivationTokenDone { .. } => {}
+            WindowEvent::Resized(_) => {}
+            WindowEvent::Moved(_) => {}
+            WindowEvent::CloseRequested => {}
+            WindowEvent::Destroyed => {}
+            WindowEvent::DroppedFile(_) => {}
+            WindowEvent::HoveredFile(_) => {}
+            WindowEvent::HoveredFileCancelled => {}
+            WindowEvent::Focused(_) => {}
+            WindowEvent::KeyboardInput { event, .. } => match event {
+                KeyEvent {
+                    state,
+                    physical_key,
+                    repeat,
+                    ..
+                } => {}
+            },
+            WindowEvent::ModifiersChanged(_) => {}
+            WindowEvent::Ime(_) => {}
+            WindowEvent::CursorMoved { position, .. } => {}
+            WindowEvent::CursorEntered { .. } => {}
+            WindowEvent::CursorLeft { .. } => {}
+            WindowEvent::MouseWheel { delta, .. } => {}
+            WindowEvent::MouseInput { state, button, .. } => {}
+        }
     }
 
     fn on_device_event(&self, device_id: DeviceId, event: DeviceEvent) {
-        // todo!()
+        match event {
+            DeviceEvent::Added => {}
+            DeviceEvent::Removed => {}
+            DeviceEvent::MouseMotion { .. } => {}
+            DeviceEvent::MouseWheel { .. } => {}
+            DeviceEvent::Motion { .. } => {}
+            DeviceEvent::Button { .. } => {}
+            DeviceEvent::Key(_) => {}
+        }
     }
 }
