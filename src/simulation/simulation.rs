@@ -1,4 +1,4 @@
-use crate::app::CelestialRendererApp;
+use crate::app::GameWindowApp;
 use crate::body::body_definitions::{
     BodyCelestialBodyDefinition, BodyMotion, BodyStarEmission, BodyWater,
 };

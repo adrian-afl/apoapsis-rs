@@ -1,4 +1,4 @@
-use crate::app::CelestialRendererApp;
+use crate::app::GameWindowApp;
 use std::fs::File;
 use std::sync::{Arc, Mutex};
 use tracing::Level;
@@ -37,7 +37,7 @@ fn main() {
 
     VEToolkit::start(
         Box::from(|toolkit: Arc<VEToolkit>| {
-            let app = CelestialRendererApp::new(toolkit);
+            let app = GameWindowApp::new(toolkit);
             Arc::new(Mutex::from(app)) as Arc<Mutex<dyn App>>
         }),
         window_attributes,

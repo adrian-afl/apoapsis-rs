@@ -175,7 +175,7 @@ impl MeshDrawer {
         })
     }
 
-    pub fn record(&self, meshes: &[Mesh]) -> Result<(), CelestialRendererError> {
+    pub fn record(&self, meshes: &[&Mesh]) -> Result<(), CelestialRendererError> {
         self.render_stage.begin_recording()?;
 
         self.render_stage.set_descriptor_set(1, &self.common_set);

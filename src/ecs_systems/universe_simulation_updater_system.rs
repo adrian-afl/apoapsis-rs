@@ -18,12 +18,7 @@ impl UniverseSimulationUpdaterSystem {
 }
 
 impl SystemTrait for UniverseSimulationUpdaterSystem {
-    fn update(
-        &mut self,
-        game_state: Arc<Mutex<GameState>>,
-        ecs: Arc<Mutex<ECSWorld>>,
-        delta_time: f64,
-    ) {
+    fn update(&mut self, game_state: Arc<Mutex<GameState>>, ecs: Arc<Mutex<ECSWorld>>) {
         let position = {
             let ecs = ecs.lock().unwrap();
             let camera_focus = ecs.find_first_by_components(component_types!(
@@ -43,7 +38,7 @@ impl SystemTrait for UniverseSimulationUpdaterSystem {
                 }
             }
         };
-        let game_time = &game_state.lock().unwrap().current_time;
+        let game_time = &game_state.lock().unwrap().current_game_time;
         self.universe.lock().unwrap().update(&position, game_time);
     }
 }
