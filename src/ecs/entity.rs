@@ -80,15 +80,15 @@ impl Entity {
         true
     }
 
-    pub fn get_components<T: ComponentTrait>(&mut self) -> Option<Vec<&mut T>> {
+    pub fn get_components<T: ComponentTrait>(&self) -> Option<Vec<&T>> {
         let typ = component_type::<T>();
-        let existing_vector = self.components.get_mut(&typ);
+        let existing_vector = self.components.get(&typ);
         match existing_vector {
             None => None,
             Some(vector) => {
-                let mut vec: Vec<&mut T> = vec![];
+                let mut vec: Vec<&T> = vec![];
                 for item in vector {
-                    match item.as_mut().as_any().downcast_mut::<T>() {
+                    match item.as_ref().as_any().downcast_ref::<T>() {
                         Some(v) => vec.push(v),
                         None => panic!(),
                     };
@@ -97,6 +97,68 @@ impl Entity {
             }
         }
     }
+
+    pub fn get_components_mut<T: ComponentTrait>(&mut self) -> Option<Vec<&mut T>> {
+        let typ = component_type::<T>();
+        let existing_vector = self.components.get_mut(&typ);
+        match existing_vector {
+            None => None,
+            Some(vector) => {
+                let mut vec: Vec<&mut T> = vec![];
+                for item in vector {
+                    match item.as_mut().as_any_mut().downcast_mut::<T>() {
+                        Some(v) => vec.push(v),
+                        None => panic!(),
+                    };
+                }
+                Some(vec)
+            }
+        }
+    }
+
+    pub fn get_first_component<T: ComponentTrait>(&self) -> Option<&T> {
+        let typ = component_type::<T>();
+        let existing_vector = self.components.get(&typ);
+
+        match existing_vector {
+            None => (),
+            Some(vector) => {
+                if let Some(item) = vector.iter().next() {
+                    match item.as_ref().as_any().downcast_ref::<T>() {
+                        Some(v) => {
+                            return Some(v);
+                        }
+                        None => {
+                            panic!();
+                        }
+                    };
+                }
+            }
+        }
+        None
+    }
+
+    pub fn get_first_component_mut<T: ComponentTrait>(&mut self) -> Option<&mut T> {
+        let typ = component_type::<T>();
+        let existing_vector = self.components.get_mut(&typ);
+
+        match existing_vector {
+            None => (),
+            Some(vector) => {
+                if let Some(item) = vector.iter_mut().next() {
+                    match item.as_mut().as_any_mut().downcast_mut::<T>() {
+                        Some(v) => {
+                            return Some(v);
+                        }
+                        None => {
+                            panic!();
+                        }
+                    };
+                }
+            }
+        }
+        None
+    }
 }
 
 // Some tests because this code is very sketchy
@@ -104,43 +166,20 @@ impl Entity {
 mod tests {
     use super::*;
     use crate::ecs::component_trait::acquire_next_id;
+    use crate::impl_component;
     use std::any::Any;
 
     struct ComponentAlpha {
         id: u64,
         alpha: u32,
     }
-    impl ComponentTrait for ComponentAlpha {
-        fn id(&self) -> u64 {
-            self.id
-        }
-
-        fn allow_multiple(&self) -> bool {
-            true
-        }
-
-        fn as_any(&mut self) -> &mut dyn Any {
-            self
-        }
-    }
+    impl_component!(ComponentAlpha, true);
 
     struct ComponentBeta {
         id: u64,
         beta: u32,
     }
-    impl ComponentTrait for ComponentBeta {
-        fn id(&self) -> u64 {
-            self.id
-        }
-
-        fn allow_multiple(&self) -> bool {
-            false
-        }
-
-        fn as_any(&mut self) -> &mut dyn Any {
-            self
-        }
-    }
+    impl_component!(ComponentBeta, false);
 
     #[test]
     fn it_works() {
@@ -157,7 +196,7 @@ mod tests {
         entity
             .add_component(ComponentBeta { beta: 111, id: 3 })
             .unwrap();
-        let mut alphas = entity.get_components::<ComponentAlpha>().unwrap();
+        let mut alphas = entity.get_components_mut::<ComponentAlpha>().unwrap();
 
         assert!(alphas.len() == 2);
 

@@ -6,7 +6,8 @@ static COMPONENT_SEQ: AtomicU64 = AtomicU64::new(1);
 pub trait ComponentTrait: Any {
     fn id(&self) -> u64;
     fn allow_multiple(&self) -> bool;
-    fn as_any(&mut self) -> &mut dyn Any;
+    fn as_any_mut(&mut self) -> &mut dyn Any;
+    fn as_any(&self) -> &dyn Any;
 }
 
 pub fn acquire_next_id() -> u64 {
@@ -35,7 +36,11 @@ macro_rules! impl_component {
                 $allow_multiple
             }
 
-            fn as_any(&mut self) -> &mut dyn Any {
+            fn as_any(&self) -> &dyn Any {
+                self
+            }
+
+            fn as_any_mut(&mut self) -> &mut dyn Any {
                 self
             }
         }
@@ -71,7 +76,11 @@ macro_rules! impl_marker_component {
                 $allow_multiple
             }
 
-            fn as_any(&mut self) -> &mut dyn Any {
+            fn as_any(&self) -> &dyn Any {
+                self
+            }
+
+            fn as_any_mut(&mut self) -> &mut dyn Any {
                 self
             }
         }
