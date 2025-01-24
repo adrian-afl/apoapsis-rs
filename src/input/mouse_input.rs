@@ -56,12 +56,14 @@ impl MouseInput {
     }
 
     pub fn on_mouse_move_on_surface(&mut self, absolute_position: DVec2) {
-        self.absolute_cursor_pos = absolute_position;
+        if !self.cursor_locked {
+            self.absolute_cursor_pos = absolute_position;
+        }
     }
 
     pub fn on_mouse_move_anywhere(&mut self, delta_position: DVec2) {
-        self.integrated_cursor_pos += delta_position;
-        if (self.cursor_locked) {
+        if self.cursor_locked {
+            self.integrated_cursor_pos += delta_position;
             let window = self.window.lock().unwrap();
             let size = window.inner_size();
             window
