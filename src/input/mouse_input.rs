@@ -2,6 +2,7 @@ use crate::input::control_queue::ControlQueue;
 use glam::DVec2;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
+use winit::dpi::PhysicalPosition;
 use winit::event::MouseButton;
 use winit::window::{CursorGrabMode, Window};
 
@@ -28,7 +29,7 @@ impl MouseInput {
         }
     }
 
-    pub fn lock_cursor(&self) {
+    pub fn lock_cursor(&mut self) {
         let window = self.window.lock().unwrap();
 
         #[cfg(any(target_os = "macos", target_os = "ios", target_os = "linux"))]
@@ -39,11 +40,15 @@ impl MouseInput {
         {
             window.set_cursor_grab(CursorGrabMode::Confined).unwrap();
         }
+        window.set_cursor_visible(false);
+        self.cursor_locked = true;
     }
 
-    pub fn unlock_cursor(&self) {
+    pub fn unlock_cursor(&mut self) {
         let window = self.window.lock().unwrap();
         window.set_cursor_grab(CursorGrabMode::None).unwrap();
+        window.set_cursor_visible(true);
+        self.cursor_locked = false;
     }
 
     pub fn is_cursor_locked(&self) -> bool {
@@ -56,6 +61,13 @@ impl MouseInput {
 
     pub fn on_mouse_move_anywhere(&mut self, delta_position: DVec2) {
         self.integrated_cursor_pos += delta_position;
+        if (self.cursor_locked) {
+            let window = self.window.lock().unwrap();
+            let size = window.inner_size();
+            window
+                .set_cursor_position(PhysicalPosition::new(size.width / 2, size.height / 2))
+                .unwrap();
+        }
     }
 
     pub fn on_mouse_scroll(&mut self, delta: f64) {

@@ -27,6 +27,7 @@ impl ControlQueue {
     }
 
     pub fn on_key(&mut self, key: PhysicalKey, state: bool) {
+        println!("{:?}, {state}", key);
         match key {
             PhysicalKey::Code(key) => match key {
                 KeyCode::Escape => {

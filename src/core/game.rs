@@ -71,7 +71,7 @@ impl Game {
             state.update_time()
         }
         for system in &mut self.ecs_systems {
-            system.update(self.state.clone(), self.ecs.clone());
+            //  system.update(self.state.clone(), self.ecs.clone());
         }
 
         match self.control_queue.lock() {

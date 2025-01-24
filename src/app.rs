@@ -35,7 +35,17 @@ impl App for GameWindowApp {
                     physical_key,
                     repeat,
                     ..
-                } => if !repeat {},
+                } => {
+                    if !repeat {
+                        self.game.keyboard_input.on_key(
+                            physical_key,
+                            match state {
+                                ElementState::Pressed => true,
+                                ElementState::Released => false,
+                            },
+                        )
+                    }
+                }
             },
             WindowEvent::CursorMoved { position, .. } => self
                 .game
