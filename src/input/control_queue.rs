@@ -1,18 +1,84 @@
+use crate::body::body_definitions::load_body_data;
+use glam::DVec3;
+use serde::Deserialize;
+use std::collections::HashMap;
+use std::fs;
 use winit::event::MouseButton;
 use winit::keyboard::{KeyCode, PhysicalKey};
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq, Hash, Deserialize)]
+enum ControlMapItem {
+    Pause,
+    MenuClickPrimary,
+    MenuClickSecondary,
+
+    WalkLeft,
+    WalkRight,
+    WalkForwards,
+    WalkBackwards,
+    Use,
+    OnFootShoot,
+    OnFootCrouch,
+    OnFootZoom,
+
+    FlightPitchAxis,
+    FlightPitchUp,
+    FlightPitchDown,
+
+    FlightYawAxis,
+    FlightYawLeft,
+    FlightYawRight,
+
+    FlightRollAxis,
+    FlightRollLeft,
+    FlightRollRight,
+
+    FlightCameraModeSwitch,
+    FlightCameraFrameSwitch,
+    FlightZoom,
+
+    FlightTranslateXAxis,
+    FlightTranslateLeft,
+    FlightTranslateRight,
+
+    FlightTranslateYAxis,
+    FlightTranslateUp,
+    FlightTranslateDown,
+
+    FlightTranslateZAxis,
+    FlightTranslateForwards,
+    FlightTranslateBackwards,
+
+    FlightExit,
+    FlightShoot,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+// #[serde(rename_all = "camelCase")] // probably not a good idea
+struct ControlMap {
+    pub keys: HashMap<ControlMapItem, KeyCode>,
+    pub mouse_buttons: HashMap<ControlMapItem, MouseButton>,
+}
+
+#[derive(Debug, Clone)]
 pub enum ControlEvent {
     Pause,
 }
 
 pub struct ControlQueue {
     events: Vec<ControlEvent>,
+    control_map: ControlMap,
 }
 
 impl ControlQueue {
     pub fn new() -> Self {
-        Self { events: vec![] }
+        let input_json =
+            fs::read_to_string("controls.json").expect("Failed to to read the controls.json file");
+        let control_map: ControlMap = serde_json::from_str(&input_json).unwrap();
+        Self {
+            events: vec![],
+            control_map,
+        }
     }
 
     pub fn on_mouse_button(&mut self, button: MouseButton, state: bool) {
@@ -27,16 +93,12 @@ impl ControlQueue {
     }
 
     pub fn on_key(&mut self, key: PhysicalKey, state: bool) {
-        println!("{:?}, {state}", key);
         match key {
-            PhysicalKey::Code(key) => match key {
-                KeyCode::Escape => {
-                    if state {
-                        self.events.push(ControlEvent::Pause)
-                    }
+            PhysicalKey::Code(key) => {
+                if key == *self.control_map.keys.get(&ControlMapItem::Pause).unwrap() && state {
+                    self.events.push(ControlEvent::Pause)
                 }
-                _ => (),
-            },
+            }
             PhysicalKey::Unidentified(_) => (),
         }
     }
