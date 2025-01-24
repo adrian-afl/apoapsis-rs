@@ -6,7 +6,7 @@ use tracing_subscriber::fmt::format::FmtSpan;
 use tracing_subscriber::FmtSubscriber;
 use vengine_rs::core::toolkit::{App, VEToolkit};
 use winit::dpi::PhysicalSize;
-use winit::window::WindowAttributes;
+use winit::window::{Window, WindowAttributes};
 
 mod app;
 mod body;
@@ -33,11 +33,11 @@ fn main() {
 
     let window_attributes = WindowAttributes::default()
         .with_inner_size(PhysicalSize::new(640 * 3, 480 * 3))
-        .with_title("dingus_mesh");
+        .with_title("Codename T.S.P.");
 
     VEToolkit::start(
-        Box::from(|toolkit: Arc<VEToolkit>| {
-            let app = GameWindowApp::new(toolkit);
+        Box::from(|toolkit: Arc<VEToolkit>, window: Arc<Mutex<Window>>| {
+            let app = GameWindowApp::new(toolkit, window);
             Arc::new(Mutex::from(app)) as Arc<Mutex<dyn App>>
         }),
         window_attributes,
