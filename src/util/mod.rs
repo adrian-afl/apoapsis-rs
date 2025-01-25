@@ -1,2 +1,3 @@
 pub mod empty_textures;
-mod entity_loader;
+pub mod entity_loader;
+pub mod strip_json_line_comments;

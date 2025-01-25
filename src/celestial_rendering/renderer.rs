@@ -1,4 +1,4 @@
-use crate::body::body_definitions::{load_body_data, BodyTerrain};
+use crate::body::body_definitions::{load_body_data, BodyCelestialBodyDefinition, BodyTerrain};
 use crate::celestial_rendering::atmosphere::atmosphere_drawer::AtmosphereDrawer;
 use crate::celestial_rendering::atmosphere::clouds_generator_high_freq::CloudGeneratorHighFreq;
 use crate::celestial_rendering::atmosphere::clouds_generator_low_freq::CloudGeneratorLowFreq;
@@ -33,9 +33,9 @@ pub struct Renderer {
 
     toolkit: Arc<VEToolkit>,
 
-    g_buffer: GBuffer,
+    pub g_buffer: GBuffer,
 
-    common_buffer: CommonBuffer,
+    pub common_buffer: CommonBuffer,
 
     mesh_drawer: MeshDrawer,
     cloud_generator_high_freq: CloudGeneratorHighFreq,
@@ -366,6 +366,20 @@ impl Renderer {
             &mut self.mesh_drawer.mesh_set_layout,
             geometry,
             material,
+        )?)
+    }
+
+    pub fn add_hierarchy_to_universe_simulation(
+        &mut self,
+        simulation: &mut Simulation,
+        body: &BodyCelestialBodyDefinition,
+    ) -> Result<i32, CelestialRendererError> {
+        Ok(simulation.add_hierarchy(
+            &self.config,
+            &mut self.g_buffer,
+            &self.common_buffer,
+            body,
+            None,
         )?)
     }
 }

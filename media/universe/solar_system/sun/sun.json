@@ -1,0 +1,37 @@
+{
+  "name": "sun",
+  "terrain": null,
+  "water": null,
+  "atmosphere": null,
+  "generatorConfig": null,
+  "dynamics": {
+    "rotationAxis": {
+      "x": "0.0",
+      "y": "1.0",
+      "z": "0.0"
+    },
+    "rotationPeriod": 2114208,
+    "mass": "1988416000000000000000000000000",
+    "motion": {
+      "Static": {
+        "position": {
+          "x": "1231768789789230",
+          "y": "4564890909056450",
+          "z": "8797675757897890"
+        }
+      }
+    },
+    "satellitePaths": [
+      //      "media/universe/solar_system/earth/mercury.json",
+      //      "media/universe/solar_system/earth/venus.json",
+      "media/universe/solar_system/earth/earth.json"
+      //      "media/universe/solar_system/earth/mars.json",
+      //      "media/universe/solar_system/earth/ceres.json",
+      //      "media/universe/solar_system/earth/jupiter.json",
+      //      "media/universe/solar_system/earth/saturn.json",
+      //      "media/universe/solar_system/earth/uranus.json",
+      //      "media/universe/solar_system/earth/neptune.json",
+      //      "media/universe/solar_system/earth/pluto.json"
+    ]
+  }
+}

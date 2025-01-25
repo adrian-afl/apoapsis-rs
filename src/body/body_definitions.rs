@@ -1,5 +1,6 @@
 use crate::math::decimal_vector_3d::DecimalVector3d;
 use crate::math::deserializable_dbig::DeserializableDBig;
+use crate::util::strip_json_line_comments::strip_json_line_comments;
 use glam::DVec3;
 use serde::Deserialize;
 use std::fs;
@@ -166,6 +167,7 @@ pub struct BodyPlanetGenConfig {
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct BodyStarEmission {
+    pub radius: f64,
     pub radiance: DVec3,
 }
 
@@ -176,18 +178,21 @@ pub struct BodyCelestialBodyDefinition {
     pub terrain: Option<BodyTerrain>,
     pub water: Option<BodyWater>,
     pub atmosphere: Option<BodyAtmosphere>,
-    pub generator_config: BodyPlanetGenConfig,
+    pub generator_config: Option<BodyPlanetGenConfig>,
     pub dynamics: BodyDynamics,
     pub star_emission: Option<BodyStarEmission>,
 }
 
 fn parse_body_data(str: &str) -> BodyCelestialBodyDefinition {
-    let data: BodyCelestialBodyDefinition = serde_json::from_str(str).unwrap();
+    let data: BodyCelestialBodyDefinition =
+        serde_json::from_str(&strip_json_line_comments(str)).unwrap();
     data
 }
 
 pub fn load_body_data(path: &str) -> BodyCelestialBodyDefinition {
-    let input_json = fs::read_to_string(path).expect("Failed to to read the input file");
+    println!("Loading body from path {}", path);
+    let input_json =
+        fs::read_to_string(path).expect(&format!("Failed to to read the input file {}", path));
     let mut data = parse_body_data(&input_json);
     for path in &data.dynamics.satellite_paths {
         data.dynamics.satellites.push(load_body_data(path.as_str()));

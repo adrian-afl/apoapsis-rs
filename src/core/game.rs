@@ -1,3 +1,4 @@
+use crate::body::body_definitions::load_body_data;
 use crate::celestial_rendering::renderer::Renderer;
 use crate::config::Config;
 use crate::core::game_event_system::{GameEvent, GameEventSystem};
@@ -49,6 +50,18 @@ impl Game {
 
         let mouse_input = MouseInput::new(window.clone(), controls.clone());
         let keyboard_input = KeyboardInput::new(window.clone(), controls.clone());
+
+        {
+            let mut universe = universe_simulation.lock().unwrap();
+            let mut renderer = renderer.lock().unwrap();
+
+            renderer
+                .add_hierarchy_to_universe_simulation(
+                    &mut universe,
+                    &load_body_data("media/universe/solar_system/sun/sun.json"),
+                )
+                .expect("Failed to load sun.json");
+        }
 
         Self {
             toolkit: toolkit.clone(),

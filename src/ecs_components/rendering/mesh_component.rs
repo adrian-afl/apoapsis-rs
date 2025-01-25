@@ -1,6 +1,7 @@
 use crate::ecs::component_trait::component_type;
 use crate::ecs::component_trait::{acquire_next_id, ComponentTrait};
 use crate::impl_component;
+use crate::util::strip_json_line_comments::strip_json_line_comments;
 use glam::DVec3;
 use serde::Deserialize;
 use std::any::{Any, TypeId};
@@ -55,16 +56,6 @@ impl_component!(MeshComponent, true);
 
 impl MeshComponent {
     pub fn from_description(description: MeshDescription) -> Self {
-        Self {
-            id: acquire_next_id(),
-            description,
-        }
-    }
-
-    pub fn from_file(path: &str) -> Self {
-        let input_json = fs::read_to_string(path)
-            .expect(format!("Failed to to read a mesh description file {}", path).as_str());
-        let description: MeshDescription = serde_json::from_str(&input_json).unwrap();
         Self {
             id: acquire_next_id(),
             description,

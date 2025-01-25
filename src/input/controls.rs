@@ -1,7 +1,6 @@
-use crate::body::body_definitions::load_body_data;
 use crate::core::game_event_system::GameEvent::{ControlActivate, ControlRelease};
 use crate::core::game_event_system::GameEventSystem;
-use glam::DVec3;
+use crate::util::strip_json_line_comments::strip_json_line_comments;
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::fs;
@@ -77,7 +76,8 @@ impl Controls {
     pub fn new(game_event_system: Arc<GameEventSystem>) -> Self {
         let input_json =
             fs::read_to_string("controls.json").expect("Failed to to read the controls.json file");
-        let control_map: ControlMap = serde_json::from_str(&input_json).unwrap();
+        let control_map: ControlMap =
+            serde_json::from_str(&strip_json_line_comments(&input_json)).unwrap();
         Self {
             control_map,
             game_event_system,

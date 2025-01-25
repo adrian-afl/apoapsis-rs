@@ -1,7 +1,7 @@
 {
   "name": "snowball",
   "terrain": {
-    "icospherePath": "universe/snowball/terrain/icosphere",
+    "icospherePath": "media/universe/solar_system/earth/terrain/icosphere",
     "radius": 6378000,
     "minHeight": -127000,
     "maxHeight": 127000,
@@ -81,7 +81,7 @@
     ]
   },
   "water": {
-    "icospherePath": "universe/snowball/water/icosphere",
+    "icospherePath": "media/universe/solar_system/earth/water/icosphere",
     "color": [
       0,
       0.3,
