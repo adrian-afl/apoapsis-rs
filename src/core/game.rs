@@ -4,11 +4,16 @@ use crate::config::Config;
 use crate::core::game_event_system::{GameEvent, GameEventSystem};
 use crate::core::game_state::GameState;
 use crate::ecs::ecs_world::ECSWorld;
+use crate::ecs::entity::Entity;
 use crate::ecs::system_trait::SystemTrait;
+use crate::ecs_components::camera::camera_focus_component::CameraFocusComponent;
+use crate::ecs_components::common::transform_component::TransformComponent;
+use crate::ecs_systems::rendering_system::RenderingSystem;
 use crate::ecs_systems::universe_simulation_updater_system::UniverseSimulationUpdaterSystem;
 use crate::input::controls::{ControlEvent, ControlMapItem, Controls};
 use crate::input::keyboard_input::KeyboardInput;
 use crate::input::mouse_input::MouseInput;
+use crate::math::decimal_vector_3d::DecimalVector3d;
 use crate::simulation::simulation::Simulation;
 use std::sync::{Arc, LockResult, Mutex};
 use vengine_rs::core::toolkit::VEToolkit;
@@ -44,9 +49,16 @@ impl Game {
         let renderer = Arc::new(Mutex::from(Renderer::new(toolkit.clone(), &config)));
         let state = Arc::new(Mutex::from(GameState::new()));
         let ecs = Arc::new(Mutex::from(ECSWorld::new()));
-        let ecs_systems: Vec<Box<dyn SystemTrait>> = vec![Box::new(
-            UniverseSimulationUpdaterSystem::new(universe_simulation.clone()),
-        )];
+        let ecs_systems: Vec<Box<dyn SystemTrait>> = vec![
+            Box::new(UniverseSimulationUpdaterSystem::new(
+                universe_simulation.clone(),
+            )),
+            Box::new(RenderingSystem::new(
+                toolkit.clone(),
+                renderer.clone(),
+                universe_simulation.clone(),
+            )),
+        ];
 
         let mouse_input = MouseInput::new(window.clone(), controls.clone());
         let keyboard_input = KeyboardInput::new(window.clone(), controls.clone());
@@ -61,6 +73,21 @@ impl Game {
                     &load_body_data("media/universe/solar_system/sun/sun.json"),
                 )
                 .expect("Failed to load sun.json");
+        }
+
+        {
+            let mut player_entity = Entity::new(Some("Player"));
+            let mut universe = universe_simulation.lock().unwrap();
+            let earth_position = &universe.get_body("earth").position;
+            let player_initial_position =
+                earth_position + DecimalVector3d::from_f64(0.0, 0.0, -9398000.0);
+            player_entity
+                .add_component(TransformComponent::from_position(player_initial_position))
+                .unwrap();
+            player_entity
+                .add_component(CameraFocusComponent::new())
+                .unwrap();
+            ecs.lock().unwrap().add(player_entity).unwrap();
         }
 
         Self {
@@ -88,7 +115,7 @@ impl Game {
             state.update_time()
         }
         for system in &mut self.ecs_systems {
-            //    system.update(self.state.clone(), self.ecs.clone());
+            system.update(self.state.clone(), self.ecs.clone());
         }
 
         let events = self.game_event_system.get_events::<Game>();

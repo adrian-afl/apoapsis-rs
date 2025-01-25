@@ -83,7 +83,7 @@ impl Entity {
             match existing_vector {
                 None => return false,
                 Some(vector) => {
-                    if !vector.is_empty() {
+                    if vector.is_empty() {
                         return false;
                     }
                 }

@@ -1,5 +1,5 @@
 {
-  "name": "snowball",
+  "name": "earth",
   "terrain": {
     "icospherePath": "media/universe/solar_system/earth/terrain/icosphere",
     "radius": 6378000,
@@ -121,12 +121,14 @@
     "rotationPeriod": 86400,
     "mass": "5972190000000000000000000",
     "motion": {
-      "Static": {
-        "position": {
+      "Orbiting": {
+        "orbit_radius": "149600000",
+        "orbit_plane_normal": {
           "x": "0",
           "y": "0",
           "z": "0"
-        }
+        },
+        "orbit_period": "31558118.4"
       }
     },
     "satellitePaths": []
