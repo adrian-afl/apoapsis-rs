@@ -1,3 +1,4 @@
+use crate::celestial_rendering::scene::camera::Camera;
 use crate::math::sin_cos::f64_to_dbig;
 use dashu_float::DBig;
 use std::ops::Add;
@@ -6,10 +7,12 @@ use std::time::SystemTime;
 pub struct GameState {
     pub current_game_time: DBig,
 
+    pub current_camera: Camera,
+
     start_time: f64,
     last_time: f64,
-    elapsed: f64,
-    delta_time: f64,
+    pub elapsed: f64,
+    pub delta_time: f64,
 }
 
 impl GameState {
@@ -24,6 +27,8 @@ impl GameState {
             last_time: start_time,
             elapsed: 0.0,
             delta_time: 0.0,
+
+            current_camera: Camera::new(),
 
             current_game_time: DBig::ZERO.clone(),
         }

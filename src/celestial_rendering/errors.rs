@@ -45,6 +45,9 @@ pub enum CelestialRendererError {
 
     #[error("IO error")]
     IOError(#[from] io::Error),
+
+    #[error("queue locking failed")]
+    QueueLockingFailed,
 }
 
 #[derive(Error, Debug)]

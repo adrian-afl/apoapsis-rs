@@ -1,12 +1,10 @@
 use crate::celestial_rendering::buffers::mesh_buffer::MeshBuffer;
 use crate::celestial_rendering::errors::CelestialRendererError;
-use crate::celestial_rendering::scene::material::{
-    ColorOrTexture, Material, ScaledTexture, ValueOrTexture,
-};
+use crate::celestial_rendering::scene::material::{ColorOrTexture, Material, ValueOrTexture};
 use crate::math::decimal_vector_3d::DecimalVector3d;
 use crate::util::empty_textures::EMPTY_TEXTURES;
 use glam::{DMat4, DQuat, DVec3};
-use std::sync::{Arc, Mutex};
+use std::sync::Mutex;
 use vengine_rs::core::descriptor_set::VEDescriptorSet;
 use vengine_rs::core::descriptor_set_layout::VEDescriptorSetLayout;
 use vengine_rs::core::toolkit::VEToolkit;
@@ -19,6 +17,7 @@ pub struct Mesh {
     pub position: DecimalVector3d,
     pub orientation: DQuat,
     pub scale: DVec3,
+
     pub model_matrix: DMat4,
 
     pub geometry: VEVertexBuffer,

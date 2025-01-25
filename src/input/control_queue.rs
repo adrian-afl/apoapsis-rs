@@ -6,7 +6,7 @@ use std::fs;
 use winit::event::MouseButton;
 use winit::keyboard::{KeyCode, PhysicalKey};
 
-#[derive(Clone, Debug, Eq, Hash, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Deserialize)]
 enum ControlMapItem {
     Pause,
     MenuClickPrimary,

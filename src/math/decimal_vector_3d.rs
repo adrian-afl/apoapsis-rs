@@ -38,7 +38,7 @@ impl DecimalVector3d {
         DecimalVector3d::from_f64(vec.x, vec.y, vec.z)
     }
 
-    pub fn assign(&mut self, v: DecimalVector3d) {
+    pub fn assign(&mut self, v: &DecimalVector3d) {
         self.x = v.x.clone();
         self.y = v.y.clone();
         self.z = v.z.clone();

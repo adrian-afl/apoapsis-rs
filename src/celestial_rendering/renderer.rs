@@ -4,11 +4,13 @@ use crate::celestial_rendering::atmosphere::clouds_generator_high_freq::CloudGen
 use crate::celestial_rendering::atmosphere::clouds_generator_low_freq::CloudGeneratorLowFreq;
 use crate::celestial_rendering::buffers::celestial_body_buffer::CelestialBodyBuffer;
 use crate::celestial_rendering::buffers::common_buffer::CommonBuffer;
+use crate::celestial_rendering::errors::CelestialRendererError;
 use crate::celestial_rendering::finalization::multi_merger::MultiMerger;
 use crate::celestial_rendering::finalization::output::Output;
 use crate::celestial_rendering::geometry::g_buffer::GBuffer;
 use crate::celestial_rendering::geometry::mesh_drawer::MeshDrawer;
 use crate::celestial_rendering::scene::camera::Camera;
+use crate::celestial_rendering::scene::material::Material;
 use crate::celestial_rendering::scene::mesh::Mesh;
 use crate::config::Config;
 use crate::math::decimal_vector_3d::DecimalVector3d;
@@ -23,6 +25,7 @@ use std::time::SystemTime;
 use tracing::{event, Level};
 use vengine_rs::core::semaphore::VESemaphore;
 use vengine_rs::core::toolkit::{App, VEToolkit};
+use vengine_rs::graphics::vertex_buffer::VEVertexBuffer;
 use winit::event::{DeviceEvent, DeviceId, KeyEvent, WindowEvent};
 
 pub struct Renderer {
@@ -118,7 +121,7 @@ impl Renderer {
         camera: &Camera,
         elapsed: f64,
         delta_time: f64,
-    ) {
+    ) -> Result<(), CelestialRendererError> {
         let now = SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)
             .unwrap()
@@ -136,15 +139,22 @@ impl Renderer {
         let mut swapchain = self.toolkit.swapchain.lock().unwrap();
 
         event!(Level::WARN, "Submitting mesh_drawer");
-        self.mesh_drawer
-            .render_stage
-            .command_buffer
-            .submit(
-                &self.toolkit.queue,
-                vec![swapchain.blit_done_semaphore.clone()],
-                vec![self.mesh_drawing_semaphore.clone()],
-            )
-            .expect("Failed to draw mesh_drawer");
+        {
+            let queue = &self
+                .toolkit
+                .queue
+                .lock()
+                .map_err(|_| CelestialRendererError::QueueLockingFailed)?;
+            self.mesh_drawer
+                .render_stage
+                .command_buffer
+                .submit(
+                    &queue,
+                    vec![swapchain.blit_done_semaphore.clone()],
+                    vec![self.mesh_drawing_semaphore.clone()],
+                )
+                .expect("Failed to draw mesh_drawer");
+        }
 
         let closest_hierarchy = simulation.find_closest_hierarchy(&camera.position);
 
@@ -182,11 +192,16 @@ impl Renderer {
                                 )
                                 .expect("Failed to update cloud_generator_low_freq");
 
+                            let queue = &self
+                                .toolkit
+                                .queue
+                                .lock()
+                                .map_err(|_| CelestialRendererError::QueueLockingFailed)?;
                             self.cloud_generator_high_freq
                                 .compute_stage
                                 .command_buffer
                                 .submit(
-                                    &self.toolkit.queue,
+                                    queue,
                                     vec![],
                                     vec![self.clouds_generation_high_freq_semaphore.clone()],
                                 )
@@ -196,7 +211,7 @@ impl Renderer {
                                 .compute_stage
                                 .command_buffer
                                 .submit(
-                                    &self.toolkit.queue,
+                                    queue,
                                     vec![],
                                     vec![self.clouds_generation_low_freq_semaphore.clone()],
                                 )
@@ -216,13 +231,18 @@ impl Renderer {
             match &body.terrain_drawer {
                 None => (),
                 Some(drawer) => {
+                    let queue = &self
+                        .toolkit
+                        .queue
+                        .lock()
+                        .map_err(|_| CelestialRendererError::QueueLockingFailed)?;
                     drawer
                         .lock()
                         .unwrap()
                         .render_stage
                         .command_buffer
                         .submit(
-                            &self.toolkit.queue,
+                            queue,
                             wait_for_semaphores.clone(),
                             vec![self.terrain_drawing_semaphore.clone()],
                         )
@@ -235,13 +255,18 @@ impl Renderer {
             match &body.water_drawer {
                 None => (),
                 Some(drawer) => {
+                    let queue = &self
+                        .toolkit
+                        .queue
+                        .lock()
+                        .map_err(|_| CelestialRendererError::QueueLockingFailed)?;
                     drawer
                         .lock()
                         .unwrap()
                         .render_stage
                         .command_buffer
                         .submit(
-                            &self.toolkit.queue,
+                            queue,
                             wait_for_semaphores.clone(),
                             vec![self.water_drawing_semaphore.clone()],
                         )
@@ -258,11 +283,16 @@ impl Renderer {
                     semaphores.push(self.clouds_generation_high_freq_semaphore.clone());
                     semaphores.push(self.clouds_generation_low_freq_semaphore.clone());
 
+                    let queue = &self
+                        .toolkit
+                        .queue
+                        .lock()
+                        .map_err(|_| CelestialRendererError::QueueLockingFailed)?;
                     self.atmosphere_drawer
                         .compute_stage
                         .command_buffer
                         .submit(
-                            &self.toolkit.queue,
+                            queue,
                             semaphores,
                             vec![self.atmosphere_drawing_semaphore.clone()],
                         )
@@ -280,11 +310,16 @@ impl Renderer {
                 .expect("Failed to update multi_merger inputs");
 
             event!(Level::WARN, "Submitting multi_merger");
+            let queue = &self
+                .toolkit
+                .queue
+                .lock()
+                .map_err(|_| CelestialRendererError::QueueLockingFailed)?;
             self.multi_merger
                 .compute_stage
                 .command_buffer
                 .submit(
-                    &self.toolkit.queue,
+                    queue,
                     wait_for_semaphores.clone(),
                     vec![self.multi_merging_semaphore.clone()],
                 )
@@ -296,19 +331,41 @@ impl Renderer {
         self.output
             .update_buffer(1.0)
             .expect("Failed to update output buffer");
-        self.output
-            .compute_stage
-            .command_buffer
-            .submit(
-                &self.toolkit.queue,
-                wait_for_semaphores.clone(),
-                vec![self.outputting_semaphore.clone()],
-            )
-            .expect("Failed to compute output");
+        {
+            let queue = &self
+                .toolkit
+                .queue
+                .lock()
+                .map_err(|_| CelestialRendererError::QueueLockingFailed)?;
+            self.output
+                .compute_stage
+                .command_buffer
+                .submit(
+                    queue,
+                    wait_for_semaphores.clone(),
+                    vec![self.outputting_semaphore.clone()],
+                )
+                .expect("Failed to compute output");
+        }
 
         event!(Level::WARN, "Submitting blit");
         swapchain
             .blit(&self.output.output, vec![self.outputting_semaphore.clone()])
             .expect("Failed to blit to swapchain");
+
+        Ok(())
+    }
+
+    pub fn create_mesh(
+        &mut self,
+        geometry: VEVertexBuffer,
+        material: Material,
+    ) -> Result<Mesh, CelestialRendererError> {
+        Ok(Mesh::new(
+            &self.toolkit,
+            &mut self.mesh_drawer.mesh_set_layout,
+            geometry,
+            material,
+        )?)
     }
 }

@@ -1,1 +1,4 @@
 pub mod camera_focus_component;
+pub mod first_person_camera_control_component;
+pub mod third_person_orbit_camera_control_component;
+pub mod third_person_static_camera_control_component;

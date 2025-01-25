@@ -41,7 +41,7 @@ impl Entity {
         Ok(())
     }
 
-    pub fn remove_component<T: ComponentTrait>(&mut self, id: u64) -> Result<(), ECSError> {
+    pub fn remove_component_by_id<T: ComponentTrait>(&mut self, id: u64) -> Result<(), ECSError> {
         let typ = component_type::<T>();
         let existing_vector = self.components.get_mut(&typ);
         match existing_vector {
@@ -51,6 +51,18 @@ impl Entity {
                     return Err(ECSError::ComponentNotFound);
                 }
                 vector.retain(|e| e.id() != id);
+                Ok(())
+            }
+        }
+    }
+
+    pub fn remove_all_components_by_type<T: ComponentTrait>(&mut self) -> Result<(), ECSError> {
+        let typ = component_type::<T>();
+        let existing_vector = self.components.get_mut(&typ);
+        match existing_vector {
+            None => Err(ECSError::ComponentNotFound),
+            Some(vector) => {
+                vector.clear();
                 Ok(())
             }
         }

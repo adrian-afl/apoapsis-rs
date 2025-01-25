@@ -24,6 +24,13 @@ pub struct MeshDrawer {
     pub common_set: VEDescriptorSet,
 }
 
+pub const MESH_DRAWER_VERTEX_ATTRIBUTES: [VertexAttribFormat; 4] = [
+    VertexAttribFormat::RGB32f,
+    VertexAttribFormat::RGB32f,
+    VertexAttribFormat::RG32f,
+    VertexAttribFormat::RGBA32f,
+];
+
 impl MeshDrawer {
     pub fn new(
         config: &Config,
@@ -31,13 +38,6 @@ impl MeshDrawer {
         g_buffer: &mut GBuffer,
         common_buffer: &CommonBuffer,
     ) -> Result<MeshDrawer, CelestialRendererError> {
-        let vertex_attributes = [
-            VertexAttribFormat::RGB32f,
-            VertexAttribFormat::RGB32f,
-            VertexAttribFormat::RG32f,
-            VertexAttribFormat::RGBA32f,
-        ];
-
         // Mesh stage is first and clears the GBuffer, so attachments here should clear
 
         let color_rgb_roughness_a_view = g_buffer
@@ -162,7 +162,7 @@ impl MeshDrawer {
             &[&mesh_set_layout, &common_set_layout],
             &vertex_shader,
             &fragment_shader,
-            &vertex_attributes,
+            &MESH_DRAWER_VERTEX_ATTRIBUTES,
             VEPrimitiveTopology::TriangleList,
             VECullMode::Back,
         )?;

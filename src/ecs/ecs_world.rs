@@ -115,3 +115,25 @@ impl ECSWorld {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::component_types;
+    use crate::ecs_components::camera::camera_focus_component::CameraFocusComponent;
+    use crate::ecs_components::common::transform_component::TransformComponent;
+
+    #[test]
+    fn processing_entities() {
+        let mut world = ECSWorld::new();
+
+        world.process_all_by_components_mut(
+            component_types!(CameraFocusComponent, TransformComponent),
+            |e| {
+                let transform = e.get_first_component::<TransformComponent>().unwrap();
+                e.remove_all_components_by_type::<TransformComponent>()
+                    .unwrap();
+            },
+        );
+    }
+}
