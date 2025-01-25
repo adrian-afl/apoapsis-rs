@@ -1,4 +1,4 @@
-use crate::input::control_queue::ControlQueue;
+use crate::input::controls::Controls;
 use glam::DVec2;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
@@ -8,7 +8,7 @@ use winit::window::{CursorGrabMode, Window};
 
 pub struct MouseInput {
     window: Arc<Mutex<Window>>,
-    control_queue: Arc<Mutex<ControlQueue>>,
+    controls: Arc<Controls>,
     button_state: HashMap<MouseButton, bool>,
     cursor_locked: bool,
     absolute_cursor_pos: DVec2,
@@ -17,10 +17,10 @@ pub struct MouseInput {
 }
 
 impl MouseInput {
-    pub fn new(window: Arc<Mutex<Window>>, control_queue: Arc<Mutex<ControlQueue>>) -> Self {
+    pub fn new(window: Arc<Mutex<Window>>, controls: Arc<Controls>) -> Self {
         Self {
             window,
-            control_queue,
+            controls,
             cursor_locked: false,
             button_state: HashMap::new(),
             absolute_cursor_pos: DVec2::new(0.0, 0.0),
@@ -83,9 +83,6 @@ impl MouseInput {
             }
             Some(current) => *current = state,
         }
-        self.control_queue
-            .lock()
-            .unwrap()
-            .on_mouse_button(button, state);
+        self.controls.on_mouse_button(button, state);
     }
 }

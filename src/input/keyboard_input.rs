@@ -1,4 +1,4 @@
-use crate::input::control_queue::ControlQueue;
+use crate::input::controls::Controls;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use winit::keyboard::PhysicalKey;
@@ -6,15 +6,15 @@ use winit::window::Window;
 
 pub struct KeyboardInput {
     window: Arc<Mutex<Window>>,
-    control_queue: Arc<Mutex<ControlQueue>>,
+    controls: Arc<Controls>,
     button_state: HashMap<PhysicalKey, bool>,
 }
 
 impl KeyboardInput {
-    pub fn new(window: Arc<Mutex<Window>>, control_queue: Arc<Mutex<ControlQueue>>) -> Self {
+    pub fn new(window: Arc<Mutex<Window>>, controls: Arc<Controls>) -> Self {
         Self {
             window,
-            control_queue,
+            controls,
             button_state: HashMap::new(),
         }
     }
@@ -26,6 +26,6 @@ impl KeyboardInput {
             }
             Some(current) => *current = state,
         }
-        self.control_queue.lock().unwrap().on_key(key, state);
+        self.controls.on_key(key, state);
     }
 }

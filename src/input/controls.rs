@@ -1,13 +1,16 @@
 use crate::body::body_definitions::load_body_data;
+use crate::core::game_event_system::GameEvent::{ControlActivate, ControlRelease};
+use crate::core::game_event_system::GameEventSystem;
 use glam::DVec3;
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::fs;
+use std::sync::Arc;
 use winit::event::MouseButton;
 use winit::keyboard::{KeyCode, PhysicalKey};
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Deserialize)]
-enum ControlMapItem {
+pub enum ControlMapItem {
     Pause,
     MenuClickPrimary,
     MenuClickSecondary,
@@ -65,49 +68,58 @@ pub enum ControlEvent {
     Pause,
 }
 
-pub struct ControlQueue {
-    events: Vec<ControlEvent>,
+pub struct Controls {
     control_map: ControlMap,
+    game_event_system: Arc<GameEventSystem>,
 }
 
-impl ControlQueue {
-    pub fn new() -> Self {
+impl Controls {
+    pub fn new(game_event_system: Arc<GameEventSystem>) -> Self {
         let input_json =
             fs::read_to_string("controls.json").expect("Failed to to read the controls.json file");
         let control_map: ControlMap = serde_json::from_str(&input_json).unwrap();
         Self {
-            events: vec![],
             control_map,
+            game_event_system,
         }
     }
 
-    pub fn on_mouse_button(&mut self, button: MouseButton, state: bool) {
-        match button {
-            MouseButton::Left => {}
-            MouseButton::Right => {}
-            MouseButton::Middle => {}
-            MouseButton::Back => {}
-            MouseButton::Forward => {}
-            MouseButton::Other(_) => {}
+    pub fn on_mouse_button(&self, button: MouseButton, state: bool) {
+        for entry in self.control_map.mouse_buttons.iter() {
+            let control_map_item = entry.0;
+            let mouse_button = entry.1;
+            if button == *mouse_button {
+                match state {
+                    true => self
+                        .game_event_system
+                        .push(ControlActivate(control_map_item.clone())),
+                    false => self
+                        .game_event_system
+                        .push(ControlRelease(control_map_item.clone())),
+                }
+            }
         }
     }
 
-    pub fn on_key(&mut self, key: PhysicalKey, state: bool) {
+    pub fn on_key(&self, key: PhysicalKey, state: bool) {
         match key {
             PhysicalKey::Code(key) => {
-                if key == *self.control_map.keys.get(&ControlMapItem::Pause).unwrap() && state {
-                    self.events.push(ControlEvent::Pause)
+                for entry in self.control_map.keys.iter() {
+                    let control_map_item = entry.0;
+                    let key_code = entry.1;
+                    if key == *key_code {
+                        match state {
+                            true => self
+                                .game_event_system
+                                .push(ControlActivate(control_map_item.clone())),
+                            false => self
+                                .game_event_system
+                                .push(ControlRelease(control_map_item.clone())),
+                        }
+                    }
                 }
             }
             PhysicalKey::Unidentified(_) => (),
         }
-    }
-
-    pub fn get_events(&self) -> Vec<ControlEvent> {
-        self.events.clone()
-    }
-
-    pub fn clear(&mut self) {
-        self.events.clear();
     }
 }

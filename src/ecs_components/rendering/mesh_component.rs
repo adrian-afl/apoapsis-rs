@@ -54,7 +54,7 @@ pub struct MeshComponent {
 impl_component!(MeshComponent, true);
 
 impl MeshComponent {
-    pub fn new(description: MeshDescription) -> Self {
+    pub fn from_description(description: MeshDescription) -> Self {
         Self {
             id: acquire_next_id(),
             description,
