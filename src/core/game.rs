@@ -1,5 +1,6 @@
 use crate::body::body_definitions::load_body_data;
 use crate::celestial_rendering::renderer::Renderer;
+use crate::component_types;
 use crate::config::Config;
 use crate::core::game_event_system::{GameEvent, GameEventSystem};
 use crate::core::game_state::GameState;
@@ -15,6 +16,7 @@ use crate::input::keyboard_input::KeyboardInput;
 use crate::input::mouse_input::MouseInput;
 use crate::math::decimal_vector_3d::DecimalVector3d;
 use crate::simulation::simulation::Simulation;
+use glam::DQuat;
 use std::sync::{Arc, LockResult, Mutex};
 use vengine_rs::core::toolkit::VEToolkit;
 use winit::window::Window;
@@ -80,7 +82,13 @@ impl Game {
             let mut universe = universe_simulation.lock().unwrap();
             let earth_position = &universe.get_body("earth").position;
             let player_initial_position =
-                earth_position + DecimalVector3d::from_f64(0.0, 0.0, -9398000.0);
+                earth_position + DecimalVector3d::from_f64(0.0, 0.0, 9398000.0);
+            state
+                .lock()
+                .unwrap()
+                .current_camera
+                .position
+                .assign(&player_initial_position);
             player_entity
                 .add_component(TransformComponent::from_position(player_initial_position))
                 .unwrap();
@@ -129,6 +137,25 @@ impl Game {
                     }
                 }
             }
+        }
+
+        {
+            let mut ecs = self.ecs.lock().unwrap();
+            let mut focus = ecs
+                .find_first_by_components_mut(component_types!(
+                    CameraFocusComponent,
+                    TransformComponent
+                ))
+                .unwrap();
+            let mut transform = focus
+                .get_first_component_mut::<TransformComponent>()
+                .unwrap();
+
+            let mut universe = self.universe_simulation.lock().unwrap();
+            let earth_position = &universe.get_body("earth").position;
+            println!("earth_position {earth_position}");
+            let player_position = earth_position + DecimalVector3d::from_f64(0.0, 0.0, 9398000.0);
+            transform.position.assign(&player_position);
         }
 
         self.game_event_system.cleanup();

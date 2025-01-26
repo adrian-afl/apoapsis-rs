@@ -22,13 +22,17 @@ impl GameState {
             .unwrap()
             .as_secs_f64();
 
+        let mut current_camera = Camera::new();
+
+        current_camera.set_perspective(90.0, 640.0 / 480.0, 0.1, 100000000.0);
+
         Self {
             start_time,
             last_time: start_time,
             elapsed: 0.0,
             delta_time: 0.0,
 
-            current_camera: Camera::new(),
+            current_camera,
 
             current_game_time: DBig::ZERO.clone(),
         }

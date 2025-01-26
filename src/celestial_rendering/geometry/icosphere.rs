@@ -104,6 +104,7 @@ impl Icosphere {
             self.part_matrices[i] = pre_final_matrix * model_offset_matrix;
         }
 
+        println!("camera_position {camera_position} | sphere_position {sphere_position}");
         self.part_matrices.as_slice()
     }
 
@@ -118,6 +119,8 @@ impl Icosphere {
             let final_matrix = self.part_matrices[i];
 
             let distance = (final_matrix.transform_vector3(DVec3::new(0.0, 0.0, 0.0))).length();
+
+            // println!("distance {distance}");
 
             let mut level = 1;
             if (distance < self.thresholds[1]) {
