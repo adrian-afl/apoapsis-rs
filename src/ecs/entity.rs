@@ -1,5 +1,5 @@
 use crate::celestial_rendering::errors::ECSError;
-use crate::ecs::component_trait::{component_type, ComponentTrait};
+use crate::ecs::component_trait::{ComponentTrait, ComponentTypes, ComponentsEnum};
 use std::any::TypeId;
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -9,7 +9,7 @@ static ENTITY_SEQ: AtomicU64 = AtomicU64::new(1);
 pub struct Entity {
     pub id: u64,
     pub name: Option<String>,
-    components: HashMap<TypeId, Vec<Box<dyn ComponentTrait>>>,
+    components: HashMap<ComponentTypes, Vec<ComponentsEnum>>,
 }
 
 impl Entity {
@@ -21,12 +21,12 @@ impl Entity {
         }
     }
 
-    pub fn add_component<T: ComponentTrait>(&mut self, component: T) -> Result<(), ECSError> {
-        let typ = component_type::<T>();
+    pub fn add_component(&mut self, component: ComponentsEnum) -> Result<(), ECSError> {
+        let typ = component.typ();
         let existing_vector = self.components.get_mut(&typ);
         match existing_vector {
             None => {
-                self.components.insert(typ, vec![Box::from(component)]);
+                self.components.insert(typ, vec![component]);
             }
             Some(vector) => {
                 if vector.iter().any(|e| e.id() == component.id()) {
@@ -35,14 +35,13 @@ impl Entity {
                 if !vector.is_empty() && !component.allow_multiple() {
                     return Err(ECSError::FailedToAddDuplicateComponent);
                 }
-                vector.push(Box::from(component));
+                vector.push(component);
             }
         }
         Ok(())
     }
 
-    pub fn remove_component_by_id<T: ComponentTrait>(&mut self, id: u64) -> Result<(), ECSError> {
-        let typ = component_type::<T>();
+    pub fn remove_component_by_id(&mut self, typ: ComponentTypes, id: u64) -> Result<(), ECSError> {
         let existing_vector = self.components.get_mut(&typ);
         match existing_vector {
             None => Err(ECSError::ComponentNotFound),
@@ -56,8 +55,7 @@ impl Entity {
         }
     }
 
-    pub fn remove_all_components_by_type<T: ComponentTrait>(&mut self) -> Result<(), ECSError> {
-        let typ = component_type::<T>();
+    pub fn remove_all_components_by_type(&mut self, typ: ComponentTypes) -> Result<(), ECSError> {
         let existing_vector = self.components.get_mut(&typ);
         match existing_vector {
             None => Err(ECSError::ComponentNotFound),
@@ -68,8 +66,7 @@ impl Entity {
         }
     }
 
-    pub fn has_component_of_type<T: ComponentTrait>(&self) -> bool {
-        let typ = component_type::<T>();
+    pub fn has_component_of_type(&self, typ: ComponentTypes) -> bool {
         let existing_vector = self.components.get(&typ);
         match existing_vector {
             None => false,
@@ -77,7 +74,7 @@ impl Entity {
         }
     }
 
-    pub fn has_all_components_of_type(&self, types: &[&TypeId]) -> bool {
+    pub fn has_all_components_of_type(&self, types: &[ComponentTypes]) -> bool {
         for typ in types {
             let existing_vector = self.components.get(&typ);
             match existing_vector {
@@ -92,84 +89,49 @@ impl Entity {
         true
     }
 
-    pub fn get_components<T: ComponentTrait>(&self) -> Option<Vec<&T>> {
-        let typ = component_type::<T>();
+    pub fn get_components(&self, typ: ComponentTypes) -> Option<Vec<&ComponentsEnum>> {
         let existing_vector = self.components.get(&typ);
         match existing_vector {
             None => None,
             Some(vector) => {
-                let mut vec: Vec<&T> = vec![];
-                for item in vector {
-                    match item.as_ref().as_any().downcast_ref::<T>() {
-                        Some(v) => vec.push(v),
-                        None => panic!(),
-                    };
+                let mut vec: Vec<&ComponentsEnum> = vec![];
+                for item in vector.as_slice() {
+                    vec.push(item)
                 }
                 Some(vec)
             }
         }
     }
 
-    pub fn get_components_mut<T: ComponentTrait>(&mut self) -> Option<Vec<&mut T>> {
-        let typ = component_type::<T>();
+    pub fn get_components_mut(&mut self, typ: ComponentTypes) -> Option<Vec<&mut ComponentsEnum>> {
         let existing_vector = self.components.get_mut(&typ);
         match existing_vector {
             None => None,
             Some(vector) => {
-                let mut vec: Vec<&mut T> = vec![];
-                for item in vector {
-                    match item.as_mut().as_any_mut().downcast_mut::<T>() {
-                        Some(v) => vec.push(v),
-                        None => panic!(),
-                    };
+                let mut vec: Vec<&mut ComponentsEnum> = vec![];
+                for item in vector.as_mut_slice() {
+                    vec.push(item)
                 }
                 Some(vec)
             }
         }
     }
 
-    pub fn get_first_component<T: ComponentTrait>(&self) -> Option<&T> {
-        let typ = component_type::<T>();
+    pub fn get_first_component(&self, typ: ComponentTypes) -> Option<&ComponentsEnum> {
         let existing_vector = self.components.get(&typ);
 
         match existing_vector {
-            None => (),
-            Some(vector) => {
-                if let Some(item) = vector.iter().next() {
-                    match item.as_ref().as_any().downcast_ref::<T>() {
-                        Some(v) => {
-                            return Some(v);
-                        }
-                        None => {
-                            panic!();
-                        }
-                    };
-                }
-            }
+            None => None,
+            Some(vector) => vector.iter().next(),
         }
-        None
     }
 
-    pub fn get_first_component_mut<T: ComponentTrait>(&mut self) -> Option<&mut T> {
-        let typ = component_type::<T>();
+    pub fn get_first_component_mut(&mut self, typ: ComponentTypes) -> Option<&mut ComponentsEnum> {
         let existing_vector = self.components.get_mut(&typ);
-
         match existing_vector {
-            None => (),
-            Some(vector) => {
-                if let Some(item) = vector.iter_mut().next() {
-                    match item.as_mut().as_any_mut().downcast_mut::<T>() {
-                        Some(v) => {
-                            return Some(v);
-                        }
-                        None => {
-                            panic!();
-                        }
-                    };
-                }
-            }
+            None => None,
+            Some(vector) => vector.iter_mut().next(),
         }
-        None
     }
 }
 
@@ -178,31 +140,20 @@ impl Entity {
 mod tests {
     use super::*;
     use crate::ecs::component_trait::acquire_next_id;
+    use crate::ecs_components::common::transform_component::TransformComponent;
     use crate::impl_component;
     use std::any::Any;
-
-    struct ComponentAlpha {
-        id: u64,
-        alpha: u32,
-    }
-    impl_component!(ComponentAlpha, true);
-
-    struct ComponentBeta {
-        id: u64,
-        beta: u32,
-    }
-    impl_component!(ComponentBeta, false);
 
     #[test]
     fn it_works() {
         let mut entity = Entity::new(None);
 
         entity
-            .add_component(ComponentAlpha { alpha: 123, id: 1 })
+            .add_component(ComponentsEnum::Transform(TransformComponent::new()))
             .unwrap();
 
         entity
-            .add_component(ComponentAlpha { alpha: 234, id: 2 })
+            .add_component(ComponentsEnum::Transform(TransformComponent::new()))
             .unwrap();
 
         entity

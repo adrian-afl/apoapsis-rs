@@ -2,11 +2,11 @@ use dashu_float::ops::SquareRoot;
 use dashu_float::DBig;
 use glam::DVec3;
 use serde::de::{MapAccess, Visitor};
-use serde::{de, Deserialize, Deserializer};
+use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::str::FromStr;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DecimalVector3d {
     pub x: DBig,
     pub y: DBig,
@@ -573,43 +573,5 @@ impl std::ops::DivAssign<DBig> for DecimalVector3d {
         self.x /= &rhs;
         self.y /= &rhs;
         self.z /= &rhs;
-    }
-}
-
-impl<'de> Deserialize<'de> for DecimalVector3d {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        struct DecimalVector3dVisitor;
-        impl<'de> Visitor<'de> for DecimalVector3dVisitor {
-            type Value = DecimalVector3d;
-
-            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-                formatter.write_str("struct DecimalVector3d")
-            }
-
-            fn visit_map<V>(self, mut map: V) -> Result<DecimalVector3d, V::Error>
-            where
-                V: MapAccess<'de>,
-            {
-                let mut x = None;
-                let mut y = None;
-                let mut z = None;
-                while let Some(key) = map.next_key()? {
-                    match key {
-                        "x" => x = Some(map.next_value()?),
-                        "y" => y = Some(map.next_value()?),
-                        "z" => z = Some(map.next_value()?),
-                        &_ => (),
-                    }
-                }
-                let x = x.ok_or_else(|| de::Error::missing_field("x"))?;
-                let y = y.ok_or_else(|| de::Error::missing_field("y"))?;
-                let z = z.ok_or_else(|| de::Error::missing_field("z"))?;
-                Ok(DecimalVector3d::from_str(x, y, z))
-            }
-        }
-        deserializer.deserialize_map(DecimalVector3dVisitor)
     }
 }

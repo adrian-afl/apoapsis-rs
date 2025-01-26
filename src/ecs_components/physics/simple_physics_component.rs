@@ -1,13 +1,11 @@
-use crate::ecs::component_trait::component_type;
 use crate::ecs::component_trait::{acquire_next_id, ComponentTrait};
-use crate::ecs_components::rendering::mesh_component::MaterialDescription;
 use crate::impl_component;
 use crate::math::decimal_vector_3d::DecimalVector3d;
 use dashu_float::DBig;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::any::{Any, TypeId};
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SimplePhysicsComponent {
     pub id: u64,
     pub mass: DBig,
@@ -17,7 +15,7 @@ pub struct SimplePhysicsComponent {
 
 impl_component!(SimplePhysicsComponent, false);
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SimplePhysicsDescription {
     pub mass: f64,

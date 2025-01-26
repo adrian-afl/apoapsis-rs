@@ -1,26 +1,24 @@
-use crate::ecs::component_trait::component_type;
 use crate::ecs::component_trait::{acquire_next_id, ComponentTrait};
 use crate::impl_component;
-use dashu_float::DBig;
 use rapier3d_f64::prelude::ColliderBuilder;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::any::{Any, TypeId};
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct RealPhysicsComponent {
     pub id: u64,
-    pub collider_builder: ColliderBuilder,
+    pub shape_description: ShapeDescription,
 }
 
 impl_component!(RealPhysicsComponent, false);
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct BallColliderDescription {
     pub radius: f64,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct BoxColliderDescription {
     pub size_x: f64,
@@ -28,21 +26,21 @@ pub struct BoxColliderDescription {
     pub size_z: f64,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CylinderColliderDescription {
     pub height: f64,
     pub radius: f64,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ConeColliderDescription {
     pub height: f64,
     pub radius: f64,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum ShapeDescription {
     Ball(BallColliderDescription),
@@ -51,7 +49,7 @@ pub enum ShapeDescription {
     Cone(ConeColliderDescription),
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RealPhysicsDescription {
     pub shape: ShapeDescription,
@@ -59,15 +57,15 @@ pub struct RealPhysicsDescription {
 }
 
 impl RealPhysicsComponent {
-    pub fn new(collider_builder: ColliderBuilder) -> Self {
+    pub fn new(shape_description: ShapeDescription) -> Self {
         Self {
             id: acquire_next_id(),
-            collider_builder,
+            shape_description,
         }
     }
 
-    pub fn from_description(shape_description: ShapeDescription) -> Self {
-        let collider_builder = match shape_description {
+    pub fn build_collider(&self) -> ColliderBuilder {
+        let collider_builder = match &self.shape_description {
             ShapeDescription::Ball(ball_description) => {
                 ColliderBuilder::ball(ball_description.radius)
             }
@@ -85,6 +83,6 @@ impl RealPhysicsComponent {
             }
         };
 
-        Self::new(collider_builder)
+        collider_builder
     }
 }

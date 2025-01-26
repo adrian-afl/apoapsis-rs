@@ -1,11 +1,11 @@
-use crate::ecs::component_trait::component_type;
 use crate::ecs::component_trait::{acquire_next_id, ComponentTrait};
 use crate::impl_component;
 use crate::math::decimal_vector_3d::DecimalVector3d;
 use glam::{DQuat, DVec3};
+use serde::{Deserialize, Serialize};
 use std::any::{Any, TypeId};
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct TransformComponent {
     pub id: u64,
     pub position: DecimalVector3d,
