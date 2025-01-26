@@ -1,4 +1,18 @@
-use crate::ecs::entity::ComponentTypes;
+use crate::ecs_components::camera::camera_focus_component::CameraFocusComponent;
+use crate::ecs_components::camera::first_person_camera_control_component::FirstPersonCameraControlComponent;
+use crate::ecs_components::camera::third_person_orbit_camera_control_component::ThirdPersonOrbitCameraControlComponent;
+use crate::ecs_components::camera::third_person_static_camera_control_component::ThirdPersonStaticCameraControlComponent;
+use crate::ecs_components::common::control_focus_component::ControlFocusComponent;
+use crate::ecs_components::common::transform_component::TransformComponent;
+use crate::ecs_components::physics::is_ground_collider_component::IsGroundColliderComponent;
+use crate::ecs_components::physics::real_physics_component::RealPhysicsComponent;
+use crate::ecs_components::physics::set_physics_kinematics_component::SetPhysicsKinematicsComponent;
+use crate::ecs_components::physics::simple_physics_component::SimplePhysicsComponent;
+use crate::ecs_components::player::is_player_component::IsPlayerComponent;
+use crate::ecs_components::rendering::mesh_component::MeshComponent;
+use crate::ecs_components::ship::ship_control_component::ShipControlComponent;
+use serde::{Deserialize, Serialize};
+
 use std::any::{Any, TypeId};
 use std::sync::atomic::{AtomicU64, Ordering};
 
@@ -12,6 +26,43 @@ pub trait ComponentTrait: Any {
     fn as_component_enum(&self) -> ComponentTypes;
     fn typ(&self) -> TypeId;
 }
+
+macro_rules! create_component_types_enum {
+    ($($component:ident),+) => {
+        #[derive(Debug, Clone, Serialize, Deserialize)]
+        pub enum ComponentTypes {
+            $(
+                $component($component),
+            )*
+        }
+
+        impl ComponentTypes {
+            pub fn to_boxed(self) -> Box<dyn ComponentTrait> {
+                match self {
+                    $(
+                        ComponentTypes::$component(x) => Box::new(x),
+                    )*
+                }
+            }
+        }
+    }
+}
+
+create_component_types_enum!(
+    CameraFocusComponent,
+    FirstPersonCameraControlComponent,
+    ThirdPersonOrbitCameraControlComponent,
+    ThirdPersonStaticCameraControlComponent,
+    TransformComponent,
+    IsGroundColliderComponent,
+    RealPhysicsComponent,
+    SimplePhysicsComponent,
+    SetPhysicsKinematicsComponent,
+    IsPlayerComponent,
+    MeshComponent,
+    ControlFocusComponent,
+    ShipControlComponent
+);
 
 pub fn acquire_next_id() -> u64 {
     COMPONENT_SEQ.fetch_add(1, Ordering::SeqCst)

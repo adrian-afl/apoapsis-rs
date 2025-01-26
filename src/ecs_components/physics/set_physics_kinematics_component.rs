@@ -1,6 +1,6 @@
 use crate::ecs::component_trait::component_type;
+use crate::ecs::component_trait::ComponentTypes;
 use crate::ecs::component_trait::{acquire_next_id, ComponentTrait};
-use crate::ecs::entity::ComponentTypes;
 use crate::impl_component;
 use dashu_float::DBig;
 use glam::{DQuat, DVec3};
