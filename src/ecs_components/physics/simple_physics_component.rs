@@ -4,6 +4,7 @@ use crate::ecs::component_trait::{acquire_next_id, ComponentTrait};
 use crate::impl_component;
 use crate::math::decimal_vector_3d::DecimalVector3d;
 use dashu_float::DBig;
+use glam::DVec3;
 use serde::{Deserialize, Serialize};
 use std::any::{Any, TypeId};
 
@@ -12,7 +13,7 @@ pub struct SimplePhysicsComponent {
     pub id: u64,
     pub mass: DBig,
     pub linear_velocity: DecimalVector3d,
-    pub angular_velocity: DecimalVector3d,
+    pub angular_velocity: DVec3,
 }
 
 impl_component!(SimplePhysicsComponent, false);
@@ -24,11 +25,7 @@ pub struct SimplePhysicsDescription {
 }
 
 impl SimplePhysicsComponent {
-    pub fn new(
-        mass: DBig,
-        linear_velocity: DecimalVector3d,
-        angular_velocity: DecimalVector3d,
-    ) -> Self {
+    pub fn new(mass: DBig, linear_velocity: DecimalVector3d, angular_velocity: DVec3) -> Self {
         Self {
             id: acquire_next_id(),
             mass,
@@ -42,7 +39,7 @@ impl SimplePhysicsComponent {
             id: acquire_next_id(),
             mass,
             linear_velocity: DecimalVector3d::zero(),
-            angular_velocity: DecimalVector3d::zero(),
+            angular_velocity: DVec3::new(0.0, 0.0, 0.0),
         }
     }
 }

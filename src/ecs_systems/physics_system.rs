@@ -1,10 +1,8 @@
 use crate::celestial_rendering::errors::ECSError;
-use crate::celestial_rendering::scene::mesh::Mesh;
 use crate::component_types;
 use crate::core::game_state::GameState;
 use crate::ecs::component_trait::component_type;
 use crate::ecs::ecs_world::ECSWorld;
-use crate::ecs::entity::Entity;
 use crate::ecs::system_trait::SystemTrait;
 use crate::ecs_components::common::transform_component::TransformComponent;
 use crate::ecs_components::physics::real_physics_component::RealPhysicsComponent;
@@ -12,16 +10,18 @@ use crate::ecs_components::physics::simple_physics_component::SimplePhysicsCompo
 use crate::ecs_components::player::is_player_component::IsPlayerComponent;
 use crate::math::decimal_vector_3d::DecimalVector3d;
 use crate::math::sin_cos::f64_to_dbig;
-use crate::simulation::real_physics_system::RealPhysicsSystem;
+use crate::simulation::real_physics_system::{RealPhysicsSystem, SetRealPhysicsBodyKinematics};
 use crate::simulation::simulation::Simulation;
 use dashu_float::DBig;
 use glam::{DQuat, DVec3};
-use rapier3d_f64::prelude::RigidBodyHandle;
+use rapier3d_f64::prelude::{RigidBodyBuilder, RigidBodyHandle};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
 struct SimulatedBody {
     rigid_body: RigidBodyHandle,
+    phase_1_relative_position: DVec3,
+    phase_1_relative_linear_velocity: DVec3,
 }
 
 struct PlayerTemporaryData {
@@ -100,7 +100,74 @@ impl PhysicsSystem {
                 let real_physics = entity.get_first_component::<RealPhysicsComponent>();
 
                 if real_physics.is_some() {
-                    let mut real_physics = real_physics.unwrap().clone();
+                    let real_physics = real_physics.unwrap().clone();
+
+                    let handle_or_none = self.handle_real_physics_simulation_start_stop(
+                        &transform,
+                        &simple_physics,
+                        &real_physics,
+                    );
+
+                    match handle_or_none {
+                        None => self.update_simple_physics(
+                            &mut simple_physics,
+                            &mut transform,
+                            delta_time,
+                            &decimal_delta_time,
+                            &decimal_half_delta_time,
+                        ),
+                        Some(id) => {
+                            let mut real_physics_system = self.real_physics_system.lock().unwrap();
+                            let mut map = self.currently_simulated_bodies.lock().unwrap();
+
+                            let simulated_object = map.get_mut(&id).unwrap();
+
+                            let mut relative_position = (&transform.position
+                                - &self.player_temporary_data.position)
+                                .to_dvec3();
+                            let relative_linear_velocity = (&simple_physics.linear_velocity
+                                - &self.player_temporary_data.linear_velocity)
+                                .to_dvec3();
+
+                            simulated_object.phase_1_relative_position = relative_position;
+                            simulated_object.phase_1_relative_linear_velocity =
+                                relative_linear_velocity;
+
+                            if simple_physics.mass > DBig::ZERO {
+                                let mut current_linear_velocity =
+                                    DecimalVector3d::from_dvec3(relative_position);
+
+                                let gravity_impulse = self
+                                    .universe_simulation
+                                    .lock()
+                                    .unwrap()
+                                    .calculate_gravity_flux(&transform.position)
+                                    * &decimal_delta_time;
+
+                                current_linear_velocity =
+                                    &current_linear_velocity + &gravity_impulse;
+
+                                relative_position = current_linear_velocity.to_dvec3()
+                            }
+
+                            real_physics_system
+                                .set_body_kinematics(
+                                    simulated_object.rigid_body,
+                                    SetRealPhysicsBodyKinematics {
+                                        linear_velocity: Some(relative_linear_velocity),
+                                        angular_velocity: None,
+                                        position: Some(relative_position),
+                                        orientation: None,
+                                        wake_up: true,
+                                    },
+                                )
+                                .unwrap();
+
+                            // this is suspicious
+                            transform.position = &transform.position
+                                + &simple_physics.linear_velocity * &decimal_delta_time;
+                        }
+                    }
 
                     *entity
                         .get_first_component_mut::<RealPhysicsComponent>()
@@ -122,6 +189,65 @@ impl PhysicsSystem {
                 *entity
                     .get_first_component_mut::<SimplePhysicsComponent>()
                     .unwrap() = simple_physics;
+            },
+        );
+
+        Ok(())
+    }
+
+    fn phase1(&mut self, ecs: Arc<Mutex<ECSWorld>>) -> Result<(), ECSError> {
+        let mut ecs = ecs.lock().unwrap();
+        ecs.process_all_by_components_mut(
+            component_types!(SimplePhysicsComponent, TransformComponent),
+            |entity| {
+                let real_physics = entity.get_first_component::<RealPhysicsComponent>();
+                if real_physics.is_some() {
+                    let real_physics_system = self.real_physics_system.lock().unwrap();
+                    let map = self.currently_simulated_bodies.lock().unwrap();
+
+                    let real_physics = real_physics.unwrap();
+
+                    let simulated = map.get(&real_physics.id);
+
+                    if simulated.is_some() {
+                        let simulated = simulated.unwrap();
+
+                        let kinematics = real_physics_system
+                            .get_body_kinematics(simulated.rigid_body)
+                            .unwrap();
+
+                        let mut transform = entity
+                            .get_first_component::<TransformComponent>()
+                            .unwrap()
+                            .clone();
+
+                        let mut simple_physics = entity
+                            .get_first_component::<SimplePhysicsComponent>()
+                            .unwrap()
+                            .clone();
+
+                        let diff_relative_position =
+                            kinematics.position - simulated.phase_1_relative_position;
+                        let diff_relative_linear_velocity =
+                            kinematics.linear_velocity - simulated.phase_1_relative_linear_velocity;
+
+                        transform.position = &transform.position
+                            + DecimalVector3d::from_dvec3(diff_relative_position);
+                        transform.orientation = kinematics.orientation;
+
+                        simple_physics.linear_velocity = &simple_physics.linear_velocity
+                            + DecimalVector3d::from_dvec3(diff_relative_linear_velocity);
+                        simple_physics.angular_velocity = kinematics.angular_velocity;
+
+                        *entity
+                            .get_first_component_mut::<TransformComponent>()
+                            .unwrap() = transform;
+
+                        *entity
+                            .get_first_component_mut::<SimplePhysicsComponent>()
+                            .unwrap() = simple_physics;
+                    }
+                }
             },
         );
 
@@ -153,36 +279,113 @@ impl PhysicsSystem {
         transform.position =
             &transform.position + &simple_physics.linear_velocity * decimal_half_delta_time;
 
-        let angular_velocity_dvec3 = simple_physics.angular_velocity.to_dvec3();
         let rotation_approximation = DQuat::from_axis_angle(
             DVec3::new(1.0, 0.0, 0.0),
-            angular_velocity_dvec3.x * delta_time,
+            simple_physics.angular_velocity.x * delta_time,
         ) * DQuat::from_axis_angle(
             DVec3::new(0.0, 1.0, 0.0),
-            angular_velocity_dvec3.y * delta_time,
+            simple_physics.angular_velocity.y * delta_time,
         ) * DQuat::from_axis_angle(
             DVec3::new(0.0, 0.0, 1.0),
-            angular_velocity_dvec3.z * delta_time,
+            simple_physics.angular_velocity.z * delta_time,
         );
 
         transform.orientation *= rotation_approximation;
     }
 
-    fn handle_start_stop(
-        &mut self,
+    fn handle_real_physics_simulation_start_stop(
+        &self,
         transform: &TransformComponent,
         simple_physics: &SimplePhysicsComponent,
         real_physics: &RealPhysicsComponent,
     ) -> Option<u64> {
+        let relative_position =
+            (&transform.position - &self.player_temporary_data.position).to_dvec3();
+
+        let should_simulate = relative_position.length() < self.real_simulation_cutoff;
+
+        let mut exists = self
+            .currently_simulated_bodies
+            .lock()
+            .unwrap()
+            .contains_key(&real_physics.id);
+
+        if !should_simulate && exists {
+            // unload
+            println!("PSY UNLOAD {}", real_physics.id);
+            self.stop_real_physics_sim(real_physics);
+            exists = false;
+        } else if should_simulate && !exists {
+            // load
+            println!("PSY LOAD {}", real_physics.id);
+            self.start_real_physics_sim(transform, simple_physics, real_physics);
+            exists = true;
+        }
+
+        if exists {
+            Some(real_physics.id)
+        } else {
+            None
+        }
+    }
+
+    fn start_real_physics_sim(
+        &self,
+        transform: &TransformComponent,
+        simple_physics: &SimplePhysicsComponent,
+        real_physics: &RealPhysicsComponent,
+    ) {
+        let rigid_body_builder =
+            RigidBodyBuilder::dynamic().additional_mass(simple_physics.mass.to_f64().unwrap());
+        let mut real_physics_system = self.real_physics_system.lock().unwrap();
+        let body_collider_tuple = real_physics_system.add_body_with_collider(
+            rigid_body_builder.build(),
+            real_physics.build_collider().build(),
+        );
+
+        let simulated = SimulatedBody {
+            rigid_body: body_collider_tuple.0,
+            phase_1_relative_position: DVec3::new(0.0, 0.0, 0.0),
+            phase_1_relative_linear_velocity: DVec3::new(0.0, 0.0, 0.0),
+        };
+
+        real_physics_system
+            .set_body_kinematics(
+                body_collider_tuple.0,
+                SetRealPhysicsBodyKinematics {
+                    position: None,
+                    orientation: Some(transform.orientation),
+                    angular_velocity: Some(simple_physics.angular_velocity),
+                    linear_velocity: None,
+                    wake_up: false,
+                },
+            )
+            .unwrap();
+
+        self.currently_simulated_bodies
+            .lock()
+            .unwrap()
+            .insert(real_physics.id, simulated);
+    }
+
+    fn stop_real_physics_sim(&self, real_physics: &RealPhysicsComponent) {
+        let mut real_physics_system = self.real_physics_system.lock().unwrap();
+        let mut map = self.currently_simulated_bodies.lock().unwrap();
+        let simulated_body = map.get(&real_physics.id).unwrap();
+
+        real_physics_system.remove_body(simulated_body.rigid_body);
+
+        map.remove(&real_physics.id);
     }
 }
 
 impl SystemTrait for PhysicsSystem {
     fn update(&mut self, game_state: Arc<Mutex<GameState>>, ecs: Arc<Mutex<ECSWorld>>) {
-        let ecs = ecs.lock().unwrap();
-        ecs.process_all_by_components(
-            component_types!(SimplePhysicsComponent, TransformComponent),
-            |entity| {},
-        );
+        let delta_time = game_state.lock().unwrap().delta_time;
+        self.phase0(ecs.clone(), delta_time).unwrap();
+
+        self.real_physics_system.lock().unwrap().step(delta_time);
+
+        self.phase1(ecs.clone()).unwrap();
     }
 }

@@ -19,28 +19,28 @@ pub struct RealPhysicsSystem {
 }
 
 pub struct RealPhysicsBodyKinematics {
-    position: DVec3,
-    orientation: DQuat,
-    linear_velocity: DVec3,
-    angular_velocity: DVec3,
+    pub position: DVec3,
+    pub orientation: DQuat,
+    pub linear_velocity: DVec3,
+    pub angular_velocity: DVec3,
 }
 
 pub struct SetRealPhysicsBodyKinematics {
-    position: Option<DVec3>,
-    orientation: Option<DQuat>,
-    linear_velocity: Option<DVec3>,
-    angular_velocity: Option<DVec3>,
-    wake_up: bool,
+    pub position: Option<DVec3>,
+    pub orientation: Option<DQuat>,
+    pub linear_velocity: Option<DVec3>,
+    pub angular_velocity: Option<DVec3>,
+    pub wake_up: bool,
 }
 
 pub struct RealPhysicsColliderKinematics {
-    position: DVec3,
-    orientation: DQuat,
+    pub position: DVec3,
+    pub orientation: DQuat,
 }
 
 pub struct SetRealPhysicsColliderKinematics {
-    position: Option<DVec3>,
-    orientation: Option<DQuat>,
+    pub position: Option<DVec3>,
+    pub orientation: Option<DQuat>,
 }
 
 impl RealPhysicsSystem {
@@ -263,6 +263,21 @@ impl RealPhysicsSystem {
                         orientation.z,
                     )));
                 };
+                Ok(())
+            }
+        }
+    }
+
+    pub fn apply_impulse(
+        &mut self,
+        body_handle: RigidBodyHandle,
+        impulse: DVec3,
+        wake_up: bool,
+    ) -> Result<(), PhysicsError> {
+        match self.rigid_body_set.get_mut(body_handle) {
+            None => Err(PhysicsError::RigidBodyNotFound),
+            Some(body) => {
+                body.apply_impulse(vector![impulse.x, impulse.y, impulse.z], wake_up);
                 Ok(())
             }
         }

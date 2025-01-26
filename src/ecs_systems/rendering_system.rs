@@ -154,9 +154,7 @@ impl SystemTrait for RenderingSystem {
                         .unwrap()
                         .remove(&mesh_component.id);
                     exists = false;
-                }
-
-                if should_render && !exists {
+                } else if should_render && !exists {
                     match self.create_mesh_from_description(&mesh_component.description) {
                         Err(err) => println!("Failed to create a mesh! Reason: {}", err),
                         Ok(mesh) => {
