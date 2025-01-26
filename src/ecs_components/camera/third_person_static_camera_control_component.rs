@@ -1,5 +1,5 @@
 use crate::ecs::component_trait::component_type;
-use crate::ecs::component_trait::ComponentsTypes;
+use crate::ecs::component_trait::ComponentTypes;
 use crate::ecs::component_trait::{acquire_next_id, ComponentTrait};
 use crate::impl_component;
 use glam::{DQuat, DVec3};

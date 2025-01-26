@@ -1,15 +1,25 @@
 use crate::celestial_rendering::errors::ECSError;
-use crate::ecs::component_trait::{component_type, ComponentTrait};
-use std::any::TypeId;
+use crate::component_trait_from_enum;
+use crate::ecs::component_trait::{component_type, ComponentTrait, ComponentTypes};
+use serde::{Deserialize, Serialize};
+use std::any::{Any, TypeId};
 use std::collections::HashMap;
+use std::ops::Deref;
 use std::sync::atomic::{AtomicU64, Ordering};
 
-static ENTITY_SEQ: AtomicU64 = AtomicU64::new(1);
+pub static ENTITY_SEQ: AtomicU64 = AtomicU64::new(1);
 
 pub struct Entity {
     pub id: u64,
     pub name: Option<String>,
     components: HashMap<TypeId, Vec<Box<dyn ComponentTrait>>>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EntitySerializedRepresentation {
+    pub id: u64,
+    pub name: Option<String>,
+    pub components: Vec<ComponentTypes>,
 }
 
 impl Entity {
@@ -21,12 +31,45 @@ impl Entity {
         }
     }
 
-    pub fn add_component<T: ComponentTrait>(&mut self, component: T) -> Result<(), ECSError> {
-        let typ = component_type::<T>();
+    pub fn serialize(&self) -> EntitySerializedRepresentation {
+        let mut components = vec![];
+        for vector in self.components.values() {
+            for component in vector {
+                components.push(component.as_component_enum());
+            }
+        }
+
+        EntitySerializedRepresentation {
+            id: self.id,
+            name: self.name.clone(),
+            components,
+        }
+    }
+
+    pub fn deserialize(repr: EntitySerializedRepresentation) -> Entity {
+        ENTITY_SEQ.fetch_max(repr.id, Ordering::SeqCst); // restore seq, this will bite my ass im 100% sure
+
+        let mut entity = Entity {
+            id: repr.id,
+            name: repr.name,
+            components: HashMap::new(),
+        };
+
+        for component_enum in repr.components {
+            let component_trait: Box<dyn ComponentTrait> =
+                component_trait_from_enum!(component_enum);
+            entity.add_component_boxed(component_trait).unwrap();
+        }
+
+        entity
+    }
+
+    fn add_component_boxed(&mut self, component: Box<dyn ComponentTrait>) -> Result<(), ECSError> {
+        let typ = component.typ();
         let existing_vector = self.components.get_mut(&typ);
         match existing_vector {
             None => {
-                self.components.insert(typ, vec![Box::from(component)]);
+                self.components.insert(typ, vec![component]);
             }
             Some(vector) => {
                 if vector.iter().any(|e| e.id() == component.id()) {
@@ -35,10 +78,14 @@ impl Entity {
                 if !vector.is_empty() && !component.allow_multiple() {
                     return Err(ECSError::FailedToAddDuplicateComponent);
                 }
-                vector.push(Box::from(component));
+                vector.push(component);
             }
         }
         Ok(())
+    }
+
+    pub fn add_component<T: ComponentTrait>(&mut self, component: T) -> Result<(), ECSError> {
+        self.add_component_boxed(Box::new(component))
     }
 
     pub fn remove_component_by_id<T: ComponentTrait>(&mut self, id: u64) -> Result<(), ECSError> {
@@ -178,56 +225,29 @@ impl Entity {
 mod tests {
     use super::*;
     use crate::ecs::component_trait::acquire_next_id;
-    use crate::impl_component;
+    use crate::ecs::component_trait::ComponentTypes;
+    use crate::ecs_components::common::transform_component::TransformComponent;
+    use crate::ecs_components::physics::is_ground_collider_component::IsGroundColliderComponent;
+    use crate::ecs_components::player::is_player_component::IsPlayerComponent;
+    use crate::{component_from_enum, impl_component};
     use std::any::Any;
-
-    struct ComponentAlpha {
-        id: u64,
-        alpha: u32,
-    }
-    impl_component!(ComponentAlpha, true);
-
-    struct ComponentBeta {
-        id: u64,
-        beta: u32,
-    }
-    impl_component!(ComponentBeta, false);
 
     #[test]
     fn it_works() {
         let mut entity = Entity::new(None);
 
         entity
-            .add_component(ComponentAlpha { alpha: 123, id: 1 })
+            .add_component(IsGroundColliderComponent::new())
             .unwrap();
 
-        entity
-            .add_component(ComponentAlpha { alpha: 234, id: 2 })
-            .unwrap();
+        entity.add_component(IsPlayerComponent::new()).unwrap();
 
-        entity
-            .add_component(ComponentBeta { beta: 111, id: 3 })
-            .unwrap();
-        let mut alphas = entity.get_components_mut::<ComponentAlpha>().unwrap();
+        entity.add_component(TransformComponent::new()).unwrap();
 
-        assert!(alphas.len() == 2);
+        let mut transform = entity.get_first_component::<TransformComponent>().unwrap();
 
-        assert!(alphas[0].alpha == 123);
-        assert!(alphas[1].alpha == 234);
+        let enu = transform.as_component_enum();
 
-        alphas[0].alpha = 444;
-
-        let mut alphas = entity.get_components::<ComponentAlpha>().unwrap();
-
-        assert!(alphas.len() == 2);
-
-        assert!(alphas[0].alpha == 444);
-        assert!(alphas[1].alpha == 234);
-
-        let betas = entity.get_components::<ComponentBeta>().unwrap();
-
-        assert!(betas.len() == 1);
-
-        assert!(betas[0].beta == 111);
+        let revert = component_from_enum!(enu, TransformComponent);
     }
 }

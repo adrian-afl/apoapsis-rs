@@ -1,9 +1,11 @@
 use crate::celestial_rendering::scene::camera::Camera;
 use crate::math::sin_cos::f64_to_dbig;
 use dashu_float::DBig;
+use serde::{Deserialize, Serialize};
 use std::ops::Add;
 use std::time::SystemTime;
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GameState {
     pub current_game_time: DBig,
 

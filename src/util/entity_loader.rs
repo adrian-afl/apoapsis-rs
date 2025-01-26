@@ -50,7 +50,7 @@ pub fn load_entity(path: &str) -> Entity {
             match physics_description.shape {
                 None => (),
                 Some(shape_description) => entity
-                    .add_component(RealPhysicsComponent::from_description(shape_description))
+                    .add_component(RealPhysicsComponent::new(shape_description))
                     .unwrap(),
             }
         }

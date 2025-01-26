@@ -4,8 +4,10 @@ use crate::component_types;
 use crate::config::Config;
 use crate::core::game_event_system::{GameEvent, GameEventSystem};
 use crate::core::game_state::GameState;
-use crate::ecs::ecs_world::ECSWorld;
-use crate::ecs::entity::Entity;
+use crate::ecs::component_trait::component_type;
+use crate::ecs::component_trait::ComponentTrait;
+use crate::ecs::ecs_world::{ECSWorld, ECSWorldSerializedRepresentation};
+use crate::ecs::entity::{Entity, EntitySerializedRepresentation, ENTITY_SEQ};
 use crate::ecs::system_trait::SystemTrait;
 use crate::ecs_components::camera::camera_focus_component::CameraFocusComponent;
 use crate::ecs_components::camera::first_person_camera_control_component::FirstPersonCameraControlComponent;
@@ -19,6 +21,8 @@ use crate::input::mouse_input::MouseInput;
 use crate::math::decimal_vector_3d::DecimalVector3d;
 use crate::simulation::simulation::Simulation;
 use glam::DQuat;
+use serde::{Deserialize, Serialize};
+use std::sync::atomic::Ordering;
 use std::sync::{Arc, LockResult, Mutex};
 use vengine_rs::core::toolkit::VEToolkit;
 use winit::window::Window;
@@ -40,6 +44,12 @@ pub struct Game {
     pub keyboard_input: KeyboardInput,
     controls: Arc<Controls>,
     game_event_system: Arc<GameEventSystem>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GameSerializedRepresentation {
+    pub ecs: ECSWorldSerializedRepresentation,
+    pub state: GameState,
 }
 
 impl Game {
@@ -166,5 +176,22 @@ impl Game {
         }
 
         self.game_event_system.cleanup();
+
+        let res = self.serialize();
+        self.deserialize_in_place(&res);
+    }
+
+    pub fn serialize(&self) -> String {
+        let repr = GameSerializedRepresentation {
+            ecs: self.ecs.lock().unwrap().serialize(),
+            state: self.state.lock().unwrap().clone(),
+        };
+        serde_json::to_string(&repr).unwrap()
+    }
+
+    pub fn deserialize_in_place(&mut self, str: &str) {
+        let repr: GameSerializedRepresentation = serde_json::from_str(str).unwrap();
+        self.state = Arc::new(Mutex::from(repr.state));
+        self.ecs = Arc::new(Mutex::from(ECSWorld::deserialize(repr.ecs)));
     }
 }

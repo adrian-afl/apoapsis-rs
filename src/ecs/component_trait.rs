@@ -17,7 +17,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 static COMPONENT_SEQ: AtomicU64 = AtomicU64::new(1);
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum ComponentsTypes {
+pub enum ComponentTypes {
     CameraFocusComponent(CameraFocusComponent),
     FirstPersonCameraControlComponent(FirstPersonCameraControlComponent),
     ThirdPersonOrbitCameraControlComponent(ThirdPersonOrbitCameraControlComponent),
@@ -42,7 +42,8 @@ pub trait ComponentTrait: Any {
     fn allow_multiple(&self) -> bool;
     fn as_any_mut(&mut self) -> &mut dyn Any;
     fn as_any(&self) -> &dyn Any;
-    fn as_component_enum(&self) -> ComponentsTypes;
+    fn as_component_enum(&self) -> ComponentTypes;
+    fn typ(&self) -> TypeId;
 }
 
 pub fn acquire_next_id() -> u64 {
@@ -54,17 +55,45 @@ pub fn component_type<T: ComponentTrait>() -> TypeId {
 }
 
 #[macro_export]
+macro_rules! component_from_enum {
+    ($enum:ident, $type:ident) => {
+        match $enum {
+            ComponentTypes::$type(x) => x,
+            _ => panic!("Failed to convert component from enum"),
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! component_trait_from_enum {
+    ($enum:ident) => {
+        match $enum {
+            ComponentTypes::CameraFocusComponent(x) => Box::new(x),
+            ComponentTypes::FirstPersonCameraControlComponent(x) => Box::new(x),
+            ComponentTypes::ThirdPersonOrbitCameraControlComponent(x) => Box::new(x),
+            ComponentTypes::ThirdPersonStaticCameraControlComponent(x) => Box::new(x),
+            ComponentTypes::ControlFocusComponent(x) => Box::new(x),
+            ComponentTypes::TransformComponent(x) => Box::new(x),
+            ComponentTypes::IsGroundColliderComponent(x) => Box::new(x),
+            ComponentTypes::RealPhysicsComponent(x) => Box::new(x),
+            ComponentTypes::SimplePhysicsComponent(x) => Box::new(x),
+            ComponentTypes::IsPlayerComponent(x) => Box::new(x),
+            ComponentTypes::MeshComponent(x) => Box::new(x),
+            ComponentTypes::ShipControlComponent(x) => Box::new(x),
+        }
+    };
+}
+
+#[macro_export]
 macro_rules! impl_component {
     ($type:ident, $allow_multiple:expr) => {
-        impl $type {
-            pub fn typ() -> TypeId {
-                component_type::<$type>()
-            }
-        }
-
         impl ComponentTrait for $type {
             fn id(&self) -> u64 {
                 self.id
+            }
+
+            fn typ(&self) -> TypeId {
+                component_type::<$type>()
             }
 
             fn allow_multiple(&self) -> bool {
@@ -79,8 +108,8 @@ macro_rules! impl_component {
                 self
             }
 
-            fn as_component_enum(&self) -> ComponentsTypes {
-                ComponentsTypes::$type(self.clone())
+            fn as_component_enum(&self) -> ComponentTypes {
+                ComponentTypes::$type(self.clone())
             }
         }
     };
@@ -100,15 +129,15 @@ macro_rules! impl_marker_component {
                     id: acquire_next_id(),
                 }
             }
-
-            pub fn typ() -> TypeId {
-                component_type::<$type>()
-            }
         }
 
         impl ComponentTrait for $type {
             fn id(&self) -> u64 {
                 self.id
+            }
+
+            fn typ(&self) -> TypeId {
+                component_type::<$type>()
             }
 
             fn allow_multiple(&self) -> bool {
@@ -123,8 +152,8 @@ macro_rules! impl_marker_component {
                 self
             }
 
-            fn as_component_enum(&self) -> ComponentsTypes {
-                ComponentsTypes::$type(self.clone())
+            fn as_component_enum(&self) -> ComponentTypes {
+                ComponentTypes::$type(self.clone())
             }
         }
     };
@@ -134,7 +163,7 @@ macro_rules! impl_marker_component {
 macro_rules! component_types {
     ($($component:ty),+) => {
         &[$(
-            & < $component > ::typ(),
+            &component_type::<$component>(),
         )*]
     };
 }

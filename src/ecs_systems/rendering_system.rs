@@ -7,6 +7,7 @@ use crate::celestial_rendering::scene::material::{
 use crate::celestial_rendering::scene::mesh::Mesh;
 use crate::component_types;
 use crate::core::game_state::GameState;
+use crate::ecs::component_trait::component_type;
 use crate::ecs::ecs_world::ECSWorld;
 use crate::ecs::system_trait::SystemTrait;
 use crate::ecs_components::common::transform_component::TransformComponent;

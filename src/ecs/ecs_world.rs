@@ -1,10 +1,18 @@
 use crate::celestial_rendering::errors::ECSError;
-use crate::ecs::entity::Entity;
+use crate::ecs::component_trait::ComponentTrait;
+use crate::ecs::entity::{Entity, EntitySerializedRepresentation, ENTITY_SEQ};
+use serde::{Deserialize, Serialize};
 use std::any::TypeId;
 use std::collections::HashMap;
+use std::sync::atomic::Ordering;
 
 pub struct ECSWorld {
     entities: HashMap<u64, Entity>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ECSWorldSerializedRepresentation {
+    pub entities: Vec<EntitySerializedRepresentation>,
 }
 
 impl ECSWorld {
@@ -12,6 +20,26 @@ impl ECSWorld {
         ECSWorld {
             entities: HashMap::new(),
         }
+    }
+
+    pub fn serialize(&self) -> ECSWorldSerializedRepresentation {
+        let mut entities = vec![];
+        ENTITY_SEQ.store(1, Ordering::SeqCst);
+        for entity in self.entities.values() {
+            entities.push(entity.serialize());
+        }
+
+        ECSWorldSerializedRepresentation { entities }
+    }
+
+    pub fn deserialize(repr: ECSWorldSerializedRepresentation) -> ECSWorld {
+        let mut world = ECSWorld::new();
+
+        for entity in repr.entities {
+            world.add(Entity::deserialize(entity)).unwrap();
+        }
+
+        world
     }
 
     pub fn add(&mut self, entity: Entity) -> Result<(), ECSError> {
@@ -120,6 +148,7 @@ impl ECSWorld {
 mod tests {
     use super::*;
     use crate::component_types;
+    use crate::ecs::component_trait::component_type;
     use crate::ecs_components::camera::camera_focus_component::CameraFocusComponent;
     use crate::ecs_components::common::transform_component::TransformComponent;
 

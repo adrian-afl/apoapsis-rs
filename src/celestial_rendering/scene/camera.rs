@@ -1,6 +1,8 @@
 use crate::math::decimal_vector_3d::DecimalVector3d;
 use glam::{DMat4, DQuat, DVec2, DVec3, DVec4};
+use serde::{Deserialize, Serialize};
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FrustumCone {
     pub top_left: DVec3,
     pub bottom_left: DVec3,
@@ -8,6 +10,7 @@ pub struct FrustumCone {
     pub bottom_right: DVec3,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CameraDirections {
     pub up: DVec3,
     pub down: DVec3,
@@ -17,6 +20,7 @@ pub struct CameraDirections {
     pub backwards: DVec3,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Camera {
     pub projection_matrix: DMat4,
     pub view_matrix: DMat4,
