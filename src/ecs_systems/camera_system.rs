@@ -33,6 +33,8 @@ impl SystemTrait for CameraSystem {
                     locked_state.current_camera.orientation = transform.orientation.clone();
 
                     locked_state.current_camera.update();
+
+                    println!("Cam pos is now {}", locked_state.current_camera.position);
                 }
             }
             Err(_) => {

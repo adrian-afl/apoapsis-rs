@@ -4,6 +4,7 @@ use crate::ecs::ecs_world::ECSWorld;
 use crate::ecs::system_trait::SystemTrait;
 use crate::ecs_components::camera::camera_focus_component::CameraFocusComponent;
 use crate::ecs_components::common::transform_component::TransformComponent;
+use crate::math::sin_cos::f64_to_dbig;
 use crate::simulation::simulation::Simulation;
 use std::sync::{Arc, Mutex};
 
@@ -19,26 +20,16 @@ impl UniverseSimulationUpdaterSystem {
 
 impl SystemTrait for UniverseSimulationUpdaterSystem {
     fn update(&mut self, game_state: Arc<Mutex<GameState>>, ecs: Arc<Mutex<ECSWorld>>) {
-        let position = {
-            let ecs = ecs.lock().unwrap();
-            let camera_focus = ecs.find_first_by_components(component_types!(
-                CameraFocusComponent,
-                TransformComponent
-            ));
-            match camera_focus {
-                Ok(camera_focus) => {
-                    let transform = camera_focus
-                        .get_first_component::<TransformComponent>()
-                        .unwrap();
-                    transform.position.clone()
-                }
-                Err(_) => {
-                    println!("Cannot update universe simulation as there is no entity with CameraFocus and Transform");
-                    return;
-                }
-            }
-        };
-        let game_time = &game_state.lock().unwrap().current_game_time;
-        self.universe.lock().unwrap().update(&position, game_time);
+        let game_state = game_state.lock().unwrap();
+        let game_time = &f64_to_dbig(1230.0); //&game_state.lock().unwrap().current_game_time;
+
+        println!(
+            "game_time camera position {}",
+            &game_state.current_camera.position
+        );
+        self.universe
+            .lock()
+            .unwrap()
+            .update(&game_state.current_camera.position, game_time);
     }
 }

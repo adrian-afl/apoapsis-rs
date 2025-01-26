@@ -8,7 +8,9 @@ use crate::ecs::ecs_world::ECSWorld;
 use crate::ecs::entity::Entity;
 use crate::ecs::system_trait::SystemTrait;
 use crate::ecs_components::camera::camera_focus_component::CameraFocusComponent;
+use crate::ecs_components::camera::first_person_camera_control_component::FirstPersonCameraControlComponent;
 use crate::ecs_components::common::transform_component::TransformComponent;
+use crate::ecs_systems::camera_system::CameraSystem;
 use crate::ecs_systems::rendering_system::RenderingSystem;
 use crate::ecs_systems::universe_simulation_updater_system::UniverseSimulationUpdaterSystem;
 use crate::input::controls::{ControlEvent, ControlMapItem, Controls};
@@ -55,6 +57,7 @@ impl Game {
             Box::new(UniverseSimulationUpdaterSystem::new(
                 universe_simulation.clone(),
             )),
+            Box::new(CameraSystem::new()),
             Box::new(RenderingSystem::new(
                 toolkit.clone(),
                 renderer.clone(),
@@ -94,6 +97,9 @@ impl Game {
                 .unwrap();
             player_entity
                 .add_component(CameraFocusComponent::new())
+                .unwrap();
+            player_entity
+                .add_component(FirstPersonCameraControlComponent::new())
                 .unwrap();
             ecs.lock().unwrap().add(player_entity).unwrap();
         }
@@ -156,6 +162,7 @@ impl Game {
             println!("earth_position {earth_position}");
             let player_position = earth_position + DecimalVector3d::from_f64(0.0, 0.0, 9398000.0);
             transform.position.assign(&player_position);
+            println!("transform.position {}", transform.position);
         }
 
         self.game_event_system.cleanup();

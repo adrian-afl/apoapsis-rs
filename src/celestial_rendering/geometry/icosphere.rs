@@ -104,7 +104,7 @@ impl Icosphere {
             self.part_matrices[i] = pre_final_matrix * model_offset_matrix;
         }
 
-        println!("camera_position {camera_position} | sphere_position {sphere_position}");
+        println!("FD {}", relative_camera_position);
         self.part_matrices.as_slice()
     }
 
