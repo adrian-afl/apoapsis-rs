@@ -1,6 +1,6 @@
 use crate::ecs::component_trait::component_type;
-use crate::ecs::component_trait::ComponentTypes;
 use crate::ecs::component_trait::{acquire_next_id, ComponentTrait};
+use crate::ecs::entity::ComponentTypes;
 use crate::impl_component;
 use crate::math::decimal_vector_3d::DecimalVector3d;
 use dashu_float::DBig;

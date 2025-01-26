@@ -1,13 +1,64 @@
 use crate::celestial_rendering::errors::ECSError;
-use crate::component_trait_from_enum;
-use crate::ecs::component_trait::{component_type, ComponentTrait, ComponentTypes};
+use crate::ecs::component_trait::{component_type, ComponentTrait};
 use serde::{Deserialize, Serialize};
 use std::any::{Any, TypeId};
 use std::collections::HashMap;
 use std::ops::Deref;
 use std::sync::atomic::{AtomicU64, Ordering};
 
+use crate::ecs_components::camera::camera_focus_component::CameraFocusComponent;
+use crate::ecs_components::camera::first_person_camera_control_component::FirstPersonCameraControlComponent;
+use crate::ecs_components::camera::third_person_orbit_camera_control_component::ThirdPersonOrbitCameraControlComponent;
+use crate::ecs_components::camera::third_person_static_camera_control_component::ThirdPersonStaticCameraControlComponent;
+use crate::ecs_components::common::control_focus_component::ControlFocusComponent;
+use crate::ecs_components::common::transform_component::TransformComponent;
+use crate::ecs_components::physics::is_ground_collider_component::IsGroundColliderComponent;
+use crate::ecs_components::physics::real_physics_component::RealPhysicsComponent;
+use crate::ecs_components::physics::set_physics_kinematics_component::SetPhysicsKinematicsComponent;
+use crate::ecs_components::physics::simple_physics_component::SimplePhysicsComponent;
+use crate::ecs_components::player::is_player_component::IsPlayerComponent;
+use crate::ecs_components::rendering::mesh_component::MeshComponent;
+use crate::ecs_components::ship::ship_control_component::ShipControlComponent;
+
 pub static ENTITY_SEQ: AtomicU64 = AtomicU64::new(1);
+
+macro_rules! create_component_types_enum {
+    ($($component:ident),+) => {
+        #[derive(Debug, Clone, Serialize, Deserialize)]
+        pub enum ComponentTypes {
+            $(
+                $component($component),
+            )*
+        }
+
+
+        macro_rules! component_trait_from_enum {
+            ($enum:ident) => {
+                match $enum {
+                    $(
+                        ComponentTypes::$component(x) => Box::new(x),
+                    )*
+                }
+            };
+        }
+    }
+}
+
+create_component_types_enum!(
+    CameraFocusComponent,
+    FirstPersonCameraControlComponent,
+    ThirdPersonOrbitCameraControlComponent,
+    ThirdPersonStaticCameraControlComponent,
+    TransformComponent,
+    IsGroundColliderComponent,
+    RealPhysicsComponent,
+    SimplePhysicsComponent,
+    SetPhysicsKinematicsComponent,
+    IsPlayerComponent,
+    MeshComponent,
+    ControlFocusComponent,
+    ShipControlComponent
+);
 
 pub struct Entity {
     pub id: u64,
@@ -225,7 +276,7 @@ impl Entity {
 mod tests {
     use super::*;
     use crate::ecs::component_trait::acquire_next_id;
-    use crate::ecs::component_trait::ComponentTypes;
+    use crate::ecs::entity::ComponentTypes;
     use crate::ecs_components::common::transform_component::TransformComponent;
     use crate::ecs_components::physics::is_ground_collider_component::IsGroundColliderComponent;
     use crate::ecs_components::player::is_player_component::IsPlayerComponent;

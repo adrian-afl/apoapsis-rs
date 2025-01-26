@@ -1,41 +1,8 @@
-use crate::ecs_components::camera::camera_focus_component::CameraFocusComponent;
-use crate::ecs_components::camera::first_person_camera_control_component::FirstPersonCameraControlComponent;
-use crate::ecs_components::camera::third_person_orbit_camera_control_component::ThirdPersonOrbitCameraControlComponent;
-use crate::ecs_components::camera::third_person_static_camera_control_component::ThirdPersonStaticCameraControlComponent;
-use crate::ecs_components::common::control_focus_component::ControlFocusComponent;
-use crate::ecs_components::common::transform_component::TransformComponent;
-use crate::ecs_components::physics::is_ground_collider_component::IsGroundColliderComponent;
-use crate::ecs_components::physics::real_physics_component::RealPhysicsComponent;
-use crate::ecs_components::physics::simple_physics_component::SimplePhysicsComponent;
-use crate::ecs_components::player::is_player_component::IsPlayerComponent;
-use crate::ecs_components::rendering::mesh_component::MeshComponent;
-use crate::ecs_components::ship::ship_control_component::ShipControlComponent;
-use serde::{Deserialize, Serialize};
+use crate::ecs::entity::ComponentTypes;
 use std::any::{Any, TypeId};
 use std::sync::atomic::{AtomicU64, Ordering};
 
 static COMPONENT_SEQ: AtomicU64 = AtomicU64::new(1);
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum ComponentTypes {
-    CameraFocusComponent(CameraFocusComponent),
-    FirstPersonCameraControlComponent(FirstPersonCameraControlComponent),
-    ThirdPersonOrbitCameraControlComponent(ThirdPersonOrbitCameraControlComponent),
-    ThirdPersonStaticCameraControlComponent(ThirdPersonStaticCameraControlComponent),
-
-    ControlFocusComponent(ControlFocusComponent),
-    TransformComponent(TransformComponent),
-
-    IsGroundColliderComponent(IsGroundColliderComponent),
-    RealPhysicsComponent(RealPhysicsComponent),
-    SimplePhysicsComponent(SimplePhysicsComponent),
-
-    IsPlayerComponent(IsPlayerComponent),
-
-    MeshComponent(MeshComponent),
-
-    ShipControlComponent(ShipControlComponent),
-}
 
 pub trait ComponentTrait: Any {
     fn id(&self) -> u64;
@@ -60,26 +27,6 @@ macro_rules! component_from_enum {
         match $enum {
             ComponentTypes::$type(x) => x,
             _ => panic!("Failed to convert component from enum"),
-        }
-    };
-}
-
-#[macro_export]
-macro_rules! component_trait_from_enum {
-    ($enum:ident) => {
-        match $enum {
-            ComponentTypes::CameraFocusComponent(x) => Box::new(x),
-            ComponentTypes::FirstPersonCameraControlComponent(x) => Box::new(x),
-            ComponentTypes::ThirdPersonOrbitCameraControlComponent(x) => Box::new(x),
-            ComponentTypes::ThirdPersonStaticCameraControlComponent(x) => Box::new(x),
-            ComponentTypes::ControlFocusComponent(x) => Box::new(x),
-            ComponentTypes::TransformComponent(x) => Box::new(x),
-            ComponentTypes::IsGroundColliderComponent(x) => Box::new(x),
-            ComponentTypes::RealPhysicsComponent(x) => Box::new(x),
-            ComponentTypes::SimplePhysicsComponent(x) => Box::new(x),
-            ComponentTypes::IsPlayerComponent(x) => Box::new(x),
-            ComponentTypes::MeshComponent(x) => Box::new(x),
-            ComponentTypes::ShipControlComponent(x) => Box::new(x),
         }
     };
 }
