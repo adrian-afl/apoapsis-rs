@@ -1,34 +1,33 @@
 use crate::ecs::component_trait::component_type;
+use crate::ecs::component_trait::ComponentsTypes;
 use crate::ecs::component_trait::{acquire_next_id, ComponentTrait};
 use crate::impl_component;
-use crate::util::strip_json_line_comments::strip_json_line_comments;
 use glam::DVec3;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::any::{Any, TypeId};
-use std::fs;
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ScaledTextureDescription {
     pub texture_path: String,
     pub scale: f64,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub enum ColorOrTextureDescription {
     Color(DVec3),
     Texture(ScaledTextureDescription),
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub enum ValueOrTextureDescription {
     Value(f64),
     Texture(ScaledTextureDescription),
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MaterialDescription {
     pub color: ColorOrTextureDescription,
@@ -39,14 +38,14 @@ pub struct MaterialDescription {
     pub bump: Option<ScaledTextureDescription>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MeshDescription {
     pub geometry_path: String,
     pub material: MaterialDescription,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct MeshComponent {
     pub id: u64,
     pub description: MeshDescription,

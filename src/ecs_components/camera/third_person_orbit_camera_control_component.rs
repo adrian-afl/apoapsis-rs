@@ -1,17 +1,19 @@
 use crate::ecs::component_trait::component_type;
+use crate::ecs::component_trait::ComponentsTypes;
 use crate::ecs::component_trait::{acquire_next_id, ComponentTrait};
 use crate::impl_component;
 use glam::{DQuat, DVec3};
+use serde::{Deserialize, Serialize};
 use std::any::{Any, TypeId};
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub enum OrbitCameraStyle {
     Absolute,
     RelativeToEntity,
     RelativeToSurface,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct ThirdPersonOrbitCameraControlComponent {
     pub id: u64,
     pub initial_offset: DVec3,
