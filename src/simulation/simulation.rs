@@ -201,12 +201,12 @@ impl Simulation {
             BodyMotion::Static(dynamics) => dynamics.position,
             BodyMotion::Orbiting(dynamics) => {
                 let parent = self.get_body_by_id(body.parent.unwrap()).unwrap(); // panic if not fulfilled
-                let orbit_progression = (time / dynamics.orbit_period.0).fract();
+                let orbit_progression = (time / dynamics.orbit_period).fract();
                 let angle = &*PIMUL2 * orbit_progression;
                 let rotation_matrix =
                     DecimalMatrix3d::axis_angle(&dynamics.orbit_plane_normal, angle);
                 rotation_matrix.apply(&DecimalVector3d::new(
-                    dynamics.orbit_radius.0,
+                    dynamics.orbit_radius,
                     DBig::ZERO,
                     DBig::ZERO,
                 )) + &parent.position
@@ -372,7 +372,7 @@ impl Simulation {
             let relative = &body.position - point;
             let length_squared = relative.length_squared();
             let length = length_squared.sqrt();
-            let strength = &*G_CONSTANT * &body.body.dynamics.mass.0 / length_squared;
+            let strength = &*G_CONSTANT * &body.body.dynamics.mass / length_squared;
             flux = flux + (relative * (&DBig::ONE / length * strength));
         }
         flux

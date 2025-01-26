@@ -1,6 +1,6 @@
 use crate::math::decimal_vector_3d::DecimalVector3d;
-use crate::math::deserializable_dbig::DeserializableDBig;
 use crate::util::strip_json_line_comments::strip_json_line_comments;
+use dashu_float::DBig;
 use glam::DVec3;
 use serde::Deserialize;
 use std::fs;
@@ -118,9 +118,9 @@ pub struct StaticBodyMotion {
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct OrbitingBodyMotion {
-    pub orbit_radius: DeserializableDBig,
+    pub orbit_radius: DBig,
     pub orbit_plane_normal: DecimalVector3d,
-    pub orbit_period: DeserializableDBig,
+    pub orbit_period: DBig,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -137,8 +137,8 @@ fn empty_sat_vec() -> Vec<BodyCelestialBodyDefinition> {
 #[serde(rename_all = "camelCase")]
 pub struct BodyDynamics {
     pub rotation_axis: DecimalVector3d,
-    pub rotation_period: u64,     // in seconds
-    pub mass: DeserializableDBig, // in kg
+    pub rotation_period: u64, // in seconds
+    pub mass: DBig,           // in kg
     pub motion: BodyMotion,
     pub satellite_paths: Vec<String>,
 

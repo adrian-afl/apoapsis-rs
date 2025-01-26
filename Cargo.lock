@@ -574,6 +574,7 @@ dependencies = [
  "num-modular",
  "num-order",
  "rustversion",
+ "serde",
  "static_assertions",
 ]
 
@@ -587,6 +588,7 @@ dependencies = [
  "dashu-base",
  "num-modular",
  "rustversion",
+ "serde",
  "static_assertions",
 ]
 
