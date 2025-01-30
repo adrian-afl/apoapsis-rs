@@ -19,6 +19,7 @@ mod ecs_systems;
 mod input;
 mod math;
 mod simulation;
+mod ui_rendering;
 mod util;
 
 fn main() {

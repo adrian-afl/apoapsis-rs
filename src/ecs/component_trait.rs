@@ -11,6 +11,7 @@ use crate::ecs_components::physics::simple_physics_component::SimplePhysicsCompo
 use crate::ecs_components::player::is_player_component::IsPlayerComponent;
 use crate::ecs_components::rendering::mesh_component::MeshComponent;
 use crate::ecs_components::ship::ship_control_component::ShipControlComponent;
+use crate::ecs_components::ui::ui_element_component::UIElementComponent;
 use serde::{Deserialize, Serialize};
 
 use std::any::{Any, TypeId};
@@ -61,7 +62,8 @@ create_component_types_enum!(
     IsPlayerComponent,
     MeshComponent,
     ControlFocusComponent,
-    ShipControlComponent
+    ShipControlComponent,
+    UIElementComponent
 );
 
 pub fn acquire_next_id() -> u64 {
