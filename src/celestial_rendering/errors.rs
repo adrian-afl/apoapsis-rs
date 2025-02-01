@@ -12,7 +12,7 @@ use vengine_rs::image::image::VEImageError;
 use vengine_rs::image::sampler::VESamplerError;
 
 #[derive(Error, Debug)]
-pub enum CelestialRendererError {
+pub enum RenderingError {
     #[error("image error")]
     ImageError(#[from] VEImageError),
 

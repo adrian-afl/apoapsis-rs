@@ -14,6 +14,14 @@ use crate::ecs_components::ship::ship_control_component::ShipControlComponent;
 use crate::ecs_components::ui::ui_element_component::UIElementComponent;
 use serde::{Deserialize, Serialize};
 
+use crate::ecs_components::ui::ui_color_component::UIColorComponent;
+use crate::ecs_components::ui::ui_cursor_component::UICursorComponent;
+use crate::ecs_components::ui::ui_hover_color_component::UIHoverColorComponent;
+use crate::ecs_components::ui::ui_hover_cursor_component::UIHoverCursorComponent;
+use crate::ecs_components::ui::ui_rectangle_component::UIRectangleComponent;
+use crate::ecs_components::ui::ui_text_component::UITextComponent;
+use crate::ecs_components::ui::ui_texture_component::UITextureComponent;
+use crate::ecs_components::ui::ui_transform_component::UITransformComponent;
 use std::any::{Any, TypeId};
 use std::sync::atomic::{AtomicU64, Ordering};
 
@@ -63,7 +71,16 @@ create_component_types_enum!(
     MeshComponent,
     ControlFocusComponent,
     ShipControlComponent,
-    UIElementComponent
+    //
+    UIElementComponent,
+    UITransformComponent,
+    UIColorComponent,
+    UIHoverColorComponent,
+    UIRectangleComponent,
+    UICursorComponent,
+    UIHoverCursorComponent,
+    UITextureComponent,
+    UITextComponent
 );
 
 pub fn acquire_next_id() -> u64 {

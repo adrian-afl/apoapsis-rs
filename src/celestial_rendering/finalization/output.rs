@@ -1,6 +1,6 @@
 use crate::celestial_rendering::buffers::cloud_generator_high_freq_buffer::CloudGeneratorHighFreqBuffer;
 use crate::celestial_rendering::buffers::output_buffer::OutputBuffer;
-use crate::celestial_rendering::errors::CelestialRendererError;
+use crate::celestial_rendering::errors::RenderingError;
 use crate::celestial_rendering::finalization::multi_merger::MultiMerger;
 use crate::config::Config;
 use ash::vk;
@@ -38,7 +38,7 @@ impl Output {
         config: &Config,
         multi_merger: &mut MultiMerger,
         toolkit: &VEToolkit,
-    ) -> Result<Output, CelestialRendererError> {
+    ) -> Result<Output, RenderingError> {
         event!(Level::WARN, "Creating Output");
         let mut output = toolkit.create_image_full(
             config.width,
@@ -132,7 +132,7 @@ impl Output {
         })
     }
 
-    pub fn update_buffer(&mut self, exposure: f64) -> Result<(), CelestialRendererError> {
+    pub fn update_buffer(&mut self, exposure: f64) -> Result<(), RenderingError> {
         self.buffer.update(exposure)?;
         Ok(())
     }

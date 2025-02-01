@@ -1,7 +1,7 @@
 use crate::celestial_rendering::buffers::celestial_body_buffer::CelestialBodyBuffer;
 use crate::celestial_rendering::buffers::cloud_generator_low_freq_buffer::CloudGeneratorLowFreqBuffer;
 use crate::celestial_rendering::buffers::common_buffer::CommonBuffer;
-use crate::celestial_rendering::errors::CelestialRendererError;
+use crate::celestial_rendering::errors::RenderingError;
 use crate::celestial_rendering::geometry::g_buffer::GBuffer;
 use crate::config::Config;
 use tracing::{event, Level};
@@ -40,7 +40,7 @@ impl AtmosphereDrawer {
         clouds_data_low_freq: &mut VEImage,
         clouds_data_high_freq: &mut VEImage,
         g_buffer: &mut GBuffer,
-    ) -> Result<AtmosphereDrawer, CelestialRendererError> {
+    ) -> Result<AtmosphereDrawer, RenderingError> {
         event!(Level::WARN, "Creating AtmosphereDrawer");
         let mut out_additive_rgb = toolkit.create_image_full(
             config.width,
@@ -175,7 +175,7 @@ impl AtmosphereDrawer {
         &self,
         celestial_buffer: &CelestialBodyBuffer,
         config: &Config,
-    ) -> Result<(), CelestialRendererError> {
+    ) -> Result<(), RenderingError> {
         self.data_set.bind_buffer(1, &celestial_buffer.buffer)?;
 
         self.compute_stage.begin_recording()?;

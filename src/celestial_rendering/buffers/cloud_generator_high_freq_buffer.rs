@@ -1,5 +1,5 @@
 use crate::celestial_rendering::buffers::buffer_writers::{write_float, write_vec4};
-use crate::celestial_rendering::errors::CelestialRendererError;
+use crate::celestial_rendering::errors::RenderingError;
 use glam::DVec4;
 use vengine_rs::buffer::buffer::{VEBuffer, VEBufferUsage};
 use vengine_rs::core::memory_properties::VEMemoryProperties;
@@ -10,9 +10,7 @@ pub struct CloudGeneratorHighFreqBuffer {
 }
 
 impl CloudGeneratorHighFreqBuffer {
-    pub fn new(
-        toolkit: &VEToolkit,
-    ) -> Result<CloudGeneratorHighFreqBuffer, CelestialRendererError> {
+    pub fn new(toolkit: &VEToolkit) -> Result<CloudGeneratorHighFreqBuffer, RenderingError> {
         Ok(CloudGeneratorHighFreqBuffer {
             buffer: toolkit.create_buffer(
                 &[VEBufferUsage::Uniform],
@@ -32,7 +30,7 @@ impl CloudGeneratorHighFreqBuffer {
         seed: DVec4,
         elapsed: f64,
         frequency: f64,
-    ) -> Result<(), CelestialRendererError> {
+    ) -> Result<(), RenderingError> {
         let ptr = self.buffer.map()? as *mut f32;
 
         let mut offset = 0;

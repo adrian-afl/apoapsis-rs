@@ -4,7 +4,7 @@ use crate::body::body_definitions::{
 };
 use crate::celestial_rendering::buffers::celestial_body_buffer::CelestialBodyBuffer;
 use crate::celestial_rendering::buffers::common_buffer::CommonBuffer;
-use crate::celestial_rendering::errors::CelestialRendererError;
+use crate::celestial_rendering::errors::RenderingError;
 use crate::celestial_rendering::geometry::g_buffer::GBuffer;
 use crate::celestial_rendering::geometry::icosphere::Icosphere;
 use crate::celestial_rendering::geometry::terrain_icosphere_drawer::TerrainIcosphereDrawer;
@@ -59,7 +59,7 @@ impl Simulation {
         common_buffer: &CommonBuffer,
         body: &BodyCelestialBodyDefinition,
         parent: Option<i32>,
-    ) -> Result<i32, CelestialRendererError> {
+    ) -> Result<i32, RenderingError> {
         let new_id = self.id_counter;
         self.id_counter += 1;
 

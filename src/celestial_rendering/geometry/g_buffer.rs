@@ -1,4 +1,4 @@
-use crate::celestial_rendering::errors::CelestialRendererError;
+use crate::celestial_rendering::errors::RenderingError;
 use crate::config::Config;
 use vengine_rs::core::memory_properties::VEMemoryProperties;
 use vengine_rs::core::toolkit::VEToolkit;
@@ -13,7 +13,7 @@ pub struct GBuffer {
 }
 
 impl GBuffer {
-    pub fn new(config: &Config, toolkit: &VEToolkit) -> Result<GBuffer, CelestialRendererError> {
+    pub fn new(config: &Config, toolkit: &VEToolkit) -> Result<GBuffer, RenderingError> {
         let color_rgb_roughness_a = toolkit.create_image_full(
             config.width,
             config.height,

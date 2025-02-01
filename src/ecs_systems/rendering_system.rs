@@ -1,4 +1,4 @@
-use crate::celestial_rendering::errors::CelestialRendererError;
+use crate::celestial_rendering::errors::RenderingError;
 use crate::celestial_rendering::geometry::mesh_drawer::MESH_DRAWER_VERTEX_ATTRIBUTES;
 use crate::celestial_rendering::renderer::Renderer;
 use crate::celestial_rendering::scene::material::{
@@ -46,7 +46,7 @@ impl RenderingSystem {
     fn create_mesh_from_description(
         &self,
         description: &MeshDescription,
-    ) -> Result<Mesh, CelestialRendererError> {
+    ) -> Result<Mesh, RenderingError> {
         let geometry = self.toolkit.create_vertex_buffer_from_file(
             &description.geometry_path,
             &MESH_DRAWER_VERTEX_ATTRIBUTES,

@@ -1,7 +1,7 @@
 use crate::celestial_rendering::buffers::buffer_writers::{
     write_float, write_mat4, write_vec3_zero,
 };
-use crate::celestial_rendering::errors::CelestialRendererError;
+use crate::celestial_rendering::errors::RenderingError;
 use glam::DMat4;
 use vengine_rs::buffer::buffer::{VEBuffer, VEBufferUsage};
 use vengine_rs::core::memory_properties::VEMemoryProperties;
@@ -12,7 +12,7 @@ pub struct TerrainIcosphereDataBuffer {
 }
 
 impl TerrainIcosphereDataBuffer {
-    pub fn new(toolkit: &VEToolkit) -> Result<TerrainIcosphereDataBuffer, CelestialRendererError> {
+    pub fn new(toolkit: &VEToolkit) -> Result<TerrainIcosphereDataBuffer, RenderingError> {
         Ok(TerrainIcosphereDataBuffer {
             buffer: toolkit.create_buffer(
                 &[VEBufferUsage::Storage],
@@ -26,7 +26,7 @@ impl TerrainIcosphereDataBuffer {
     current schema:
     mat4 partMatrix[320];
     */
-    pub fn update(&mut self, part_matrices: &[DMat4]) -> Result<(), CelestialRendererError> {
+    pub fn update(&mut self, part_matrices: &[DMat4]) -> Result<(), RenderingError> {
         let ptr = self.buffer.map()? as *mut f32;
 
         let mut offset = 0;

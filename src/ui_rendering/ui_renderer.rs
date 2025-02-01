@@ -4,6 +4,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use thiserror::Error;
 use vengine_rs::core::toolkit::VEToolkit;
+use vengine_rs::graphics::attachment::VEAttachmentError;
 use vengine_rs::image::image::VEImage;
 
 pub struct UIRenderer {
@@ -15,7 +16,10 @@ pub struct UIRenderer {
 }
 
 #[derive(Error, Debug)]
-pub enum UIRendererError {}
+pub enum UIRendererError {
+    #[error("rendering error")]
+    RenderingError(#[from] RenderingError),
+}
 
 impl UIRenderer {
     pub fn new(toolkit: Arc<VEToolkit>, config: &Config) -> Self {

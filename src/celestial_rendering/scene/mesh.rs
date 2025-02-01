@@ -1,5 +1,5 @@
 use crate::celestial_rendering::buffers::mesh_buffer::MeshBuffer;
-use crate::celestial_rendering::errors::CelestialRendererError;
+use crate::celestial_rendering::errors::RenderingError;
 use crate::celestial_rendering::scene::material::{ColorOrTexture, Material, ValueOrTexture};
 use crate::math::decimal_vector_3d::DecimalVector3d;
 use crate::util::empty_textures::EMPTY_TEXTURES;
@@ -34,7 +34,7 @@ impl Mesh {
         layout: &mut VEDescriptorSetLayout,
         geometry: VEVertexBuffer,
         material: Material,
-    ) -> Result<Mesh, CelestialRendererError> {
+    ) -> Result<Mesh, RenderingError> {
         Ok(Mesh {
             position: DecimalVector3d::zero(),
             orientation: DQuat::IDENTITY.clone(),
@@ -53,10 +53,7 @@ impl Mesh {
         })
     }
 
-    pub fn update(
-        &mut self,
-        camera_position: &DecimalVector3d,
-    ) -> Result<(), CelestialRendererError> {
+    pub fn update(&mut self, camera_position: &DecimalVector3d) -> Result<(), RenderingError> {
         let translation_camera_space = &self.position - camera_position;
         let dvec_translation_camera_space = translation_camera_space.to_dvec3();
         self.model_matrix = DMat4::from_scale_rotation_translation(

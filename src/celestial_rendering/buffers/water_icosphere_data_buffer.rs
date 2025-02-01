@@ -1,7 +1,7 @@
 use crate::celestial_rendering::buffers::buffer_writers::{
     write_float, write_mat4, write_vec3_zero,
 };
-use crate::celestial_rendering::errors::CelestialRendererError;
+use crate::celestial_rendering::errors::RenderingError;
 use glam::{DMat4, DVec3};
 use vengine_rs::buffer::buffer::{VEBuffer, VEBufferUsage};
 use vengine_rs::core::memory_properties::VEMemoryProperties;
@@ -12,7 +12,7 @@ pub struct WaterIcosphereDataBuffer {
 }
 
 impl WaterIcosphereDataBuffer {
-    pub fn new(toolkit: &VEToolkit) -> Result<WaterIcosphereDataBuffer, CelestialRendererError> {
+    pub fn new(toolkit: &VEToolkit) -> Result<WaterIcosphereDataBuffer, RenderingError> {
         Ok(WaterIcosphereDataBuffer {
             buffer: toolkit.create_buffer(
                 &[VEBufferUsage::Storage],
@@ -33,7 +33,7 @@ impl WaterIcosphereDataBuffer {
         water_color: DVec3,
         body_center_camera_space: DVec3,
         part_matrices: &[DMat4],
-    ) -> Result<(), CelestialRendererError> {
+    ) -> Result<(), RenderingError> {
         let ptr = self.buffer.map()? as *mut f32;
 
         let mut offset = 0;

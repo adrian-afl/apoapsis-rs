@@ -1,4 +1,4 @@
-use crate::celestial_rendering::errors::CelestialRendererError;
+use crate::celestial_rendering::errors::RenderingError;
 use crate::math::decimal_vector_3d::DecimalVector3d;
 use glam::{DMat4, DQuat, DVec3};
 use std::collections::HashMap;
@@ -37,7 +37,7 @@ impl Icosphere {
         dir_path: String,
         thresholds: Vec<f64>,
         vertex_attributes: Vec<VertexAttribFormat>,
-    ) -> Result<Icosphere, CelestialRendererError> {
+    ) -> Result<Icosphere, RenderingError> {
         let path = format!("{}/metadata.ini", dir_path);
 
         let mut ico = Icosphere {
@@ -112,7 +112,7 @@ impl Icosphere {
         &mut self,
         toolkit: &VEToolkit,
         stage: &VERenderStage,
-    ) -> Result<(), CelestialRendererError> {
+    ) -> Result<(), RenderingError> {
         for i in 0..self.metadata.len() {
             let m = &self.metadata[i];
 
@@ -162,7 +162,7 @@ impl Icosphere {
         toolkit: &VEToolkit,
         name: &str,
         level: u8,
-    ) -> Result<VEVertexBuffer, CelestialRendererError> {
+    ) -> Result<VEVertexBuffer, RenderingError> {
         let path = format!("{}/{name}.l{level}.raw", self.dir_path);
         //println!("LOADING {}", path);
         let file = File::open(path)?;

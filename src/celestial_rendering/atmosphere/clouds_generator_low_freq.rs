@@ -1,5 +1,5 @@
 use crate::celestial_rendering::buffers::cloud_generator_low_freq_buffer::CloudGeneratorLowFreqBuffer;
-use crate::celestial_rendering::errors::CelestialRendererError;
+use crate::celestial_rendering::errors::RenderingError;
 use glam::DVec4;
 use tracing::{event, Level};
 use vengine_rs::compute::compute_stage::VEComputeStage;
@@ -29,7 +29,7 @@ static LOW_FREQ_RES_HEIGHT: u32 = 1024;
 static WORKGROUP_SIZE: u32 = 8; // from the shader!!! its 8x8x1
 
 impl CloudGeneratorLowFreq {
-    pub fn new(toolkit: &VEToolkit) -> Result<CloudGeneratorLowFreq, CelestialRendererError> {
+    pub fn new(toolkit: &VEToolkit) -> Result<CloudGeneratorLowFreq, RenderingError> {
         event!(Level::WARN, "Creating CloudGeneratorLowFreq");
         let mut low_freq_data_r = toolkit.create_image_full(
             LOW_FREQ_RES_WIDTH,
@@ -93,7 +93,7 @@ impl CloudGeneratorLowFreq {
         seed: DVec4,
         elapsed: f64,
         frequency: f64,
-    ) -> Result<(), CelestialRendererError> {
+    ) -> Result<(), RenderingError> {
         self.buffer.update(seed, elapsed, frequency)?;
         Ok(())
     }

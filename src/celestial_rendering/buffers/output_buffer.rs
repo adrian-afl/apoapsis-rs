@@ -1,5 +1,5 @@
 use crate::celestial_rendering::buffers::buffer_writers::{write_float, write_int, write_vec4};
-use crate::celestial_rendering::errors::CelestialRendererError;
+use crate::celestial_rendering::errors::RenderingError;
 use glam::DVec4;
 use vengine_rs::buffer::buffer::{VEBuffer, VEBufferUsage};
 use vengine_rs::core::memory_properties::VEMemoryProperties;
@@ -10,7 +10,7 @@ pub struct OutputBuffer {
 }
 
 impl OutputBuffer {
-    pub fn new(toolkit: &VEToolkit) -> Result<OutputBuffer, CelestialRendererError> {
+    pub fn new(toolkit: &VEToolkit) -> Result<OutputBuffer, RenderingError> {
         Ok(OutputBuffer {
             buffer: toolkit.create_buffer(
                 &[VEBufferUsage::Uniform],
@@ -24,7 +24,7 @@ impl OutputBuffer {
     current schema:
     float exposure;
     */
-    pub fn update(&mut self, exposure: f64) -> Result<(), CelestialRendererError> {
+    pub fn update(&mut self, exposure: f64) -> Result<(), RenderingError> {
         let ptr = self.buffer.map()? as *mut f32;
 
         let mut offset = 0;

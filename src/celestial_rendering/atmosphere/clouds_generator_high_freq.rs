@@ -1,5 +1,5 @@
 use crate::celestial_rendering::buffers::cloud_generator_high_freq_buffer::CloudGeneratorHighFreqBuffer;
-use crate::celestial_rendering::errors::CelestialRendererError;
+use crate::celestial_rendering::errors::RenderingError;
 use glam::DVec4;
 use tracing::{event, Level};
 use vengine_rs::compute::compute_stage::VEComputeStage;
@@ -28,7 +28,7 @@ static HI_FREQ_RES: u32 = 64;
 static WORKGROUP_SIZE: u32 = 4; // from the shader!!! its 4x4x4
 
 impl CloudGeneratorHighFreq {
-    pub fn new(toolkit: &VEToolkit) -> Result<CloudGeneratorHighFreq, CelestialRendererError> {
+    pub fn new(toolkit: &VEToolkit) -> Result<CloudGeneratorHighFreq, RenderingError> {
         event!(Level::WARN, "Creating CloudGeneratorHighFreq");
         let mut high_freq_data_r = toolkit.create_image_full(
             HI_FREQ_RES,
@@ -92,7 +92,7 @@ impl CloudGeneratorHighFreq {
         seed: DVec4,
         elapsed: f64,
         frequency: f64,
-    ) -> Result<(), CelestialRendererError> {
+    ) -> Result<(), RenderingError> {
         self.buffer.update(seed, elapsed, frequency)?;
         Ok(())
     }

@@ -2,7 +2,7 @@ use crate::body::body_definitions::{BodyAtmosphere, BodyClouds, BodyTerrain};
 use crate::celestial_rendering::buffers::buffer_writers::{
     write_float, write_mat4, write_vec3_with_float, write_vec3_zero,
 };
-use crate::celestial_rendering::errors::CelestialRendererError;
+use crate::celestial_rendering::errors::RenderingError;
 use crate::math::decimal_vector_3d::DecimalVector3d;
 use crate::simulation::simulation::{SimulatedBody, Simulation};
 use dashu_float::DBig;
@@ -23,7 +23,7 @@ impl Debug for CelestialBodyBuffer {
 }
 
 impl CelestialBodyBuffer {
-    pub fn new(toolkit: &VEToolkit) -> Result<CelestialBodyBuffer, CelestialRendererError> {
+    pub fn new(toolkit: &VEToolkit) -> Result<CelestialBodyBuffer, RenderingError> {
         Ok(CelestialBodyBuffer {
             buffer: toolkit.create_buffer(
                 &[VEBufferUsage::Uniform],
@@ -60,7 +60,7 @@ impl CelestialBodyBuffer {
         star_position: &DecimalVector3d,
         star_radiance: DVec3,
         body: &SimulatedBody,
-    ) -> Result<(), CelestialRendererError> {
+    ) -> Result<(), RenderingError> {
         let ptr = self.buffer.map()? as *mut f32;
 
         let mut offset = 0;

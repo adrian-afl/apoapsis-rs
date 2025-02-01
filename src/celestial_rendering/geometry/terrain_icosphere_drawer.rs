@@ -1,6 +1,6 @@
 use crate::celestial_rendering::buffers::common_buffer::CommonBuffer;
 use crate::celestial_rendering::buffers::terrain_icosphere_data_buffer::TerrainIcosphereDataBuffer;
-use crate::celestial_rendering::errors::CelestialRendererError;
+use crate::celestial_rendering::errors::RenderingError;
 use crate::celestial_rendering::geometry::g_buffer::GBuffer;
 use crate::celestial_rendering::geometry::icosphere::Icosphere;
 use crate::celestial_rendering::geometry::water_icosphere_drawer::WaterIcosphereDrawer;
@@ -50,7 +50,7 @@ impl TerrainIcosphereDrawer {
         common_buffer: &CommonBuffer,
         dir_path: String,
         thresholds: Vec<f64>,
-    ) -> Result<TerrainIcosphereDrawer, CelestialRendererError> {
+    ) -> Result<TerrainIcosphereDrawer, RenderingError> {
         let vertex_attributes = vec![
             VertexAttribFormat::RGB32f,    // pos
             VertexAttribFormat::RGB8inorm, // normal
@@ -174,7 +174,7 @@ impl TerrainIcosphereDrawer {
         &mut self,
         camera_position: &DecimalVector3d,
         simulated_body: &SimulatedBody,
-    ) -> Result<(), CelestialRendererError> {
+    ) -> Result<(), RenderingError> {
         let matrices = self.icosphere.update_and_get_part_matrices(
             &camera_position,
             &simulated_body.position,
@@ -186,7 +186,7 @@ impl TerrainIcosphereDrawer {
         Ok(())
     }
 
-    pub fn record(&mut self, toolkit: &VEToolkit) -> Result<(), CelestialRendererError> {
+    pub fn record(&mut self, toolkit: &VEToolkit) -> Result<(), RenderingError> {
         self.render_stage.begin_recording()?;
 
         self.render_stage.set_descriptor_set(0, &self.data_set);

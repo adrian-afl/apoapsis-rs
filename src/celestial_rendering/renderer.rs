@@ -4,7 +4,7 @@ use crate::celestial_rendering::atmosphere::clouds_generator_high_freq::CloudGen
 use crate::celestial_rendering::atmosphere::clouds_generator_low_freq::CloudGeneratorLowFreq;
 use crate::celestial_rendering::buffers::celestial_body_buffer::CelestialBodyBuffer;
 use crate::celestial_rendering::buffers::common_buffer::CommonBuffer;
-use crate::celestial_rendering::errors::CelestialRendererError;
+use crate::celestial_rendering::errors::RenderingError;
 use crate::celestial_rendering::finalization::multi_merger::MultiMerger;
 use crate::celestial_rendering::finalization::output::Output;
 use crate::celestial_rendering::geometry::g_buffer::GBuffer;
@@ -121,7 +121,7 @@ impl Renderer {
         camera: &Camera,
         elapsed: f64,
         delta_time: f64,
-    ) -> Result<(), CelestialRendererError> {
+    ) -> Result<(), RenderingError> {
         let now = SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)
             .unwrap()
@@ -144,7 +144,7 @@ impl Renderer {
                 .toolkit
                 .queue
                 .lock()
-                .map_err(|_| CelestialRendererError::QueueLockingFailed)?;
+                .map_err(|_| RenderingError::QueueLockingFailed)?;
             self.mesh_drawer
                 .render_stage
                 .command_buffer
@@ -196,7 +196,7 @@ impl Renderer {
                                 .toolkit
                                 .queue
                                 .lock()
-                                .map_err(|_| CelestialRendererError::QueueLockingFailed)?;
+                                .map_err(|_| RenderingError::QueueLockingFailed)?;
                             self.cloud_generator_high_freq
                                 .compute_stage
                                 .command_buffer
@@ -235,7 +235,7 @@ impl Renderer {
                         .toolkit
                         .queue
                         .lock()
-                        .map_err(|_| CelestialRendererError::QueueLockingFailed)?;
+                        .map_err(|_| RenderingError::QueueLockingFailed)?;
                     drawer
                         .lock()
                         .unwrap()
@@ -259,7 +259,7 @@ impl Renderer {
                         .toolkit
                         .queue
                         .lock()
-                        .map_err(|_| CelestialRendererError::QueueLockingFailed)?;
+                        .map_err(|_| RenderingError::QueueLockingFailed)?;
                     drawer
                         .lock()
                         .unwrap()
@@ -287,7 +287,7 @@ impl Renderer {
                         .toolkit
                         .queue
                         .lock()
-                        .map_err(|_| CelestialRendererError::QueueLockingFailed)?;
+                        .map_err(|_| RenderingError::QueueLockingFailed)?;
                     self.atmosphere_drawer
                         .compute_stage
                         .command_buffer
@@ -314,7 +314,7 @@ impl Renderer {
                 .toolkit
                 .queue
                 .lock()
-                .map_err(|_| CelestialRendererError::QueueLockingFailed)?;
+                .map_err(|_| RenderingError::QueueLockingFailed)?;
             self.multi_merger
                 .compute_stage
                 .command_buffer
@@ -336,7 +336,7 @@ impl Renderer {
                 .toolkit
                 .queue
                 .lock()
-                .map_err(|_| CelestialRendererError::QueueLockingFailed)?;
+                .map_err(|_| RenderingError::QueueLockingFailed)?;
             self.output
                 .compute_stage
                 .command_buffer
@@ -360,7 +360,7 @@ impl Renderer {
         &mut self,
         geometry: VEVertexBuffer,
         material: Material,
-    ) -> Result<Mesh, CelestialRendererError> {
+    ) -> Result<Mesh, RenderingError> {
         Ok(Mesh::new(
             &self.toolkit,
             &mut self.mesh_drawer.mesh_set_layout,
@@ -373,7 +373,7 @@ impl Renderer {
         &mut self,
         simulation: &mut Simulation,
         body: &BodyCelestialBodyDefinition,
-    ) -> Result<i32, CelestialRendererError> {
+    ) -> Result<i32, RenderingError> {
         Ok(simulation.add_hierarchy(
             &self.config,
             &mut self.g_buffer,

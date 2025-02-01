@@ -1,5 +1,5 @@
 use crate::celestial_rendering::buffers::cloud_generator_high_freq_buffer::CloudGeneratorHighFreqBuffer;
-use crate::celestial_rendering::errors::CelestialRendererError;
+use crate::celestial_rendering::errors::RenderingError;
 use crate::config::Config;
 use glam::DVec4;
 use tracing::{event, Level};
@@ -28,10 +28,7 @@ pub struct MultiMerger {
 static WORKGROUP_SIZE: u32 = 8; // from the shader!!! its 8x8x1
 
 impl MultiMerger {
-    pub fn new(
-        config: &Config,
-        toolkit: &VEToolkit,
-    ) -> Result<MultiMerger, CelestialRendererError> {
+    pub fn new(config: &Config, toolkit: &VEToolkit) -> Result<MultiMerger, RenderingError> {
         event!(Level::WARN, "Creating MultiMerger");
         let mut output = toolkit.create_image_full(
             config.width,
@@ -92,7 +89,7 @@ impl MultiMerger {
         additive: &mut VEImage,
         alpha: &mut VEImage,
         config: &Config,
-    ) -> Result<(), CelestialRendererError> {
+    ) -> Result<(), RenderingError> {
         let view = additive.get_view(VEImageViewCreateInfo::simple_2d())?;
         self.data_set.bind_image_storage(0, additive, view)?;
 
