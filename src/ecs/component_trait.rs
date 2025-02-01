@@ -11,14 +11,13 @@ use crate::ecs_components::physics::simple_physics_component::SimplePhysicsCompo
 use crate::ecs_components::player::is_player_component::IsPlayerComponent;
 use crate::ecs_components::rendering::mesh_component::MeshComponent;
 use crate::ecs_components::ship::ship_control_component::ShipControlComponent;
-use crate::ecs_components::ui::ui_box_component::UIRectangleComponent;
+use crate::ecs_components::ui::ui_box_component::UIBoxComponent;
 use crate::ecs_components::ui::ui_color_component::UIColorComponent;
 use crate::ecs_components::ui::ui_cursor_component::UICursorComponent;
 use crate::ecs_components::ui::ui_hover_color_component::UIHoverColorComponent;
 use crate::ecs_components::ui::ui_hover_cursor_component::UIHoverCursorComponent;
 use crate::ecs_components::ui::ui_text_component::UITextComponent;
 use crate::ecs_components::ui::ui_texture_component::UITextureComponent;
-use crate::ecs_components::ui::ui_transform_component::UITransformComponent;
 use serde::{Deserialize, Serialize};
 use std::sync::atomic::{AtomicU64, Ordering};
 
@@ -181,10 +180,9 @@ create_component_types_enum!(
     (mesh, Mesh, MeshComponent, true),
     (control_focus, ControlFocus, ControlFocusComponent, false),
     (ship_control, ShipControl, ShipControlComponent, false),
-    (ui_transform, UITransform, UITransformComponent, false),
     (ui_color, UIColor, UIColorComponent, false),
     (ui_hover_color, UIHoverColor, UIHoverColorComponent, false),
-    (ui_rectangle, UIRectangle, UIRectangleComponent, false),
+    (ui_box, UIBox, UIBoxComponent, false),
     (ui_cursor, UICursor, UICursorComponent, false),
     (
         ui_hover_cursor,

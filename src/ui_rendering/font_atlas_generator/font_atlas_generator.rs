@@ -27,6 +27,13 @@ impl GeneratedChar {
     }
 }
 
+struct Size {
+    width: u16,
+    height: u16,
+}
+
+fn blit_box(src_size: Size, dst_size: Size, 
+
 impl FontAtlas {
     pub fn new(font_path: &str, font_size: u8, supported_chars: &str) -> Self {
         let font = Font::from_bytes(

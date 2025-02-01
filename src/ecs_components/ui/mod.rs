@@ -5,4 +5,3 @@ pub mod ui_hover_color_component;
 pub mod ui_hover_cursor_component;
 pub mod ui_text_component;
 pub mod ui_texture_component;
-pub mod ui_transform_component;
