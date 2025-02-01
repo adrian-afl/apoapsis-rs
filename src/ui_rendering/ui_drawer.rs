@@ -25,7 +25,10 @@ pub struct UIDrawer {
     pub common_set: VEDescriptorSet,
     pub quad_geometry: VEVertexBuffer,
     pub common_buffer: UICommonBuffer,
+
+    pub font_atlas_small: FontAtlas,
     pub font_atlas_medium: FontAtlas,
+    pub font_atlas_large: FontAtlas,
 }
 
 pub const MESH_DRAWER_VERTEX_ATTRIBUTES: [VertexAttribFormat; 2] = [
@@ -112,9 +115,21 @@ impl UIDrawer {
             VECullMode::None,
         )?;
 
+        let font_atlas_small = FontAtlas::new(
+            "media/inter_font.ttf",
+            8,
+            " !\\\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~",
+        );
+
         let font_atlas_medium = FontAtlas::new(
             "media/inter_font.ttf",
-            10,
+            12,
+            " !\\\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~",
+        );
+
+        let font_atlas_large = FontAtlas::new(
+            "media/inter_font.ttf",
+            18,
             " !\\\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~",
         );
 
@@ -125,7 +140,9 @@ impl UIDrawer {
             common_set,
             common_buffer,
             quad_geometry,
+            font_atlas_small,
             font_atlas_medium,
+            font_atlas_large,
         })
     }
 

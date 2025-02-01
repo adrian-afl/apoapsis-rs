@@ -47,8 +47,8 @@ fn blit_box(
     dst_offset: Offset,
     region_size: Size,
 ) {
-    for region_y in 0..region_size.width {
-        for region_x in 0..region_size.height {
+    for region_y in 0..region_size.height {
+        for region_x in 0..region_size.width {
             let src_x = region_x + src_offset.x;
             let src_y = region_y + src_offset.y;
 
