@@ -13,6 +13,8 @@ use crate::ecs_components::rendering::mesh_component::{
     ColorOrTextureDescription, MeshDescription, ValueOrTextureDescription,
 };
 use crate::simulation::simulation::Simulation;
+use rayon::iter::IntoParallelRefIterator;
+use rayon::iter::ParallelIterator;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, RwLock};
 use vengine_rs::core::toolkit::VEToolkit;
@@ -135,6 +137,10 @@ impl SystemTrait for RenderingSystem {
         let current_camera_position = &locked_state.current_camera.position;
 
         println!("RenderingSystem / Just before parallel");
+
+        // this list here is so that if entity disappears, the mesh is cleaned up
+        let detected_mesh_component_ids = Mutex::new(vec![]);
+
         ecs.parallel_process_all_by_components(
             &[&Components::Mesh, &Components::Transform],
             |entity| {
@@ -143,6 +149,10 @@ impl SystemTrait for RenderingSystem {
                 let mesh_components = &entity.components.mesh;
 
                 for mesh_component in mesh_components {
+                    detected_mesh_component_ids
+                        .lock()
+                        .unwrap()
+                        .push(mesh_component.id);
                     println!("RenderingSystem / For mesh component {}", mesh_component.id);
                     let relative_position = &transform_component.position - current_camera_position;
                     let relative_position = relative_position.to_dvec3();
@@ -189,6 +199,20 @@ impl SystemTrait for RenderingSystem {
                 }
             },
         );
+
+        // TODO this should clear up meshes that are removed from the ECS completely
+        // does it work? maybe
+        let locked_map = self.currently_rendered_meshes.try_read().unwrap();
+        let detected_mesh_component_ids = detected_mesh_component_ids.lock().unwrap();
+        let keys: Vec<&u64> = locked_map.keys().collect();
+
+        keys.par_iter().for_each(|key| {
+            if !detected_mesh_component_ids.contains(key) {
+                let mut locked_map = self.currently_rendered_meshes.try_write().unwrap();
+                locked_map.remove(key);
+            }
+        });
+
         println!("RenderingSystem / After render");
 
         println!("RenderingSystem / Draw");

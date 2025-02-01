@@ -34,8 +34,8 @@ impl Mesh {
         layout: &mut VEDescriptorSetLayout,
         geometry: VEVertexBuffer,
         material: Material,
-    ) -> Result<Mesh, RenderingError> {
-        Ok(Mesh {
+    ) -> Result<Self, RenderingError> {
+        Ok(Self {
             position: DecimalVector3d::zero(),
             orientation: DQuat::IDENTITY.clone(),
             scale: DVec3::new(1.0, 1.0, 1.0),

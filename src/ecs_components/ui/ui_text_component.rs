@@ -10,6 +10,6 @@ pub enum UIFontSize {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct UITextComponent {
     pub id: u64,
-    content: String,
-    font_size: UIFontSize,
+    pub content: String,
+    pub font_size: UIFontSize,
 }

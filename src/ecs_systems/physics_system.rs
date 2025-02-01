@@ -12,6 +12,8 @@ use crate::simulation::simulation::Simulation;
 use dashu_float::DBig;
 use glam::{DQuat, DVec3};
 use rapier3d_f64::prelude::{RigidBodyBuilder, RigidBodyHandle};
+use rayon::iter::IntoParallelRefIterator;
+use rayon::iter::ParallelIterator;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, RwLock};
 
@@ -177,12 +179,19 @@ impl PhysicsSystem {
 
         let mut ecs = ecs.lock().unwrap();
 
+        // this list here is so that if entity disappears, the element is cleaned up
+        let detected_element_real_physics_ids = Mutex::new(vec![]);
+
         ecs.parallel_process_all_by_components_mut(
             &[&Components::SimplePhysics, &Components::Transform],
             |entity| {
                 let real_physics = entity.components.real_physics.as_ref();
                 if real_physics.is_some() {
                     let real_physics = real_physics.unwrap();
+                    detected_element_real_physics_ids
+                        .lock()
+                        .unwrap()
+                        .push(real_physics.id);
 
                     let map = self.currently_simulated_bodies.try_read().unwrap();
                     let simulated = map.get(&real_physics.id);
@@ -214,6 +223,27 @@ impl PhysicsSystem {
                 }
             },
         );
+
+        // TODO this should clear up elements that are removed from the ECS completely
+        // does it work? maybe
+        let locked_map = self.currently_simulated_bodies.try_read().unwrap();
+        let detected_mesh_component_ids = detected_element_real_physics_ids.lock().unwrap();
+        let keys: Vec<&u64> = locked_map.keys().collect();
+
+        keys.par_iter().for_each(|key| {
+            if !detected_mesh_component_ids.contains(key) {
+                let mut real_physics_system = self.real_physics_system.try_write().unwrap();
+                let mut currently_simulated_bodies =
+                    self.currently_simulated_bodies.try_write().unwrap();
+                // unload
+                println!("PSY UNLOAD {}", key);
+                Self::stop_real_physics_sim(
+                    &mut real_physics_system,
+                    &mut currently_simulated_bodies,
+                    **key,
+                );
+            }
+        });
     }
 
     fn update_simple_physics(
@@ -278,7 +308,7 @@ impl PhysicsSystem {
             Self::stop_real_physics_sim(
                 &mut real_physics_system,
                 &mut currently_simulated_bodies,
-                real_physics,
+                real_physics.id,
             );
             exists = false;
         } else if should_simulate && !exists {
@@ -343,13 +373,15 @@ impl PhysicsSystem {
     fn stop_real_physics_sim(
         real_physics_system: &mut RealPhysicsSystem,
         currently_simulated_bodies: &mut HashMap<u64, SimulatedBody>,
-        real_physics: &RealPhysicsComponent,
+        real_physics_component_id: u64,
     ) {
-        let simulated_body = currently_simulated_bodies.get(&real_physics.id).unwrap();
+        let simulated_body = currently_simulated_bodies
+            .get(&real_physics_component_id)
+            .unwrap();
 
         real_physics_system.remove_body(simulated_body.rigid_body);
 
-        currently_simulated_bodies.remove(&real_physics.id);
+        currently_simulated_bodies.remove(&real_physics_component_id);
     }
 }
 

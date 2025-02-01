@@ -1,5 +1,5 @@
 mod font_atlas_generator;
-mod ui_common_buffer;
-mod ui_drawer;
+pub mod ui_common_buffer;
+pub mod ui_drawer;
 mod ui_item_buffer;
-pub mod ui_renderer;
+pub mod ui_rendered_item;

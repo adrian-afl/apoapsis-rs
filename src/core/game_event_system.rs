@@ -9,6 +9,7 @@ use std::sync::{Arc, Mutex};
 pub enum GameEvent {
     ControlActivate(ControlMapItem),
     ControlRelease(ControlMapItem),
+    CursorMoved(ControlMapItem),
 }
 
 #[derive(Debug)]
