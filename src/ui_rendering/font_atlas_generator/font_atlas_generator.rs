@@ -2,6 +2,9 @@ use fontdue::{Font, Metrics};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
+use vengine_rs::core::toolkit::VEToolkit;
+use vengine_rs::image::image::{VEImage, VEImageUsage};
+use vengine_rs::image::image_format::VEImageFormat;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CharPosition {
@@ -69,10 +72,11 @@ pub struct FontAtlas {
     pub bitmap_width: usize,
     pub bitmap_height: usize,
     pub bitmap: Vec<u8>,
+    pub texture: VEImage,
 }
 
 impl FontAtlas {
-    pub fn new(font_path: &str, font_size: u8, supported_chars: &str) -> Self {
+    pub fn new(toolkit: &VEToolkit, font_path: &str, font_size: u8, supported_chars: &str) -> Self {
         let font = Font::from_bytes(
             fs::read(font_path).unwrap(),
             fontdue::FontSettings::default(),
@@ -122,12 +126,24 @@ impl FontAtlas {
             x_cursor += c.metrics.width;
         }
 
+        let texture = toolkit
+            .create_image_from_data(
+                &bitmap,
+                width_sum as u32,
+                height_max as u32,
+                1,
+                VEImageFormat::R8unorm,
+                &[VEImageUsage::Sampled],
+            )
+            .unwrap();
+
         Self {
             letters,
             bitmap,
             bitmap_width: width_sum,
             bitmap_height: height_max,
             font_size: 0,
+            texture,
         }
     }
 

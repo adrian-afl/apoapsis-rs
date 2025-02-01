@@ -116,18 +116,21 @@ impl UIDrawer {
         )?;
 
         let font_atlas_small = FontAtlas::new(
+            toolkit,
             "media/inter_font.ttf",
             8,
             " !\\\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~",
         );
 
         let font_atlas_medium = FontAtlas::new(
+            toolkit,
             "media/inter_font.ttf",
             12,
             " !\\\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~",
         );
 
         let font_atlas_large = FontAtlas::new(
+            toolkit,
             "media/inter_font.ttf",
             18,
             " !\\\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~",

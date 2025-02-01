@@ -14,7 +14,7 @@ impl EmptyTextures {
     pub fn generate(&self, toolkit: &VEToolkit) {
         let mut image = toolkit
             .create_image_from_data(
-                vec![0],
+                &[0],
                 1,
                 1,
                 1,
