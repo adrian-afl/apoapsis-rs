@@ -1,5 +1,6 @@
 use crate::celestial_rendering::errors::RenderingError;
 use crate::config::Config;
+use crate::ui_rendering::font_atlas_generator::font_atlas_generator::FontAtlas;
 use crate::ui_rendering::ui_common_buffer::UICommonBuffer;
 use crate::ui_rendering::ui_rendered_item::UIRenderedItem;
 use vengine_rs::core::descriptor_set::VEDescriptorSet;
@@ -24,6 +25,7 @@ pub struct UIDrawer {
     pub common_set: VEDescriptorSet,
     pub quad_geometry: VEVertexBuffer,
     pub common_buffer: UICommonBuffer,
+    pub font_atlas_medium: FontAtlas,
 }
 
 pub const MESH_DRAWER_VERTEX_ATTRIBUTES: [VertexAttribFormat; 2] = [
@@ -110,6 +112,12 @@ impl UIDrawer {
             VECullMode::None,
         )?;
 
+        let font_atlas_medium = FontAtlas::new(
+            "media/inter_font.ttf",
+            10,
+            " !\\\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~",
+        );
+
         Ok(Self {
             render_stage,
             item_set_layout,
@@ -117,6 +125,7 @@ impl UIDrawer {
             common_set,
             common_buffer,
             quad_geometry,
+            font_atlas_medium,
         })
     }
 

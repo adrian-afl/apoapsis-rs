@@ -13,6 +13,7 @@ use crate::ecs_components::common::transform_component::TransformComponent;
 use crate::ecs_systems::camera_system::CameraSystem;
 use crate::ecs_systems::physics_system::PhysicsSystem;
 use crate::ecs_systems::rendering_system::RenderingSystem;
+use crate::ecs_systems::ui_system::UIRenderer;
 use crate::ecs_systems::universe_simulation_updater_system::UniverseSimulationUpdaterSystem;
 use crate::input::controls::{ControlMapItem, Controls};
 use crate::input::keyboard_input::KeyboardInput;
@@ -57,7 +58,12 @@ impl Game {
         let controls = Arc::new(Controls::new(game_event_system.clone()));
 
         let universe_simulation = Arc::new(RwLock::new(Simulation::new(toolkit.clone())));
-        let renderer = Arc::new(Mutex::from(Renderer::new(toolkit.clone(), &config)));
+        let ui_renderer = UIRenderer::new(toolkit.clone(), &config);
+        let renderer = Arc::new(Mutex::from(Renderer::new(
+            toolkit.clone(),
+            &config,
+            ui_renderer.ui_drawer.clone(),
+        )));
         let state = Arc::new(Mutex::from(GameState::new()));
         let ecs = Arc::new(Mutex::from(ECSWorld::new()));
         let ecs_systems: Vec<Box<dyn SystemTrait>> = vec![
@@ -90,7 +96,7 @@ impl Game {
 
         {
             let mut player_entity = Entity::new(Some("Player"));
-            let mut universe = universe_simulation.try_read().unwrap();
+            let universe = universe_simulation.try_read().unwrap();
             let earth_position = &universe.get_body("earth").position;
             let player_initial_position =
                 earth_position + DecimalVector3d::from_f64(0.0, 0.0, 9398000.0);
@@ -151,12 +157,12 @@ impl Game {
 
         {
             let mut ecs = self.ecs.lock().unwrap();
-            let mut focus = ecs
+            let focus = ecs
                 .find_first_by_components_mut(&[&Components::CameraFocus, &Components::Transform])
                 .unwrap();
-            let mut transform = focus.components.transform.as_mut().unwrap();
+            let transform = focus.components.transform.as_mut().unwrap();
 
-            let mut universe = self.universe_simulation.try_read().unwrap();
+            let universe = self.universe_simulation.try_read().unwrap();
             let earth_position = &universe.get_body("earth").position;
             println!("earth_position {earth_position}");
             let player_position = earth_position + DecimalVector3d::from_f64(0.0, 0.0, 9398000.0);

@@ -5,7 +5,6 @@ use crate::ecs::component_trait::Components;
 use crate::ecs::ecs_world::ECSWorld;
 use crate::ecs::system_trait::SystemTrait;
 use crate::ecs_components::ui::cursor_type::UICursorType;
-use crate::input::mouse_input::MouseInput;
 use crate::ui_rendering::ui_drawer::UIDrawer;
 use crate::ui_rendering::ui_rendered_item::UIRenderedItem;
 use glam::DVec2;
@@ -21,9 +20,8 @@ pub struct UIRenderer {
     config: Config,
 
     toolkit: Arc<VEToolkit>,
-    mouse_input: Arc<MouseInput>,
 
-    ui_drawer: Mutex<UIDrawer>,
+    pub ui_drawer: Arc<Mutex<UIDrawer>>,
     currently_rendered_items: RwLock<HashMap<u64, UIRenderedItem>>,
 }
 
@@ -34,18 +32,15 @@ pub enum UIRendererError {
 }
 
 impl UIRenderer {
-    pub fn new(
-        toolkit: Arc<VEToolkit>,
-        config: &Config,
-        mouse_input: Arc<MouseInput>,
-    ) -> Result<Self, UIRendererError> {
-        Ok(Self {
+    pub fn new(toolkit: Arc<VEToolkit>, config: &Config) -> Self {
+        Self {
             config: config.clone(),
             toolkit: toolkit.clone(),
-            ui_drawer: Mutex::from(UIDrawer::new(&config, &toolkit)?),
+            ui_drawer: Arc::new(Mutex::from(
+                UIDrawer::new(&config, &toolkit).expect("Failed to create UIDrawer"),
+            )),
             currently_rendered_items: RwLock::new(HashMap::new()),
-            mouse_input,
-        })
+        }
     }
 }
 
@@ -132,7 +127,17 @@ impl SystemTrait for UIRenderer {
                 locked_map.remove(key);
             }
         });
-        
-        self.ui_drawer.lock().unwrap().
+
+        let drawer = self.ui_drawer.lock().unwrap();
+        drawer
+            .record(
+                &self
+                    .currently_rendered_items
+                    .try_read()
+                    .unwrap()
+                    .values()
+                    .collect::<Vec<_>>(),
+            )
+            .unwrap();
     }
 }

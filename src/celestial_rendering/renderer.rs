@@ -16,6 +16,7 @@ use crate::config::Config;
 use crate::math::decimal_vector_3d::DecimalVector3d;
 use crate::math::sin_cos::f64_to_dbig;
 use crate::simulation::simulation::Simulation;
+use crate::ui_rendering::ui_drawer::UIDrawer;
 use crate::util::empty_textures::EMPTY_TEXTURES;
 use dashu_float::DBig;
 use glam::{DMat3, DMat4, DQuat, DVec3, DVec4};
@@ -37,6 +38,7 @@ pub struct Renderer {
 
     pub common_buffer: CommonBuffer,
 
+    ui_drawer: Arc<Mutex<UIDrawer>>,
     mesh_drawer: MeshDrawer,
     cloud_generator_high_freq: CloudGeneratorHighFreq,
     cloud_generator_low_freq: CloudGeneratorLowFreq,
@@ -49,13 +51,14 @@ pub struct Renderer {
     clouds_generation_high_freq_semaphore: Arc<Mutex<VESemaphore>>,
     atmosphere_drawing_semaphore: Arc<Mutex<VESemaphore>>,
     multi_merging_semaphore: Arc<Mutex<VESemaphore>>,
+    ui_drawing_semaphore: Arc<Mutex<VESemaphore>>,
     outputting_semaphore: Arc<Mutex<VESemaphore>>,
     terrain_drawing_semaphore: Arc<Mutex<VESemaphore>>,
     water_drawing_semaphore: Arc<Mutex<VESemaphore>>,
 }
 
 impl Renderer {
-    pub fn new(toolkit: Arc<VEToolkit>, config: &Config) -> Self {
+    pub fn new(toolkit: Arc<VEToolkit>, config: &Config, ui_drawer: Arc<Mutex<UIDrawer>>) -> Self {
         EMPTY_TEXTURES.generate(&toolkit);
 
         let common_buffer = CommonBuffer::new(&toolkit).expect("Failed to create CommonBuffer");
@@ -88,6 +91,7 @@ impl Renderer {
         Self {
             config: config.clone(),
             toolkit: toolkit.clone(),
+            ui_drawer,
             output,
             atmosphere_drawer,
             multi_merger,
@@ -108,6 +112,7 @@ impl Renderer {
                 toolkit.create_semaphore().unwrap(),
             )),
             multi_merging_semaphore: Arc::new(Mutex::from(toolkit.create_semaphore().unwrap())),
+            ui_drawing_semaphore: Arc::new(Mutex::from(toolkit.create_semaphore().unwrap())),
             outputting_semaphore: Arc::new(Mutex::from(toolkit.create_semaphore().unwrap())),
             terrain_drawing_semaphore: Arc::new(Mutex::from(toolkit.create_semaphore().unwrap())),
             water_drawing_semaphore: Arc::new(Mutex::from(toolkit.create_semaphore().unwrap())),
@@ -324,7 +329,28 @@ impl Renderer {
                     vec![self.multi_merging_semaphore.clone()],
                 )
                 .expect("Failed to compute multi_merger");
-            wait_for_semaphores = vec![self.multi_merging_semaphore.clone()]
+            wait_for_semaphores = vec![self.multi_merging_semaphore.clone()];
+        }
+
+        event!(Level::WARN, "Drawing UI");
+        {
+            let queue = &self
+                .toolkit
+                .queue
+                .lock()
+                .map_err(|_| RenderingError::QueueLockingFailed)?;
+            self.ui_drawer
+                .lock()
+                .unwrap()
+                .render_stage
+                .command_buffer
+                .submit(
+                    queue,
+                    wait_for_semaphores.clone(),
+                    vec![self.ui_drawing_semaphore.clone()],
+                )
+                .expect("Failed to draw ui");
+            wait_for_semaphores = vec![self.ui_drawing_semaphore.clone()];
         }
 
         event!(Level::WARN, "Submitting output");
