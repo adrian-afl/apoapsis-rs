@@ -5,14 +5,12 @@ use crate::celestial_rendering::scene::material::{
     ColorOrTexture, Material, ScaledTexture, ValueOrTexture,
 };
 use crate::celestial_rendering::scene::mesh::Mesh;
-use crate::component_types;
 use crate::core::game_state::GameState;
-use crate::ecs::component_trait::component_type;
+use crate::ecs::component_trait::ComponentTypes;
 use crate::ecs::ecs_world::ECSWorld;
 use crate::ecs::system_trait::SystemTrait;
-use crate::ecs_components::common::transform_component::TransformComponent;
 use crate::ecs_components::rendering::mesh_component::{
-    ColorOrTextureDescription, MeshComponent, MeshDescription, ValueOrTextureDescription,
+    ColorOrTextureDescription, MeshDescription, ValueOrTextureDescription,
 };
 use crate::simulation::simulation::Simulation;
 use std::collections::HashMap;
@@ -130,52 +128,56 @@ impl RenderingSystem {
 impl SystemTrait for RenderingSystem {
     fn update(&mut self, game_state: Arc<Mutex<GameState>>, ecs: Arc<Mutex<ECSWorld>>) {
         let ecs = ecs.lock().unwrap();
-        ecs.process_all_by_components(
-            component_types!(MeshComponent, TransformComponent),
+        ecs.parallel_process_all_by_components(
+            &[
+                &ComponentTypes::MeshComponent,
+                &ComponentTypes::TransformComponent,
+            ],
             |entity| {
-                let transform_component =
-                    entity.get_first_component::<TransformComponent>().unwrap();
-                let mesh_component = entity.get_first_component::<MeshComponent>().unwrap();
+                let transform_component = entity.components.transform.as_ref().unwrap();
+                let mesh_components = &entity.components.mesh;
 
-                let relative_position = &transform_component.position
-                    - &game_state.lock().unwrap().current_camera.position;
-                let relative_position = relative_position.to_dvec3();
+                for mesh_component in mesh_components {
+                    let relative_position = &transform_component.position
+                        - &game_state.lock().unwrap().current_camera.position;
+                    let relative_position = relative_position.to_dvec3();
 
-                let should_render = relative_position.length() < self.rendering_cutoff;
-                let mut exists = self
-                    .currently_rendered_meshes
-                    .lock()
-                    .unwrap()
-                    .contains_key(&mesh_component.id);
-
-                if !should_render && exists {
-                    self.currently_rendered_meshes
+                    let should_render = relative_position.length() < self.rendering_cutoff;
+                    let mut exists = self
+                        .currently_rendered_meshes
                         .lock()
                         .unwrap()
-                        .remove(&mesh_component.id);
-                    exists = false;
-                } else if should_render && !exists {
-                    match self.create_mesh_from_description(&mesh_component.description) {
-                        Err(err) => println!("Failed to create a mesh! Reason: {}", err),
-                        Ok(mesh) => {
-                            self.currently_rendered_meshes
-                                .lock()
-                                .unwrap()
-                                .insert(mesh_component.id, mesh);
-                            exists = true;
+                        .contains_key(&mesh_component.id);
+
+                    if !should_render && exists {
+                        self.currently_rendered_meshes
+                            .lock()
+                            .unwrap()
+                            .remove(&mesh_component.id);
+                        exists = false;
+                    } else if should_render && !exists {
+                        match self.create_mesh_from_description(&mesh_component.description) {
+                            Err(err) => println!("Failed to create a mesh! Reason: {}", err),
+                            Ok(mesh) => {
+                                self.currently_rendered_meshes
+                                    .lock()
+                                    .unwrap()
+                                    .insert(mesh_component.id, mesh);
+                                exists = true;
+                            }
                         }
                     }
-                }
 
-                if should_render && exists {
-                    let mut map_locked = self.currently_rendered_meshes.lock().unwrap();
-                    let mut mesh = map_locked.get_mut(&mesh_component.id).unwrap();
-                    mesh.position.assign(&transform_component.position);
-                    mesh.scale = transform_component.scale.clone();
-                    mesh.orientation = transform_component.orientation.clone();
+                    if should_render && exists {
+                        let mut map_locked = self.currently_rendered_meshes.lock().unwrap();
+                        let mesh = map_locked.get_mut(&mesh_component.id).unwrap();
+                        mesh.position.assign(&transform_component.position);
+                        mesh.scale = transform_component.scale.clone();
+                        mesh.orientation = transform_component.orientation.clone();
 
-                    mesh.update(&game_state.lock().unwrap().current_camera.position)
-                        .unwrap();
+                        mesh.update(&game_state.lock().unwrap().current_camera.position)
+                            .unwrap();
+                    }
                 }
             },
         );

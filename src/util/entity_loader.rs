@@ -35,28 +35,28 @@ pub fn load_entity(path: &str) -> Entity {
     match description.mesh {
         None => (),
         Some(mesh_description) => entity
-            .add_component(MeshComponent::from_description(mesh_description))
-            .unwrap(),
+            .components
+            .mesh
+            .push(MeshComponent::from_description(mesh_description)),
     }
 
     match description.physics {
         None => (),
         Some(physics_description) => {
-            entity
-                .add_component(SimplePhysicsComponent::from_mass(f64_to_dbig(
-                    physics_description.mass,
-                )))
-                .unwrap();
+            entity.components.simple_physics = Some(SimplePhysicsComponent::from_mass(
+                f64_to_dbig(physics_description.mass),
+            ));
             match physics_description.shape {
                 None => (),
-                Some(shape_description) => entity
-                    .add_component(RealPhysicsComponent::new(shape_description))
-                    .unwrap(),
+                Some(shape_description) => {
+                    entity.components.real_physics =
+                        Some(RealPhysicsComponent::new(shape_description))
+                }
             }
         }
     }
 
-    entity.add_component(TransformComponent::new()).unwrap();
+    entity.components.transform = Some(TransformComponent::new());
 
     entity
 }

@@ -11,7 +11,6 @@ use crate::ecs_components::physics::simple_physics_component::SimplePhysicsCompo
 use crate::ecs_components::player::is_player_component::IsPlayerComponent;
 use crate::ecs_components::rendering::mesh_component::MeshComponent;
 use crate::ecs_components::ship::ship_control_component::ShipControlComponent;
-use crate::ecs_components::ui::ui_element_component::UIElementComponent;
 use serde::{Deserialize, Serialize};
 
 use crate::ecs_components::ui::ui_color_component::UIColorComponent;
@@ -22,12 +21,11 @@ use crate::ecs_components::ui::ui_rectangle_component::UIRectangleComponent;
 use crate::ecs_components::ui::ui_text_component::UITextComponent;
 use crate::ecs_components::ui::ui_texture_component::UITextureComponent;
 use crate::ecs_components::ui::ui_transform_component::UITransformComponent;
-use std::any::{Any, TypeId};
 use std::sync::atomic::{AtomicU64, Ordering};
 
 static COMPONENT_SEQ: AtomicU64 = AtomicU64::new(1);
 
-pub trait ComponentTrait: Any {
+pub trait ComponentTrait {
     fn id(&self) -> u64;
     fn get_type(&self) -> ComponentTypes;
 }
@@ -142,10 +140,6 @@ create_component_types_enum!(
 
 pub fn acquire_next_id() -> u64 {
     COMPONENT_SEQ.fetch_add(1, Ordering::SeqCst)
-}
-
-pub fn component_type<T: ComponentTrait>() -> TypeId {
-    TypeId::of::<T>()
 }
 
 #[macro_export]

@@ -1,9 +1,6 @@
-use crate::component_types;
 use crate::core::game_state::GameState;
 use crate::ecs::ecs_world::ECSWorld;
 use crate::ecs::system_trait::SystemTrait;
-use crate::ecs_components::camera::camera_focus_component::CameraFocusComponent;
-use crate::ecs_components::common::transform_component::TransformComponent;
 use crate::math::sin_cos::f64_to_dbig;
 use crate::simulation::simulation::Simulation;
 use std::sync::{Arc, Mutex};

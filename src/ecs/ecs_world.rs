@@ -1,6 +1,6 @@
-use crate::celestial_rendering::errors::ECSError;
 use crate::ecs::component_trait::{ComponentTrait, ComponentTypes};
 use crate::ecs::entity::{Entity, ENTITY_SEQ};
+use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::atomic::Ordering;
@@ -35,26 +35,28 @@ impl ECSWorld {
         let mut world = ECSWorld::new();
 
         for entity in repr.entities {
-            world.add(entity).unwrap();
+            world.add(entity);
         }
 
         world
     }
 
-    pub fn add(&mut self, entity: Entity) -> Result<(), ECSError> {
+    pub fn add(&mut self, entity: Entity) {
         if self.entities.contains_key(&entity.id) {
-            return Err(ECSError::FailedToAddDuplicateEntity);
+            //return Err(ECSError::FailedToAddDuplicateEntity);
+            // actually, why not just do nothing?
+            return;
         }
         self.entities.insert(entity.id, entity);
-        Ok(())
     }
 
-    pub fn remove(&mut self, entity: Entity) -> Result<(), ECSError> {
+    pub fn remove(&mut self, entity: Entity) {
         if !self.entities.contains_key(&entity.id) {
-            return Err(ECSError::EntityNotFound);
+            //return Err(ECSError::EntityNotFound);
+            // actually, why not just do nothing?
+            return;
         }
         self.entities.remove(&entity.id);
-        Ok(())
     }
 
     fn find_id_by_name(&self, name: &str) -> Option<u64> {
@@ -73,20 +75,20 @@ impl ECSWorld {
         found_id
     }
 
-    pub fn find_by_name_mut(&mut self, name: &str) -> Result<&mut Entity, ECSError> {
+    pub fn find_by_name_mut(&mut self, name: &str) -> Option<&mut Entity> {
         let found_id = self.find_id_by_name(name);
-        match found_id {
-            None => Err(ECSError::EntityNotFound),
-            Some(id) => Ok(self.entities.get_mut(&id).unwrap()),
+        if let Some(id) = found_id {
+            return self.entities.get_mut(&id);
         }
+        None
     }
 
-    pub fn find_by_name(&self, name: &str) -> Result<&Entity, ECSError> {
+    pub fn find_by_name(&self, name: &str) -> Option<&Entity> {
         let found_id = self.find_id_by_name(name);
-        match found_id {
-            None => Err(ECSError::EntityNotFound),
-            Some(id) => Ok(self.entities.get(&id).unwrap()),
+        if let Some(id) = found_id {
+            return self.entities.get(&id);
         }
+        None
     }
 
     fn find_first_id_by_components(&self, component_types: &[&ComponentTypes]) -> Option<u64> {
@@ -103,23 +105,20 @@ impl ECSWorld {
     pub fn find_first_by_components_mut(
         &mut self,
         component_types: &[&ComponentTypes],
-    ) -> Result<&mut Entity, ECSError> {
+    ) -> Option<&mut Entity> {
         let found_id = self.find_first_id_by_components(component_types);
-        match found_id {
-            None => Err(ECSError::EntityNotFound),
-            Some(id) => Ok(self.entities.get_mut(&id).unwrap()),
+        if let Some(id) = found_id {
+            return self.entities.get_mut(&id);
         }
+        None
     }
 
-    pub fn find_first_by_components(
-        &self,
-        component_types: &[&ComponentTypes],
-    ) -> Result<&Entity, ECSError> {
+    pub fn find_first_by_components(&self, component_types: &[&ComponentTypes]) -> Option<&Entity> {
         let found_id = self.find_first_id_by_components(component_types);
-        match found_id {
-            None => Err(ECSError::EntityNotFound),
-            Some(id) => Ok(self.entities.get(&id).unwrap()),
+        if let Some(id) = found_id {
+            return self.entities.get(&id);
         }
+        None
     }
 
     pub fn process_all_by_components_mut(
@@ -134,6 +133,20 @@ impl ECSWorld {
         }
     }
 
+    pub fn parallel_process_all_by_components_mut(
+        &mut self,
+        types: &[&ComponentTypes],
+        mut processor: impl Fn(&mut Entity) + Sync + Send,
+    ) {
+        self.entities
+            .par_iter_mut()
+            .for_each(|(_, entity): (&u64, &mut Entity)| {
+                if entity.components.has_all(types) {
+                    processor(entity);
+                }
+            });
+    }
+
     pub fn process_all_by_components(
         &self,
         types: &[&ComponentTypes],
@@ -145,14 +158,23 @@ impl ECSWorld {
             }
         }
     }
+
+    pub fn parallel_process_all_by_components(
+        &self,
+        types: &[&ComponentTypes],
+        processor: impl Fn(&Entity) + Sync + Send,
+    ) {
+        self.entities.par_iter().for_each(|(_, entity)| {
+            if entity.components.has_all(types) {
+                processor(entity);
+            }
+        });
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ecs::component_trait::component_type;
-    use crate::ecs_components::camera::camera_focus_component::CameraFocusComponent;
-    use crate::ecs_components::common::transform_component::TransformComponent;
 
     #[test]
     fn processing_entities() {

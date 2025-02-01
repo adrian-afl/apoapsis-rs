@@ -49,7 +49,7 @@ impl PhysicsSystem {
         }
     }
 
-    fn phase0(&mut self, ecs: Arc<Mutex<ECSWorld>>, delta_time: f64) -> Result<(), ECSError> {
+    fn phase0(&mut self, ecs: Arc<Mutex<ECSWorld>>, delta_time: f64) {
         let decimal_delta_time = f64_to_dbig(delta_time);
         let decimal_half_delta_time = f64_to_dbig(delta_time * 0.5);
 
@@ -62,10 +62,10 @@ impl PhysicsSystem {
         {
             // scope to now screw up with shadowing
             let player = match player {
-                Ok(player) => player,
-                Err(err) => {
+                Some(player) => player,
+                None => {
                     println!("Player entity not found, Relativity cannot continue");
-                    return Err(err);
+                    return;
                 }
             };
 
@@ -80,7 +80,7 @@ impl PhysicsSystem {
                 .assign(&simple_physics.linear_velocity);
         }
 
-        ecs.process_all_by_components_mut(
+        ecs.parallel_process_all_by_components_mut(
             &[
                 &ComponentTypes::SimplePhysicsComponent,
                 &ComponentTypes::TransformComponent,
@@ -170,13 +170,11 @@ impl PhysicsSystem {
                 }
             },
         );
-
-        Ok(())
     }
 
-    fn phase1(&mut self, ecs: Arc<Mutex<ECSWorld>>) -> Result<(), ECSError> {
+    fn phase1(&mut self, ecs: Arc<Mutex<ECSWorld>>) {
         let mut ecs = ecs.lock().unwrap();
-        ecs.process_all_by_components_mut(
+        ecs.parallel_process_all_by_components_mut(
             &[
                 &ComponentTypes::SimplePhysicsComponent,
                 &ComponentTypes::TransformComponent,
@@ -217,8 +215,6 @@ impl PhysicsSystem {
                 }
             },
         );
-
-        Ok(())
     }
 
     fn update_simple_physics(
@@ -349,10 +345,10 @@ impl PhysicsSystem {
 impl SystemTrait for PhysicsSystem {
     fn update(&mut self, game_state: Arc<Mutex<GameState>>, ecs: Arc<Mutex<ECSWorld>>) {
         let delta_time = game_state.lock().unwrap().delta_time;
-        self.phase0(ecs.clone(), delta_time).unwrap();
+        self.phase0(ecs.clone(), delta_time);
 
         self.real_physics_system.lock().unwrap().step(delta_time);
 
-        self.phase1(ecs.clone()).unwrap();
+        self.phase1(ecs.clone());
     }
 }

@@ -102,15 +102,11 @@ impl Game {
                 .current_camera
                 .position
                 .assign(&player_initial_position);
-            player_entity
-                .add_component(TransformComponent::from_position(player_initial_position))
-                .unwrap();
-            player_entity
-                .add_component(CameraFocusComponent::new())
-                .unwrap();
-            player_entity
-                .add_component(FirstPersonCameraControlComponent::new())
-                .unwrap();
+            player_entity.components.transform =
+                Some(TransformComponent::from_position(player_initial_position));
+            player_entity.components.camera_focus = Some(CameraFocusComponent::new());
+            player_entity.components.first_person_camera_control =
+                Some(FirstPersonCameraControlComponent::new());
             ecs.lock().unwrap().add(player_entity).unwrap();
         }
 

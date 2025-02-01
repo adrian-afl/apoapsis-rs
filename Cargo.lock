@@ -1697,6 +1697,7 @@ dependencies = [
  "gilrs",
  "glam",
  "rapier3d-f64",
+ "rayon",
  "regex",
  "serde",
  "serde_json",
