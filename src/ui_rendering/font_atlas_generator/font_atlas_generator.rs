@@ -32,7 +32,7 @@ struct Size {
     height: u16,
 }
 
-fn blit_box(src_size: Size, dst_size: Size, 
+fn blit_box(src_size: Size, dst_size: Size) {}
 
 impl FontAtlas {
     pub fn new(font_path: &str, font_size: u8, supported_chars: &str) -> Self {
@@ -47,6 +47,10 @@ impl FontAtlas {
             generated.push(GeneratedChar::generate(&font, font_size, c));
         }
 
-        Self {}
+        Self {
+            letters: HashMap::new(),
+            bitmap: vec![],
+            font_size: 0,
+        }
     }
 }

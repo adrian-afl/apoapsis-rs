@@ -1,6 +1,4 @@
-use crate::ecs::component_trait::Components;
-use crate::ecs::component_trait::{acquire_next_id, ComponentTrait};
-use crate::impl_component;
+use crate::ecs::component_trait::acquire_next_id;
 use glam::{DQuat, DVec3};
 use serde::{Deserialize, Serialize};
 
@@ -10,8 +8,6 @@ pub struct ThirdPersonStaticCameraControlComponent {
     pub offset: DVec3,
     pub orientation: DQuat,
 }
-
-impl_component!(ThirdPersonStaticCameraControlComponent);
 
 impl ThirdPersonStaticCameraControlComponent {
     pub fn new(offset: DVec3, orientation: DQuat) -> Self {

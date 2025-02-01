@@ -1,6 +1,4 @@
-use crate::ecs::component_trait::Components;
-use crate::ecs::component_trait::{acquire_next_id, ComponentTrait};
-use crate::impl_component;
+use crate::ecs::component_trait::acquire_next_id;
 use glam::DVec3;
 use serde::{Deserialize, Serialize};
 
@@ -48,8 +46,6 @@ pub struct MeshComponent {
     pub id: u64,
     pub description: MeshDescription,
 }
-
-impl_component!(MeshComponent);
 
 impl MeshComponent {
     pub fn from_description(description: MeshDescription) -> Self {

@@ -1,10 +1,9 @@
-use crate::body::body_definitions::{BodyAtmosphere, BodyClouds, BodyTerrain};
 use crate::celestial_rendering::buffers::buffer_writers::{
     write_float, write_mat4, write_vec3_with_float, write_vec3_zero,
 };
 use crate::celestial_rendering::errors::RenderingError;
 use crate::math::decimal_vector_3d::DecimalVector3d;
-use crate::simulation::simulation::{SimulatedBody, Simulation};
+use crate::simulation::simulation::SimulatedBody;
 use dashu_float::DBig;
 use glam::DVec3;
 use std::fmt::{Debug, Formatter, Write};

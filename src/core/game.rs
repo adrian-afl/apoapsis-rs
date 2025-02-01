@@ -1,13 +1,11 @@
 use crate::body::body_definitions::load_body_data;
 use crate::celestial_rendering::renderer::Renderer;
-use crate::component_types;
 use crate::config::Config;
 use crate::core::game_event_system::{GameEvent, GameEventSystem};
 use crate::core::game_state::GameState;
-use crate::ecs::component_trait::component_type;
-use crate::ecs::component_trait::ComponentTrait;
+use crate::ecs::component_trait::Components;
 use crate::ecs::ecs_world::{ECSWorld, ECSWorldSerializedRepresentation};
-use crate::ecs::entity::{Entity, EntitySerializedRepresentation, ENTITY_SEQ};
+use crate::ecs::entity::Entity;
 use crate::ecs::system_trait::SystemTrait;
 use crate::ecs_components::camera::camera_focus_component::CameraFocusComponent;
 use crate::ecs_components::camera::first_person_camera_control_component::FirstPersonCameraControlComponent;
@@ -15,15 +13,13 @@ use crate::ecs_components::common::transform_component::TransformComponent;
 use crate::ecs_systems::camera_system::CameraSystem;
 use crate::ecs_systems::rendering_system::RenderingSystem;
 use crate::ecs_systems::universe_simulation_updater_system::UniverseSimulationUpdaterSystem;
-use crate::input::controls::{ControlEvent, ControlMapItem, Controls};
+use crate::input::controls::{ControlMapItem, Controls};
 use crate::input::keyboard_input::KeyboardInput;
 use crate::input::mouse_input::MouseInput;
 use crate::math::decimal_vector_3d::DecimalVector3d;
 use crate::simulation::simulation::Simulation;
-use glam::DQuat;
 use serde::{Deserialize, Serialize};
-use std::sync::atomic::Ordering;
-use std::sync::{Arc, LockResult, Mutex};
+use std::sync::{Arc, Mutex};
 use vengine_rs::core::toolkit::VEToolkit;
 use winit::window::Window;
 
@@ -107,7 +103,7 @@ impl Game {
             player_entity.components.camera_focus = Some(CameraFocusComponent::new());
             player_entity.components.first_person_camera_control =
                 Some(FirstPersonCameraControlComponent::new());
-            ecs.lock().unwrap().add(player_entity).unwrap();
+            ecs.lock().unwrap().add(player_entity);
         }
 
         Self {
@@ -154,14 +150,9 @@ impl Game {
         {
             let mut ecs = self.ecs.lock().unwrap();
             let mut focus = ecs
-                .find_first_by_components_mut(component_types!(
-                    CameraFocusComponent,
-                    TransformComponent
-                ))
+                .find_first_by_components_mut(&[&Components::CameraFocus, &Components::Transform])
                 .unwrap();
-            let mut transform = focus
-                .get_first_component_mut::<TransformComponent>()
-                .unwrap();
+            let mut transform = focus.components.transform.as_mut().unwrap();
 
             let mut universe = self.universe_simulation.lock().unwrap();
             let earth_position = &universe.get_body("earth").position;

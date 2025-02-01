@@ -1,6 +1,4 @@
-use crate::ecs::component_trait::Components;
-use crate::ecs::component_trait::{acquire_next_id, ComponentTrait};
-use crate::impl_component;
+use crate::ecs::component_trait::acquire_next_id;
 use glam::DVec3;
 use serde::{Deserialize, Serialize};
 
@@ -11,8 +9,6 @@ pub struct SetPhysicsKinematicsComponent {
     pub linear_velocity: Option<DVec3>,
     pub angular_velocity: Option<DVec3>,
 }
-
-impl_component!(SetPhysicsKinematicsComponent);
 
 impl SetPhysicsKinematicsComponent {
     pub fn new(linear_velocity: Option<DVec3>, angular_velocity: Option<DVec3>) -> Self {

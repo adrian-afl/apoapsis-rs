@@ -2,9 +2,7 @@ use crate::core::game::Game;
 use glam::DVec2;
 use std::sync::{Arc, Mutex};
 use vengine_rs::core::toolkit::{App, VEToolkit};
-use winit::event::{
-    DeviceEvent, DeviceId, ElementState, KeyEvent, MouseButton, MouseScrollDelta, WindowEvent,
-};
+use winit::event::{DeviceEvent, DeviceId, ElementState, KeyEvent, MouseScrollDelta, WindowEvent};
 use winit::window::Window;
 
 pub struct GameWindowApp {
@@ -72,7 +70,7 @@ impl App for GameWindowApp {
         }
     }
 
-    fn on_device_event(&mut self, device_id: DeviceId, event: DeviceEvent) {
+    fn on_device_event(&mut self, _: DeviceId, event: DeviceEvent) {
         match event {
             DeviceEvent::MouseMotion { delta } => self
                 .game

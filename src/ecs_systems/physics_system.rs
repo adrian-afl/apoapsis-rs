@@ -49,7 +49,7 @@ impl PhysicsSystem {
     }
 
     fn phase0(&mut self, ecs: Arc<Mutex<ECSWorld>>) {
-        let mut ecs = ecs.lock().unwrap();
+        let ecs = ecs.lock().unwrap();
         let player = ecs.find_first_by_components(&[
             &Components::IsPlayer,
             &Components::SimplePhysics,
@@ -77,33 +77,28 @@ impl PhysicsSystem {
 
         let mut ecs = ecs.lock().unwrap();
 
-        let mut real_physics_system = self.real_physics_system.lock().unwrap();
-        let mut map = self.currently_simulated_bodies.lock().unwrap();
-        let universe_simulation = self.universe_simulation.lock().unwrap();
-
         ecs.parallel_process_all_by_components_mut(
             &[&Components::SimplePhysics, &Components::Transform],
             |entity| {
-                let mut transform = entity.components.transform.as_mut().unwrap();
-                let mut simple_physics = entity.components.simple_physics.as_mut().unwrap();
+                let mut map = self.currently_simulated_bodies.lock().unwrap();
+
+                let transform = entity.components.transform.as_mut().unwrap();
+                let simple_physics = entity.components.simple_physics.as_mut().unwrap();
                 let real_physics = entity.components.real_physics.as_ref();
 
                 if real_physics.is_some() {
                     let real_physics = real_physics.unwrap();
 
                     let handle_or_none = self.handle_real_physics_simulation_start_stop(
-                        &mut real_physics_system,
-                        &mut map,
-                        &transform,
-                        &simple_physics,
-                        &real_physics,
+                        transform,
+                        simple_physics,
+                        real_physics,
                     );
 
                     match handle_or_none {
                         None => self.update_simple_physics(
-                            &universe_simulation,
-                            &mut simple_physics,
-                            &mut transform,
+                            simple_physics,
+                            transform,
                             delta_time,
                             &decimal_delta_time,
                             &decimal_half_delta_time,
@@ -126,6 +121,7 @@ impl PhysicsSystem {
                                 let mut current_linear_velocity =
                                     DecimalVector3d::from_dvec3(relative_position);
 
+                                let universe_simulation = self.universe_simulation.lock().unwrap();
                                 let gravity_impulse = universe_simulation
                                     .calculate_gravity_flux(&transform.position)
                                     * &decimal_delta_time;
@@ -136,6 +132,7 @@ impl PhysicsSystem {
                                 relative_position = current_linear_velocity.to_dvec3()
                             }
 
+                            let mut real_physics_system = self.real_physics_system.lock().unwrap();
                             real_physics_system
                                 .set_body_kinematics(
                                     simulated_object.rigid_body,
@@ -156,9 +153,8 @@ impl PhysicsSystem {
                     }
                 } else {
                     self.update_simple_physics(
-                        &universe_simulation,
-                        &mut simple_physics,
-                        &mut transform,
+                        simple_physics,
+                        transform,
                         delta_time,
                         &decimal_delta_time,
                         &decimal_half_delta_time,
@@ -170,8 +166,6 @@ impl PhysicsSystem {
 
     fn phase2(&mut self, ecs: Arc<Mutex<ECSWorld>>) {
         let mut ecs = ecs.lock().unwrap();
-        let mut real_physics_system = self.real_physics_system.lock().unwrap();
-        let mut map = self.currently_simulated_bodies.lock().unwrap();
 
         ecs.parallel_process_all_by_components_mut(
             &[&Components::SimplePhysics, &Components::Transform],
@@ -180,11 +174,13 @@ impl PhysicsSystem {
                 if real_physics.is_some() {
                     let real_physics = real_physics.unwrap();
 
+                    let map = self.currently_simulated_bodies.lock().unwrap();
                     let simulated = map.get(&real_physics.id);
 
                     if simulated.is_some() {
                         let simulated = simulated.unwrap();
 
+                        let real_physics_system = self.real_physics_system.lock().unwrap();
                         let kinematics = real_physics_system
                             .get_body_kinematics(simulated.rigid_body)
                             .unwrap();
@@ -212,13 +208,13 @@ impl PhysicsSystem {
 
     fn update_simple_physics(
         &self,
-        universe_simulation: &Simulation,
         simple_physics: &mut SimplePhysicsComponent,
         transform: &mut TransformComponent,
         delta_time: f64,
         decimal_delta_time: &DBig,
         decimal_half_delta_time: &DBig,
     ) {
+        let universe_simulation = self.universe_simulation.lock().unwrap();
         transform.position =
             &transform.position + &simple_physics.linear_velocity * decimal_half_delta_time;
 
@@ -248,8 +244,6 @@ impl PhysicsSystem {
 
     fn handle_real_physics_simulation_start_stop(
         &self,
-        real_physics_system: &mut RealPhysicsSystem,
-        currently_simulated_bodies: &mut HashMap<u64, SimulatedBody>,
         transform: &TransformComponent,
         simple_physics: &SimplePhysicsComponent,
         real_physics: &RealPhysicsComponent,
@@ -259,23 +253,31 @@ impl PhysicsSystem {
 
         let should_simulate = relative_position.length() < self.real_simulation_cutoff;
 
-        let mut exists = currently_simulated_bodies.contains_key(&real_physics.id);
+        let mut exists = self
+            .currently_simulated_bodies
+            .lock()
+            .unwrap()
+            .contains_key(&real_physics.id);
 
         if !should_simulate && exists {
+            let mut real_physics_system = self.real_physics_system.lock().unwrap();
+            let mut currently_simulated_bodies = self.currently_simulated_bodies.lock().unwrap();
             // unload
             println!("PSY UNLOAD {}", real_physics.id);
             Self::stop_real_physics_sim(
-                real_physics_system,
-                currently_simulated_bodies,
+                &mut real_physics_system,
+                &mut currently_simulated_bodies,
                 real_physics,
             );
             exists = false;
         } else if should_simulate && !exists {
+            let mut real_physics_system = self.real_physics_system.lock().unwrap();
+            let mut currently_simulated_bodies = self.currently_simulated_bodies.lock().unwrap();
             // load
             println!("PSY LOAD {}", real_physics.id);
             Self::start_real_physics_sim(
-                real_physics_system,
-                currently_simulated_bodies,
+                &mut real_physics_system,
+                &mut currently_simulated_bodies,
                 transform,
                 simple_physics,
                 real_physics,

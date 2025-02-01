@@ -128,6 +128,9 @@ impl RenderingSystem {
 impl SystemTrait for RenderingSystem {
     fn update(&mut self, game_state: Arc<Mutex<GameState>>, ecs: Arc<Mutex<ECSWorld>>) {
         let ecs = ecs.lock().unwrap();
+
+        let current_camera_position = &game_state.lock().unwrap().current_camera.position;
+
         ecs.parallel_process_all_by_components(
             &[&Components::Mesh, &Components::Transform],
             |entity| {
@@ -135,11 +138,11 @@ impl SystemTrait for RenderingSystem {
                 let mesh_components = &entity.components.mesh;
 
                 for mesh_component in mesh_components {
-                    let relative_position = &transform_component.position
-                        - &game_state.lock().unwrap().current_camera.position;
+                    let relative_position = &transform_component.position - current_camera_position;
                     let relative_position = relative_position.to_dvec3();
 
                     let should_render = relative_position.length() < self.rendering_cutoff;
+
                     let mut exists = self
                         .currently_rendered_meshes
                         .lock()
@@ -166,14 +169,13 @@ impl SystemTrait for RenderingSystem {
                     }
 
                     if should_render && exists {
-                        let mut map_locked = self.currently_rendered_meshes.lock().unwrap();
-                        let mesh = map_locked.get_mut(&mesh_component.id).unwrap();
+                        let mut locked_map = self.currently_rendered_meshes.lock().unwrap();
+                        let mesh = locked_map.get_mut(&mesh_component.id).unwrap();
                         mesh.position.assign(&transform_component.position);
                         mesh.scale = transform_component.scale.clone();
                         mesh.orientation = transform_component.orientation.clone();
 
-                        mesh.update(&game_state.lock().unwrap().current_camera.position)
-                            .unwrap();
+                        mesh.update(current_camera_position).unwrap();
                     }
                 }
             },

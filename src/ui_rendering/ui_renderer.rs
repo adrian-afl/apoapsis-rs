@@ -1,10 +1,9 @@
+use crate::celestial_rendering::errors::RenderingError;
 use crate::config::Config;
-use crate::ecs_components::ui::ui_element_component::UIElementComponent;
 use std::collections::HashMap;
 use std::sync::Arc;
 use thiserror::Error;
 use vengine_rs::core::toolkit::VEToolkit;
-use vengine_rs::graphics::attachment::VEAttachmentError;
 use vengine_rs::image::image::VEImage;
 
 pub struct UIRenderer {
@@ -30,7 +29,7 @@ impl UIRenderer {
         }
     }
 
-    pub fn draw(&mut self, elements: &[&UIElementComponent]) -> Result<(), UIRendererError> {
-        Ok(())
-    }
+    // pub fn draw(&mut self, elements: &[&UIElementComponent]) -> Result<(), UIRendererError> {
+    //     Ok(())
+    // }
 }

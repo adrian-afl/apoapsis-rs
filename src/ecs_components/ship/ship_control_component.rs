@@ -1,6 +1,4 @@
-use crate::ecs::component_trait::Components;
-use crate::ecs::component_trait::{acquire_next_id, ComponentTrait};
-use crate::impl_component;
+use crate::ecs::component_trait::acquire_next_id;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -9,8 +7,6 @@ pub struct ShipControlComponent {
     pub linear_impulse_strength: f64,
     pub angular_impulse_strength: f64,
 }
-
-impl_component!(ShipControlComponent);
 
 impl ShipControlComponent {
     pub fn new(linear_impulse_strength: f64, angular_impulse_strength: f64) -> Self {

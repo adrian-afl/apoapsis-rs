@@ -1,6 +1,4 @@
-use crate::ecs::component_trait::Components;
-use crate::ecs::component_trait::{acquire_next_id, ComponentTrait};
-use crate::impl_component;
+use crate::ecs::component_trait::acquire_next_id;
 use crate::math::decimal_vector_3d::DecimalVector3d;
 use dashu_float::DBig;
 use glam::DVec3;
@@ -13,8 +11,6 @@ pub struct SimplePhysicsComponent {
     pub linear_velocity: DecimalVector3d,
     pub angular_velocity: DVec3,
 }
-
-impl_component!(SimplePhysicsComponent);
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
