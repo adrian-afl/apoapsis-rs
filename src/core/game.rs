@@ -11,6 +11,7 @@ use crate::ecs_components::camera::camera_focus_component::CameraFocusComponent;
 use crate::ecs_components::camera::first_person_camera_control_component::FirstPersonCameraControlComponent;
 use crate::ecs_components::common::transform_component::TransformComponent;
 use crate::ecs_systems::camera_system::CameraSystem;
+use crate::ecs_systems::physics_system::PhysicsSystem;
 use crate::ecs_systems::rendering_system::RenderingSystem;
 use crate::ecs_systems::universe_simulation_updater_system::UniverseSimulationUpdaterSystem;
 use crate::input::controls::{ControlMapItem, Controls};
@@ -19,7 +20,7 @@ use crate::input::mouse_input::MouseInput;
 use crate::math::decimal_vector_3d::DecimalVector3d;
 use crate::simulation::simulation::Simulation;
 use serde::{Deserialize, Serialize};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, RwLock};
 use vengine_rs::core::toolkit::VEToolkit;
 use winit::window::Window;
 
@@ -29,7 +30,7 @@ pub struct Game {
 
     pub config: Config,
 
-    universe_simulation: Arc<Mutex<Simulation>>,
+    universe_simulation: Arc<RwLock<Simulation>>,
     renderer: Arc<Mutex<Renderer>>,
     state: Arc<Mutex<GameState>>,
 
@@ -55,7 +56,7 @@ impl Game {
         let game_event_system = Arc::new(GameEventSystem::new());
         let controls = Arc::new(Controls::new(game_event_system.clone()));
 
-        let universe_simulation = Arc::new(Mutex::from(Simulation::new(toolkit.clone())));
+        let universe_simulation = Arc::new(RwLock::new(Simulation::new(toolkit.clone())));
         let renderer = Arc::new(Mutex::from(Renderer::new(toolkit.clone(), &config)));
         let state = Arc::new(Mutex::from(GameState::new()));
         let ecs = Arc::new(Mutex::from(ECSWorld::new()));
@@ -64,6 +65,7 @@ impl Game {
                 universe_simulation.clone(),
             )),
             Box::new(CameraSystem::new()),
+            Box::new(PhysicsSystem::new(universe_simulation.clone())),
             Box::new(RenderingSystem::new(
                 toolkit.clone(),
                 renderer.clone(),
@@ -75,7 +77,7 @@ impl Game {
         let keyboard_input = KeyboardInput::new(window.clone(), controls.clone());
 
         {
-            let mut universe = universe_simulation.lock().unwrap();
+            let mut universe = universe_simulation.try_write().unwrap();
             let mut renderer = renderer.lock().unwrap();
 
             renderer
@@ -88,7 +90,7 @@ impl Game {
 
         {
             let mut player_entity = Entity::new(Some("Player"));
-            let mut universe = universe_simulation.lock().unwrap();
+            let mut universe = universe_simulation.try_read().unwrap();
             let earth_position = &universe.get_body("earth").position;
             let player_initial_position =
                 earth_position + DecimalVector3d::from_f64(0.0, 0.0, 9398000.0);
@@ -154,7 +156,7 @@ impl Game {
                 .unwrap();
             let mut transform = focus.components.transform.as_mut().unwrap();
 
-            let mut universe = self.universe_simulation.lock().unwrap();
+            let mut universe = self.universe_simulation.try_read().unwrap();
             let earth_position = &universe.get_body("earth").position;
             println!("earth_position {earth_position}");
             let player_position = earth_position + DecimalVector3d::from_f64(0.0, 0.0, 9398000.0);

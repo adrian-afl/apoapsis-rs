@@ -13,7 +13,7 @@ use dashu_float::DBig;
 use glam::{DQuat, DVec3};
 use rapier3d_f64::prelude::{RigidBodyBuilder, RigidBodyHandle};
 use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, RwLock};
 
 struct SimulatedBody {
     rigid_body: RigidBodyHandle,
@@ -27,19 +27,19 @@ struct PlayerTemporaryData {
 }
 
 pub struct PhysicsSystem {
-    universe_simulation: Arc<Mutex<Simulation>>,
-    currently_simulated_bodies: Arc<Mutex<HashMap<u64, SimulatedBody>>>,
-    real_physics_system: Arc<Mutex<RealPhysicsSystem>>,
+    universe_simulation: Arc<RwLock<Simulation>>,
+    currently_simulated_bodies: RwLock<HashMap<u64, SimulatedBody>>,
+    real_physics_system: RwLock<RealPhysicsSystem>,
     real_simulation_cutoff: f64,
     player_temporary_data: PlayerTemporaryData,
 }
 
 impl PhysicsSystem {
-    pub fn new(universe_simulation: Arc<Mutex<Simulation>>) -> Self {
+    pub fn new(universe_simulation: Arc<RwLock<Simulation>>) -> Self {
         Self {
             universe_simulation,
-            real_physics_system: Arc::new(Mutex::from(RealPhysicsSystem::new())),
-            currently_simulated_bodies: Arc::new(Mutex::from(HashMap::new())),
+            real_physics_system: RwLock::new(RealPhysicsSystem::new()),
+            currently_simulated_bodies: RwLock::new(HashMap::new()),
             real_simulation_cutoff: 100.0,
             player_temporary_data: PlayerTemporaryData {
                 position: DecimalVector3d::zero(),
@@ -49,6 +49,8 @@ impl PhysicsSystem {
     }
 
     fn phase0(&mut self, ecs: Arc<Mutex<ECSWorld>>) {
+        println!("PhysicsSystem / phase0");
+
         let ecs = ecs.lock().unwrap();
         let player = ecs.find_first_by_components(&[
             &Components::IsPlayer,
@@ -72,6 +74,8 @@ impl PhysicsSystem {
     }
 
     fn phase1(&mut self, ecs: Arc<Mutex<ECSWorld>>, delta_time: f64) {
+        println!("PhysicsSystem / phase1");
+
         let decimal_delta_time = f64_to_dbig(delta_time);
         let decimal_half_delta_time = f64_to_dbig(delta_time * 0.5);
 
@@ -80,8 +84,6 @@ impl PhysicsSystem {
         ecs.parallel_process_all_by_components_mut(
             &[&Components::SimplePhysics, &Components::Transform],
             |entity| {
-                let mut map = self.currently_simulated_bodies.lock().unwrap();
-
                 let transform = entity.components.transform.as_mut().unwrap();
                 let simple_physics = entity.components.simple_physics.as_mut().unwrap();
                 let real_physics = entity.components.real_physics.as_ref();
@@ -104,8 +106,6 @@ impl PhysicsSystem {
                             &decimal_half_delta_time,
                         ),
                         Some(id) => {
-                            let simulated_object = map.get_mut(&id).unwrap();
-
                             let mut relative_position = (&transform.position
                                 - &self.player_temporary_data.position)
                                 .to_dvec3();
@@ -113,15 +113,20 @@ impl PhysicsSystem {
                                 - &self.player_temporary_data.linear_velocity)
                                 .to_dvec3();
 
-                            simulated_object.phase_1_relative_position = relative_position;
-                            simulated_object.phase_1_relative_linear_velocity =
-                                relative_linear_velocity;
+                            {
+                                let mut map = self.currently_simulated_bodies.try_write().unwrap();
+                                let simulated_object = map.get_mut(&id).unwrap();
+                                simulated_object.phase_1_relative_position = relative_position;
+                                simulated_object.phase_1_relative_linear_velocity =
+                                    relative_linear_velocity;
+                            } // unlocks
 
                             if simple_physics.mass > DBig::ZERO {
                                 let mut current_linear_velocity =
                                     DecimalVector3d::from_dvec3(relative_position);
 
-                                let universe_simulation = self.universe_simulation.lock().unwrap();
+                                let universe_simulation =
+                                    self.universe_simulation.try_read().unwrap();
                                 let gravity_impulse = universe_simulation
                                     .calculate_gravity_flux(&transform.position)
                                     * &decimal_delta_time;
@@ -132,7 +137,10 @@ impl PhysicsSystem {
                                 relative_position = current_linear_velocity.to_dvec3()
                             }
 
-                            let mut real_physics_system = self.real_physics_system.lock().unwrap();
+                            let map = self.currently_simulated_bodies.try_read().unwrap();
+                            let simulated_object = map.get(&id).unwrap();
+                            let mut real_physics_system =
+                                self.real_physics_system.try_write().unwrap();
                             real_physics_system
                                 .set_body_kinematics(
                                     simulated_object.rigid_body,
@@ -165,6 +173,8 @@ impl PhysicsSystem {
     }
 
     fn phase2(&mut self, ecs: Arc<Mutex<ECSWorld>>) {
+        println!("PhysicsSystem / phase2");
+
         let mut ecs = ecs.lock().unwrap();
 
         ecs.parallel_process_all_by_components_mut(
@@ -174,13 +184,13 @@ impl PhysicsSystem {
                 if real_physics.is_some() {
                     let real_physics = real_physics.unwrap();
 
-                    let map = self.currently_simulated_bodies.lock().unwrap();
+                    let map = self.currently_simulated_bodies.try_read().unwrap();
                     let simulated = map.get(&real_physics.id);
 
                     if simulated.is_some() {
                         let simulated = simulated.unwrap();
 
-                        let real_physics_system = self.real_physics_system.lock().unwrap();
+                        let real_physics_system = self.real_physics_system.try_read().unwrap();
                         let kinematics = real_physics_system
                             .get_body_kinematics(simulated.rigid_body)
                             .unwrap();
@@ -214,7 +224,7 @@ impl PhysicsSystem {
         decimal_delta_time: &DBig,
         decimal_half_delta_time: &DBig,
     ) {
-        let universe_simulation = self.universe_simulation.lock().unwrap();
+        let universe_simulation = self.universe_simulation.try_read().unwrap();
         transform.position =
             &transform.position + &simple_physics.linear_velocity * decimal_half_delta_time;
 
@@ -255,13 +265,14 @@ impl PhysicsSystem {
 
         let mut exists = self
             .currently_simulated_bodies
-            .lock()
+            .try_read()
             .unwrap()
             .contains_key(&real_physics.id);
 
         if !should_simulate && exists {
-            let mut real_physics_system = self.real_physics_system.lock().unwrap();
-            let mut currently_simulated_bodies = self.currently_simulated_bodies.lock().unwrap();
+            let mut real_physics_system = self.real_physics_system.try_write().unwrap();
+            let mut currently_simulated_bodies =
+                self.currently_simulated_bodies.try_write().unwrap();
             // unload
             println!("PSY UNLOAD {}", real_physics.id);
             Self::stop_real_physics_sim(
@@ -271,8 +282,9 @@ impl PhysicsSystem {
             );
             exists = false;
         } else if should_simulate && !exists {
-            let mut real_physics_system = self.real_physics_system.lock().unwrap();
-            let mut currently_simulated_bodies = self.currently_simulated_bodies.lock().unwrap();
+            let mut real_physics_system = self.real_physics_system.try_write().unwrap();
+            let mut currently_simulated_bodies =
+                self.currently_simulated_bodies.try_write().unwrap();
             // load
             println!("PSY LOAD {}", real_physics.id);
             Self::start_real_physics_sim(
@@ -343,12 +355,17 @@ impl PhysicsSystem {
 
 impl SystemTrait for PhysicsSystem {
     fn update(&mut self, game_state: Arc<Mutex<GameState>>, ecs: Arc<Mutex<ECSWorld>>) {
+        println!("PhysicsSystem / update");
+
         let delta_time = game_state.lock().unwrap().delta_time;
 
         self.phase0(ecs.clone());
         self.phase1(ecs.clone(), delta_time);
 
-        self.real_physics_system.lock().unwrap().step(delta_time);
+        self.real_physics_system
+            .try_write()
+            .unwrap()
+            .step(delta_time);
 
         self.phase2(ecs.clone());
     }

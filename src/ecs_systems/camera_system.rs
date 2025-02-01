@@ -14,6 +14,8 @@ impl CameraSystem {
 
 impl SystemTrait for CameraSystem {
     fn update(&mut self, game_state: Arc<Mutex<GameState>>, ecs: Arc<Mutex<ECSWorld>>) {
+        println!("CameraSystem / update");
+
         let ecs = ecs.lock().unwrap();
         let entity =
             ecs.find_first_by_components(&[&Components::CameraFocus, &Components::Transform]);

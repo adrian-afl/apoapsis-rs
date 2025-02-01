@@ -14,15 +14,15 @@ use crate::ecs_components::rendering::mesh_component::{
 };
 use crate::simulation::simulation::Simulation;
 use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, RwLock};
 use vengine_rs::core::toolkit::VEToolkit;
 use vengine_rs::image::image::VEImageUsage;
 
 pub struct RenderingSystem {
     toolkit: Arc<VEToolkit>,
     renderer: Arc<Mutex<Renderer>>,
-    universe_simulation: Arc<Mutex<Simulation>>,
-    currently_rendered_meshes: Arc<Mutex<HashMap<u64, Mesh>>>,
+    universe_simulation: Arc<RwLock<Simulation>>,
+    currently_rendered_meshes: RwLock<HashMap<u64, Mesh>>,
     rendering_cutoff: f64,
 }
 
@@ -30,13 +30,13 @@ impl RenderingSystem {
     pub fn new(
         toolkit: Arc<VEToolkit>,
         renderer: Arc<Mutex<Renderer>>,
-        universe_simulation: Arc<Mutex<Simulation>>,
+        universe_simulation: Arc<RwLock<Simulation>>,
     ) -> Self {
         Self {
             toolkit,
             renderer,
             universe_simulation,
-            currently_rendered_meshes: Arc::new(Mutex::from(HashMap::new())),
+            currently_rendered_meshes: RwLock::new(HashMap::new()),
             rendering_cutoff: 100.0,
         }
     }
@@ -127,17 +127,23 @@ impl RenderingSystem {
 
 impl SystemTrait for RenderingSystem {
     fn update(&mut self, game_state: Arc<Mutex<GameState>>, ecs: Arc<Mutex<ECSWorld>>) {
+        println!("RenderingSystem / update");
+
         let ecs = ecs.lock().unwrap();
 
-        let current_camera_position = &game_state.lock().unwrap().current_camera.position;
+        let locked_state = &game_state.lock().unwrap();
+        let current_camera_position = &locked_state.current_camera.position;
 
+        println!("RenderingSystem / Just before parallel");
         ecs.parallel_process_all_by_components(
             &[&Components::Mesh, &Components::Transform],
             |entity| {
+                println!("RenderingSystem / Parallel {}", entity.id);
                 let transform_component = entity.components.transform.as_ref().unwrap();
                 let mesh_components = &entity.components.mesh;
 
                 for mesh_component in mesh_components {
+                    println!("RenderingSystem / For mesh component {}", mesh_component.id);
                     let relative_position = &transform_component.position - current_camera_position;
                     let relative_position = relative_position.to_dvec3();
 
@@ -145,22 +151,24 @@ impl SystemTrait for RenderingSystem {
 
                     let mut exists = self
                         .currently_rendered_meshes
-                        .lock()
+                        .try_read()
                         .unwrap()
                         .contains_key(&mesh_component.id);
 
                     if !should_render && exists {
+                        println!("RenderingSystem / REMOVE {}", mesh_component.id);
                         self.currently_rendered_meshes
-                            .lock()
+                            .try_write()
                             .unwrap()
                             .remove(&mesh_component.id);
                         exists = false;
                     } else if should_render && !exists {
+                        println!("RenderingSystem / ADD {}", mesh_component.id);
                         match self.create_mesh_from_description(&mesh_component.description) {
                             Err(err) => println!("Failed to create a mesh! Reason: {}", err),
                             Ok(mesh) => {
                                 self.currently_rendered_meshes
-                                    .lock()
+                                    .try_write()
                                     .unwrap()
                                     .insert(mesh_component.id, mesh);
                                 exists = true;
@@ -169,7 +177,8 @@ impl SystemTrait for RenderingSystem {
                     }
 
                     if should_render && exists {
-                        let mut locked_map = self.currently_rendered_meshes.lock().unwrap();
+                        println!("RenderingSystem / UPDATE {}", mesh_component.id);
+                        let mut locked_map = self.currently_rendered_meshes.try_write().unwrap();
                         let mesh = locked_map.get_mut(&mesh_component.id).unwrap();
                         mesh.position.assign(&transform_component.position);
                         mesh.scale = transform_component.scale.clone();
@@ -180,14 +189,14 @@ impl SystemTrait for RenderingSystem {
                 }
             },
         );
+        println!("RenderingSystem / After render");
 
-        let locked_state = &game_state.lock().unwrap();
-
+        println!("RenderingSystem / Draw");
         let render_result = self.renderer.lock().unwrap().draw(
-            &self.universe_simulation.lock().unwrap(),
+            &self.universe_simulation.try_read().unwrap(),
             &self
                 .currently_rendered_meshes
-                .lock()
+                .try_read()
                 .unwrap()
                 .values()
                 .collect::<Vec<_>>(),
@@ -196,6 +205,7 @@ impl SystemTrait for RenderingSystem {
             locked_state.delta_time,
         );
 
+        println!("RenderingSystem / End");
         match render_result {
             Ok(_) => (),
             Err(err) => println!("Render failed! Reason: {}", err),
