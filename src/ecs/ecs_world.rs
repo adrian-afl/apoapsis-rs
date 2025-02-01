@@ -1,4 +1,4 @@
-use crate::ecs::component_trait::{ComponentTrait, ComponentTypes};
+use crate::ecs::component_trait::{ComponentTrait, Components};
 use crate::ecs::entity::{Entity, ENTITY_SEQ};
 use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -91,7 +91,7 @@ impl ECSWorld {
         None
     }
 
-    fn find_first_id_by_components(&self, component_types: &[&ComponentTypes]) -> Option<u64> {
+    fn find_first_id_by_components(&self, component_types: &[&Components]) -> Option<u64> {
         let mut found_id = None;
         for entity in self.entities.values() {
             if entity.components.has_all(component_types) {
@@ -104,7 +104,7 @@ impl ECSWorld {
 
     pub fn find_first_by_components_mut(
         &mut self,
-        component_types: &[&ComponentTypes],
+        component_types: &[&Components],
     ) -> Option<&mut Entity> {
         let found_id = self.find_first_id_by_components(component_types);
         if let Some(id) = found_id {
@@ -113,7 +113,7 @@ impl ECSWorld {
         None
     }
 
-    pub fn find_first_by_components(&self, component_types: &[&ComponentTypes]) -> Option<&Entity> {
+    pub fn find_first_by_components(&self, component_types: &[&Components]) -> Option<&Entity> {
         let found_id = self.find_first_id_by_components(component_types);
         if let Some(id) = found_id {
             return self.entities.get(&id);
@@ -123,7 +123,7 @@ impl ECSWorld {
 
     pub fn process_all_by_components_mut(
         &mut self,
-        types: &[&ComponentTypes],
+        types: &[&Components],
         mut processor: impl FnMut(&mut Entity),
     ) {
         for entity in self.entities.values_mut() {
@@ -135,7 +135,7 @@ impl ECSWorld {
 
     pub fn parallel_process_all_by_components_mut(
         &mut self,
-        types: &[&ComponentTypes],
+        types: &[&Components],
         mut processor: impl Fn(&mut Entity) + Sync + Send,
     ) {
         self.entities
@@ -147,11 +147,7 @@ impl ECSWorld {
             });
     }
 
-    pub fn process_all_by_components(
-        &self,
-        types: &[&ComponentTypes],
-        processor: impl Fn(&Entity),
-    ) {
+    pub fn process_all_by_components(&self, types: &[&Components], processor: impl Fn(&Entity)) {
         for entity in self.entities.values() {
             if entity.components.has_all(types) {
                 processor(entity);
@@ -161,7 +157,7 @@ impl ECSWorld {
 
     pub fn parallel_process_all_by_components(
         &self,
-        types: &[&ComponentTypes],
+        types: &[&Components],
         processor: impl Fn(&Entity) + Sync + Send,
     ) {
         self.entities.par_iter().for_each(|(_, entity)| {

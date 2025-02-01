@@ -6,7 +6,7 @@ use crate::celestial_rendering::scene::material::{
 };
 use crate::celestial_rendering::scene::mesh::Mesh;
 use crate::core::game_state::GameState;
-use crate::ecs::component_trait::ComponentTypes;
+use crate::ecs::component_trait::Components;
 use crate::ecs::ecs_world::ECSWorld;
 use crate::ecs::system_trait::SystemTrait;
 use crate::ecs_components::rendering::mesh_component::{
@@ -129,10 +129,7 @@ impl SystemTrait for RenderingSystem {
     fn update(&mut self, game_state: Arc<Mutex<GameState>>, ecs: Arc<Mutex<ECSWorld>>) {
         let ecs = ecs.lock().unwrap();
         ecs.parallel_process_all_by_components(
-            &[
-                &ComponentTypes::MeshComponent,
-                &ComponentTypes::TransformComponent,
-            ],
+            &[&Components::Mesh, &Components::Transform],
             |entity| {
                 let transform_component = entity.components.transform.as_ref().unwrap();
                 let mesh_components = &entity.components.mesh;

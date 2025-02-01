@@ -1,6 +1,4 @@
-use crate::ecs::component_trait::ComponentTypes;
-use crate::ecs::component_trait::{acquire_next_id, ComponentTrait};
-use crate::impl_component;
+use crate::ecs::component_trait::acquire_next_id;
 use crate::math::decimal_vector_3d::DecimalVector3d;
 use glam::{DQuat, DVec3};
 use serde::{Deserialize, Serialize};
@@ -12,8 +10,6 @@ pub struct TransformComponent {
     pub orientation: DQuat,
     pub scale: DVec3,
 }
-
-impl_component!(TransformComponent);
 
 impl TransformComponent {
     pub fn new() -> TransformComponent {

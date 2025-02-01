@@ -1,6 +1,6 @@
 use crate::celestial_rendering::errors::ECSError;
 use crate::core::game_state::GameState;
-use crate::ecs::component_trait::ComponentTypes;
+use crate::ecs::component_trait::Components;
 use crate::ecs::ecs_world::ECSWorld;
 use crate::ecs::system_trait::SystemTrait;
 use crate::ecs_components::common::transform_component::TransformComponent;
@@ -55,9 +55,9 @@ impl PhysicsSystem {
 
         let mut ecs = ecs.lock().unwrap();
         let player = ecs.find_first_by_components(&[
-            &ComponentTypes::IsPlayerComponent,
-            &ComponentTypes::SimplePhysicsComponent,
-            &ComponentTypes::TransformComponent,
+            &Components::IsPlayer,
+            &Components::SimplePhysics,
+            &Components::Transform,
         ]);
         {
             // scope to now screw up with shadowing
@@ -81,10 +81,7 @@ impl PhysicsSystem {
         }
 
         ecs.parallel_process_all_by_components_mut(
-            &[
-                &ComponentTypes::SimplePhysicsComponent,
-                &ComponentTypes::TransformComponent,
-            ],
+            &[&Components::SimplePhysics, &Components::Transform],
             |entity| {
                 let mut transform = entity.components.transform.as_mut().unwrap();
                 let mut simple_physics = entity.components.simple_physics.as_mut().unwrap();
@@ -175,10 +172,7 @@ impl PhysicsSystem {
     fn phase1(&mut self, ecs: Arc<Mutex<ECSWorld>>) {
         let mut ecs = ecs.lock().unwrap();
         ecs.parallel_process_all_by_components_mut(
-            &[
-                &ComponentTypes::SimplePhysicsComponent,
-                &ComponentTypes::TransformComponent,
-            ],
+            &[&Components::SimplePhysics, &Components::Transform],
             |entity| {
                 let real_physics = entity.components.real_physics.as_ref();
                 if real_physics.is_some() {

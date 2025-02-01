@@ -1,4 +1,4 @@
-use crate::ecs::component_trait::ComponentTypes;
+use crate::ecs::component_trait::Components;
 use crate::ecs::component_trait::{acquire_next_id, ComponentTrait};
 use crate::impl_component;
 use rapier3d_f64::prelude::ColliderBuilder;
