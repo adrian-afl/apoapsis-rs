@@ -1,13 +1,11 @@
 use crate::celestial_rendering::errors::ECSError;
-use crate::component_types;
 use crate::core::game_state::GameState;
-use crate::ecs::component_trait::component_type;
+use crate::ecs::component_trait::ComponentTypes;
 use crate::ecs::ecs_world::ECSWorld;
 use crate::ecs::system_trait::SystemTrait;
 use crate::ecs_components::common::transform_component::TransformComponent;
 use crate::ecs_components::physics::real_physics_component::RealPhysicsComponent;
 use crate::ecs_components::physics::simple_physics_component::SimplePhysicsComponent;
-use crate::ecs_components::player::is_player_component::IsPlayerComponent;
 use crate::math::decimal_vector_3d::DecimalVector3d;
 use crate::math::sin_cos::f64_to_dbig;
 use crate::simulation::real_physics_system::{RealPhysicsSystem, SetRealPhysicsBodyKinematics};
@@ -56,11 +54,11 @@ impl PhysicsSystem {
         let decimal_half_delta_time = f64_to_dbig(delta_time * 0.5);
 
         let mut ecs = ecs.lock().unwrap();
-        let player = ecs.find_first_by_components(component_types!(
-            IsPlayerComponent,
-            SimplePhysicsComponent,
-            TransformComponent
-        ));
+        let player = ecs.find_first_by_components(&[
+            &ComponentTypes::IsPlayerComponent,
+            &ComponentTypes::SimplePhysicsComponent,
+            &ComponentTypes::TransformComponent,
+        ]);
         {
             // scope to now screw up with shadowing
             let player = match player {
@@ -71,10 +69,8 @@ impl PhysicsSystem {
                 }
             };
 
-            let transform = player.get_first_component::<TransformComponent>().unwrap();
-            let simple_physics = player
-                .get_first_component::<SimplePhysicsComponent>()
-                .unwrap();
+            let transform = player.components.transform.as_ref().unwrap();
+            let simple_physics = player.components.simple_physics.as_ref().unwrap();
 
             self.player_temporary_data
                 .position
@@ -85,22 +81,17 @@ impl PhysicsSystem {
         }
 
         ecs.process_all_by_components_mut(
-            component_types!(SimplePhysicsComponent, TransformComponent),
+            &[
+                &ComponentTypes::SimplePhysicsComponent,
+                &ComponentTypes::TransformComponent,
+            ],
             |entity| {
-                let mut transform = entity
-                    .get_first_component::<TransformComponent>()
-                    .unwrap()
-                    .clone();
-
-                let mut simple_physics = entity
-                    .get_first_component::<SimplePhysicsComponent>()
-                    .unwrap()
-                    .clone();
-
-                let real_physics = entity.get_first_component::<RealPhysicsComponent>();
+                let mut transform = entity.components.transform.as_mut().unwrap();
+                let mut simple_physics = entity.components.simple_physics.as_mut().unwrap();
+                let real_physics = entity.components.real_physics.as_ref();
 
                 if real_physics.is_some() {
-                    let real_physics = real_physics.unwrap().clone();
+                    let real_physics = real_physics.unwrap();
 
                     let handle_or_none = self.handle_real_physics_simulation_start_stop(
                         &transform,
@@ -168,10 +159,6 @@ impl PhysicsSystem {
                                 + &simple_physics.linear_velocity * &decimal_delta_time;
                         }
                     }
-
-                    *entity
-                        .get_first_component_mut::<RealPhysicsComponent>()
-                        .unwrap() = real_physics;
                 } else {
                     self.update_simple_physics(
                         &mut simple_physics,
@@ -181,14 +168,6 @@ impl PhysicsSystem {
                         &decimal_half_delta_time,
                     )
                 }
-
-                *entity
-                    .get_first_component_mut::<TransformComponent>()
-                    .unwrap() = transform;
-
-                *entity
-                    .get_first_component_mut::<SimplePhysicsComponent>()
-                    .unwrap() = simple_physics;
             },
         );
 
@@ -198,9 +177,12 @@ impl PhysicsSystem {
     fn phase1(&mut self, ecs: Arc<Mutex<ECSWorld>>) -> Result<(), ECSError> {
         let mut ecs = ecs.lock().unwrap();
         ecs.process_all_by_components_mut(
-            component_types!(SimplePhysicsComponent, TransformComponent),
+            &[
+                &ComponentTypes::SimplePhysicsComponent,
+                &ComponentTypes::TransformComponent,
+            ],
             |entity| {
-                let real_physics = entity.get_first_component::<RealPhysicsComponent>();
+                let real_physics = entity.components.real_physics.as_ref();
                 if real_physics.is_some() {
                     let real_physics_system = self.real_physics_system.lock().unwrap();
                     let map = self.currently_simulated_bodies.lock().unwrap();
@@ -216,15 +198,8 @@ impl PhysicsSystem {
                             .get_body_kinematics(simulated.rigid_body)
                             .unwrap();
 
-                        let mut transform = entity
-                            .get_first_component::<TransformComponent>()
-                            .unwrap()
-                            .clone();
-
-                        let mut simple_physics = entity
-                            .get_first_component::<SimplePhysicsComponent>()
-                            .unwrap()
-                            .clone();
+                        let transform = entity.components.transform.as_mut().unwrap();
+                        let simple_physics = entity.components.simple_physics.as_mut().unwrap();
 
                         let diff_relative_position =
                             kinematics.position - simulated.phase_1_relative_position;
@@ -238,14 +213,6 @@ impl PhysicsSystem {
                         simple_physics.linear_velocity = &simple_physics.linear_velocity
                             + DecimalVector3d::from_dvec3(diff_relative_linear_velocity);
                         simple_physics.angular_velocity = kinematics.angular_velocity;
-
-                        *entity
-                            .get_first_component_mut::<TransformComponent>()
-                            .unwrap() = transform;
-
-                        *entity
-                            .get_first_component_mut::<SimplePhysicsComponent>()
-                            .unwrap() = simple_physics;
                     }
                 }
             },

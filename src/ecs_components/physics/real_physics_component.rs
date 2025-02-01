@@ -1,10 +1,8 @@
-use crate::ecs::component_trait::component_type;
 use crate::ecs::component_trait::ComponentTypes;
 use crate::ecs::component_trait::{acquire_next_id, ComponentTrait};
 use crate::impl_component;
 use rapier3d_f64::prelude::ColliderBuilder;
 use serde::{Deserialize, Serialize};
-use std::any::{Any, TypeId};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct RealPhysicsComponent {
@@ -12,7 +10,7 @@ pub struct RealPhysicsComponent {
     pub shape_description: ShapeDescription,
 }
 
-impl_component!(RealPhysicsComponent, false);
+impl_component!(RealPhysicsComponent);
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

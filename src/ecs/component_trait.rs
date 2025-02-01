@@ -29,58 +29,115 @@ static COMPONENT_SEQ: AtomicU64 = AtomicU64::new(1);
 
 pub trait ComponentTrait: Any {
     fn id(&self) -> u64;
-    fn allow_multiple(&self) -> bool;
-    fn as_any_mut(&mut self) -> &mut dyn Any;
-    fn as_any(&self) -> &dyn Any;
-    fn as_component_enum(&self) -> ComponentTypes;
-    fn typ(&self) -> TypeId;
+    fn get_type(&self) -> ComponentTypes;
+}
+
+macro_rules! vector_or_option_type {
+    ($component_type:ident, true) => {
+        Vec< $component_type >
+    };
+    ($component_type:ident, false) => {
+        Option< $component_type >
+    };
+}
+
+macro_rules! vector_or_option_initializer {
+    ($component_type:ident, true) => {
+        Vec::new()
+    };
+    ($component_type:ident, false) => {
+        None
+    };
+}
+
+macro_rules! has_component {
+    ($self:ident, $component_snake:ident, $component:ident, true) => {
+        $self.$component_snake.len() > 0
+    };
+    ($self:ident, $component_snake:ident, $component:ident, false) => {
+        $self.$component_snake.is_some()
+    };
 }
 
 macro_rules! create_component_types_enum {
-    ($($component:ident),+) => {
+    ($(($component_snake:ident, $component:ident, $component_multiple:ident)),+) => {
         #[derive(Debug, Clone, Serialize, Deserialize)]
         pub enum ComponentTypes {
             $(
-                $component($component),
+                $component,
             )*
         }
 
-        impl ComponentTypes {
-            pub fn to_boxed(self) -> Box<dyn ComponentTrait> {
-                match self {
+        #[derive(Debug, Clone, Serialize, Deserialize)]
+        pub struct AttachedComponents {
+            $(
+                pub $component_snake: vector_or_option_type!($component, $component_multiple),
+            )*
+        }
+
+        impl AttachedComponents {
+            pub fn new() -> Self {
+                Self {
                     $(
-                        ComponentTypes::$component(x) => Box::new(x),
+                        $component_snake: vector_or_option_initializer!($component, $component_multiple),
                     )*
                 }
+            }
+
+            pub fn has(&self, typ: &ComponentTypes) -> bool {
+                match typ {
+                    $(
+                        ComponentTypes::$component => has_component!(self, $component_snake, $component, $component_multiple),
+                    )*
+                }
+            }
+
+            pub fn has_all(&self, types: &[&ComponentTypes]) -> bool {
+                for typ in types {
+                    if !self.has(typ) {
+                        return false;
+                    }
+                }
+                true
             }
         }
     }
 }
 
 create_component_types_enum!(
-    CameraFocusComponent,
-    FirstPersonCameraControlComponent,
-    ThirdPersonOrbitCameraControlComponent,
-    ThirdPersonStaticCameraControlComponent,
-    TransformComponent,
-    IsGroundColliderComponent,
-    RealPhysicsComponent,
-    SimplePhysicsComponent,
-    SetPhysicsKinematicsComponent,
-    IsPlayerComponent,
-    MeshComponent,
-    ControlFocusComponent,
-    ShipControlComponent,
-    //
-    UIElementComponent,
-    UITransformComponent,
-    UIColorComponent,
-    UIHoverColorComponent,
-    UIRectangleComponent,
-    UICursorComponent,
-    UIHoverCursorComponent,
-    UITextureComponent,
-    UITextComponent
+    (camera_focus, CameraFocusComponent, false),
+    (
+        first_person_camera_control,
+        FirstPersonCameraControlComponent,
+        false
+    ),
+    (
+        third_person_orbit_camera_control,
+        ThirdPersonOrbitCameraControlComponent,
+        false
+    ),
+    (
+        third_person_static_camera_control,
+        ThirdPersonStaticCameraControlComponent,
+        false
+    ),
+    (transform, TransformComponent, false),
+    (is_ground_collider, IsGroundColliderComponent, false),
+    (real_physics, RealPhysicsComponent, false),
+    (simple_physics, SimplePhysicsComponent, false),
+    (set_physics_kinematics, SetPhysicsKinematicsComponent, true),
+    (is_player, IsPlayerComponent, false),
+    (mesh, MeshComponent, true),
+    (control_focus, ControlFocusComponent, false),
+    (ship_control, ShipControlComponent, false),
+    (ui_transform, UITransformComponent, false),
+    (ui_color, UIColorComponent, false),
+    (ui_hover_color, UIHoverColorComponent, false),
+    (ui_rectangle, UIRectangleComponent, false),
+    (ui_cursor, UICursorComponent, false),
+    (ui_hover_cursor, UIHoverCursorComponent, false),
+    (ui_texture, UITextureComponent, false),
+    (ui_text, UITextComponent, false)
 );
 
 pub fn acquire_next_id() -> u64 {
@@ -92,41 +149,15 @@ pub fn component_type<T: ComponentTrait>() -> TypeId {
 }
 
 #[macro_export]
-macro_rules! component_from_enum {
-    ($enum:ident, $type:ident) => {
-        match $enum {
-            ComponentTypes::$type(x) => x,
-            _ => panic!("Failed to convert component from enum"),
-        }
-    };
-}
-
-#[macro_export]
 macro_rules! impl_component {
-    ($type:ident, $allow_multiple:expr) => {
+    ($type:ident) => {
         impl ComponentTrait for $type {
             fn id(&self) -> u64 {
                 self.id
             }
 
-            fn typ(&self) -> TypeId {
-                component_type::<$type>()
-            }
-
-            fn allow_multiple(&self) -> bool {
-                $allow_multiple
-            }
-
-            fn as_any(&self) -> &dyn Any {
-                self
-            }
-
-            fn as_any_mut(&mut self) -> &mut dyn Any {
-                self
-            }
-
-            fn as_component_enum(&self) -> ComponentTypes {
-                ComponentTypes::$type(self.clone())
+            fn get_type(&self) -> ComponentTypes {
+                ComponentTypes::$type
             }
         }
     };
@@ -134,7 +165,7 @@ macro_rules! impl_component {
 
 #[macro_export]
 macro_rules! impl_marker_component {
-    ($type:ident, $allow_multiple:expr) => {
+    ($type:ident) => {
         #[derive(Clone, Debug, Serialize, Deserialize)]
         pub struct $type {
             pub id: u64,
@@ -153,34 +184,9 @@ macro_rules! impl_marker_component {
                 self.id
             }
 
-            fn typ(&self) -> TypeId {
-                component_type::<$type>()
-            }
-
-            fn allow_multiple(&self) -> bool {
-                $allow_multiple
-            }
-
-            fn as_any(&self) -> &dyn Any {
-                self
-            }
-
-            fn as_any_mut(&mut self) -> &mut dyn Any {
-                self
-            }
-
-            fn as_component_enum(&self) -> ComponentTypes {
-                ComponentTypes::$type(self.clone())
+            fn get_type(&self) -> ComponentTypes {
+                ComponentTypes::$type
             }
         }
-    };
-}
-
-#[macro_export]
-macro_rules! component_types {
-    ($($component:ty),+) => {
-        &[$(
-            &component_type::<$component>(),
-        )*]
     };
 }

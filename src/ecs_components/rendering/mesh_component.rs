@@ -1,10 +1,8 @@
-use crate::ecs::component_trait::component_type;
 use crate::ecs::component_trait::ComponentTypes;
 use crate::ecs::component_trait::{acquire_next_id, ComponentTrait};
 use crate::impl_component;
 use glam::DVec3;
 use serde::{Deserialize, Serialize};
-use std::any::{Any, TypeId};
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -51,7 +49,7 @@ pub struct MeshComponent {
     pub description: MeshDescription,
 }
 
-impl_component!(MeshComponent, true);
+impl_component!(MeshComponent);
 
 impl MeshComponent {
     pub fn from_description(description: MeshDescription) -> Self {
