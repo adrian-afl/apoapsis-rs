@@ -58,12 +58,12 @@ impl SystemTrait for UISystem {
             //
             let exists = self
                 .currently_rendered_items
-                .try_read()
+                .read()
                 .unwrap()
                 .contains_key(&entity.id);
 
             if !exists {
-                self.currently_rendered_items.try_write().unwrap().insert(
+                self.currently_rendered_items.write().unwrap().insert(
                     entity.id,
                     UIRenderedItem::empty(
                         &self.toolkit,
@@ -73,7 +73,7 @@ impl SystemTrait for UISystem {
                 );
             }
 
-            let mut map_locked = self.currently_rendered_items.try_write().unwrap();
+            let mut map_locked = self.currently_rendered_items.write().unwrap();
 
             let item = map_locked.get_mut(&entity.id).unwrap();
 
@@ -91,6 +91,11 @@ impl SystemTrait for UISystem {
             }
 
             let uibox = &entity.components.ui_box.as_ref().unwrap();
+
+            item.position = uibox.position;
+            item.size = uibox.size;
+            item.orientation = uibox.orientation;
+            item.z_index = uibox.z_index;
 
             if let Some(color) = &entity.components.ui_color {
                 item.color = color.color;
@@ -141,6 +146,8 @@ impl SystemTrait for UISystem {
                 locked_map.remove(key);
             }
         });
+
+        println!("UI ELEMS {:?}", self.currently_rendered_items);
 
         let mut ui_drawer = self.ui_drawer.lock().unwrap();
         ui_drawer.update_buffer().unwrap();

@@ -33,7 +33,7 @@ pub struct UIDrawer {
     pub out_color: VEImage,
 }
 
-pub const MESH_DRAWER_VERTEX_ATTRIBUTES: [VertexAttribFormat; 2] = [
+pub const UI_ITEM_DRAWER_VERTEX_ATTRIBUTES: [VertexAttribFormat; 2] = [
     VertexAttribFormat::RG32f, // Position
     VertexAttribFormat::RG32f, // UV
 ];
@@ -41,13 +41,35 @@ pub const MESH_DRAWER_VERTEX_ATTRIBUTES: [VertexAttribFormat; 2] = [
 impl UIDrawer {
     pub fn new(config: &ResolutionConfig, toolkit: &VEToolkit) -> Result<Self, RenderingError> {
         let floats: [f32; 24] = [
-            1.0, -1.0, 1.0, 0.0, -1.0, 1.0, 0.0, 1.0, -1.0, -1.0, 0.0, 0.0, 1.0, -1.0, 1.0, 0.0,
-            1.0, 1.0, 1.0, 1.0, -1.0, 1.0, 0.0, 1.0,
+            // v1
+            1.0, -1.0, //
+            1.0, 0.0, //
+            // v2 //
+            -1.0, 1.0, //
+            0.0, 1.0, //
+            // v3 //
+            -1.0, -1.0, //
+            0.0, 0.0, //
+            // v4 //
+            1.0, -1.0, //
+            1.0, 0.0, //
+            // v5 //
+            1.0, 1.0, //
+            1.0, 1.0, //
+            // v6 //
+            -1.0, 1.0, //
+            0.0, 1.0, //
         ];
-        let bytes: Vec<u8> = floats.iter().flat_map(|x| x.to_le_bytes()).collect();
+        let mut bytes: Vec<u8> = vec![];
+        for f in floats {
+            let fb = f.to_le_bytes();
+            for b in fb {
+                bytes.push(b);
+            }
+        }
 
         let quad_geometry = toolkit
-            .create_vertex_buffer_from_data(bytes, &MESH_DRAWER_VERTEX_ATTRIBUTES)
+            .create_vertex_buffer_from_data(bytes, &UI_ITEM_DRAWER_VERTEX_ATTRIBUTES)
             .unwrap();
 
         let mut out_color = toolkit.create_image_full(
@@ -55,7 +77,11 @@ impl UIDrawer {
             config.height,
             1,
             VEImageFormat::RGBA16f,
-            &[VEImageUsage::Storage, VEImageUsage::Sampled],
+            &[
+                VEImageUsage::ColorAttachment,
+                VEImageUsage::Storage,
+                // VEImageUsage::Sampled,
+            ],
         )?;
 
         let out_color_view = out_color.get_view(VEImageViewCreateInfo::simple_2d())?;
@@ -112,7 +138,7 @@ impl UIDrawer {
             &[&item_set_layout, &common_set_layout],
             &vertex_shader,
             &fragment_shader,
-            &MESH_DRAWER_VERTEX_ATTRIBUTES,
+            &UI_ITEM_DRAWER_VERTEX_ATTRIBUTES,
             VEPrimitiveTopology::TriangleList,
             VECullMode::None,
         )?;

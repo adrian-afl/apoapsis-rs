@@ -92,7 +92,7 @@ impl CelestialHierarchy {
                     .rendered_bodies
                     .get_mut(&closest_hierarchy_body.body.name)
                     .unwrap();
-                println!("{:?}", closest_star.body);
+                // println!("{:?}", closest_star.body);
                 body.celestial_body_buffer.update(
                     &camera_position,
                     &closest_star.position,

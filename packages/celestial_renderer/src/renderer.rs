@@ -81,8 +81,13 @@ impl Renderer {
         let mut multi_merger =
             MultiMerger::new(&config, &toolkit).expect("Failed to create MultiMerger");
 
-        let output =
-            Output::new(&config, &mut multi_merger, &toolkit).expect("Failed to create Output");
+        let output = Output::new(
+            &config,
+            &mut multi_merger,
+            &mut ui_drawer.lock().unwrap(),
+            &toolkit,
+        )
+        .expect("Failed to create Output");
 
         let mut cloud_generator_low_freq =
             CloudGeneratorLowFreq::new(&toolkit).expect("Failed to create CloudGeneratorLowFreq");

@@ -137,6 +137,9 @@ impl Game {
                     .with_position(DVec2::new(0.9, 0.9))
                     .with_size(DVec2::new(0.1, 0.1)),
             );
+
+            ecs.lock().unwrap().add(box_top_left);
+            ecs.lock().unwrap().add(box_bottom_right);
         }
 
         Self {

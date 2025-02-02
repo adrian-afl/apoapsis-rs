@@ -3,6 +3,7 @@ use crate::finalization::multi_merger::MultiMerger;
 use ash::vk;
 use renderer_common::errors::RenderingError;
 use renderer_common::resolution_config::ResolutionConfig;
+use ui_renderer::ui_drawer::UIDrawer;
 use vengine_rs::compute::compute_stage::VEComputeStage;
 use vengine_rs::core::descriptor_set::VEDescriptorSet;
 use vengine_rs::core::descriptor_set_layout::{
@@ -31,6 +32,7 @@ impl Output {
     pub fn new(
         config: &ResolutionConfig,
         multi_merger: &mut MultiMerger,
+        ui_drawer: &mut UIDrawer,
         toolkit: &VEToolkit,
     ) -> Result<Output, RenderingError> {
         let mut output = toolkit.create_image_full(
@@ -66,8 +68,14 @@ impl Output {
                 stage: VEDescriptorSetFieldStage::Compute,
             },
             VEDescriptorSetLayoutField {
-                // output image
+                // ui result
                 binding: 2,
+                typ: VEDescriptorSetFieldType::StorageImage,
+                stage: VEDescriptorSetFieldStage::Compute,
+            },
+            VEDescriptorSetLayoutField {
+                // output image
+                binding: 3,
                 typ: VEDescriptorSetFieldType::StorageImage,
                 stage: VEDescriptorSetFieldStage::Compute,
             },
@@ -82,8 +90,13 @@ impl Output {
             .get_view(VEImageViewCreateInfo::simple_2d())?;
         data_set.bind_image_storage(1, &multi_merger.output, view)?;
 
+        let view = ui_drawer // TODO hmmmmmm this could be a nice macro
+            .out_color
+            .get_view(VEImageViewCreateInfo::simple_2d())?;
+        data_set.bind_image_storage(2, &ui_drawer.out_color, view)?;
+
         let view = output.get_view(VEImageViewCreateInfo::simple_2d())?;
-        data_set.bind_image_storage(2, &output, view)?;
+        data_set.bind_image_storage(3, &output, view)?;
 
         let compute_stage =
             toolkit.create_compute_stage(&[&data_set_layout], &hi_freq_compute_shader)?;

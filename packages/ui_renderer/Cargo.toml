@@ -1,0 +1,14 @@
+[package]
+name = "ui_renderer"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+vengine-rs = { git = "ssh://git@github.com/adrian-afl/vengine-rs.git", rev = "db4300037180528357a4417a5e68a002dcf68f23" }
+fontdue = "0.9.2"
+renderer_common = { path = "../renderer_common" }
+glam = { version = "0.29.2" }
+rayon = "1.10.0"
+ecs = { path = "../ecs" }
+thiserror = "2.0.11"
+

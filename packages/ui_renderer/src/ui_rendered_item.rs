@@ -2,7 +2,9 @@ use crate::font_atlas_generator::font_atlas_generator::FontAtlas;
 use crate::ui_item_buffer::UIItemBuffer;
 use ecs::components::ui::ui_text_component::UIFontSize;
 use glam::{DVec2, DVec4};
+use renderer_common::empty_textures::EMPTY_TEXTURES;
 use renderer_common::errors::RenderingError;
+use std::fmt::{Debug, Formatter};
 use std::sync::Mutex;
 use vengine_rs::core::descriptor_set::VEDescriptorSet;
 use vengine_rs::core::descriptor_set_layout::VEDescriptorSetLayout;
@@ -30,11 +32,40 @@ pub struct UIRenderedItem {
     pub item_buffer: Mutex<UIItemBuffer>,
 }
 
+impl Debug for UIRenderedItem {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_fmt(format_args!(
+            "UIRenderedItem size {:?} position {:?}",
+            self.size, self.position
+        ))
+    }
+}
+
 impl UIRenderedItem {
     pub fn empty(
         toolkit: &VEToolkit,
         layout: &mut VEDescriptorSetLayout,
     ) -> Result<Self, RenderingError> {
+        let descriptor_set = layout.create_descriptor_set()?;
+        let item_buffer = UIItemBuffer::new(toolkit)?;
+        descriptor_set.bind_buffer(0, &item_buffer.buffer)?;
+
+        let sampler = toolkit.create_sampler(
+            VESamplerAddressMode::Repeat,
+            VEFiltering::Linear,
+            VEFiltering::Linear,
+            false,
+        )?;
+
+        let empty_image = EMPTY_TEXTURES.get_empty_image();
+        let empty_view = EMPTY_TEXTURES.get_empty_view();
+
+        descriptor_set.bind_image_sampler(
+            1,
+            &empty_image.lock().unwrap().as_ref().unwrap(),
+            empty_view.lock().unwrap().unwrap(),
+            &sampler,
+        )?;
         Ok(Self {
             size: DVec2::new(0.0, 0.0),
             position: DVec2::new(0.0, 0.0),
@@ -48,14 +79,9 @@ impl UIRenderedItem {
             text: "".to_owned(),
             font_size: UIFontSize::Medium,
 
-            descriptor_set: layout.create_descriptor_set()?,
-            item_buffer: Mutex::from(UIItemBuffer::new(toolkit)?),
-            sampler: toolkit.create_sampler(
-                VESamplerAddressMode::Repeat,
-                VEFiltering::Linear,
-                VEFiltering::Linear,
-                true,
-            )?,
+            descriptor_set,
+            item_buffer: Mutex::from(item_buffer),
+            sampler,
         })
     }
 
