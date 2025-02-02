@@ -1,9 +1,6 @@
 use crate::camera_system::CameraSystem;
-use celestial_renderer::body::body_definitions::load_body_data;
 use celestial_renderer::renderer::Renderer;
 use celestial_renderer::rendering_system::RenderingSystem;
-use celestial_renderer::simulation::simulation::Simulation;
-use celestial_renderer::universe_simulation_updater_system::UniverseSimulationUpdaterSystem;
 use ecs::component_trait::Components;
 use ecs::components::camera::camera_focus_component::CameraFocusComponent;
 use ecs::components::camera::first_person_camera_control_component::FirstPersonCameraControlComponent;
@@ -22,6 +19,9 @@ use renderer_common::resolution_config::ResolutionConfig;
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex, RwLock};
 use ui_renderer::ui_system::UIRenderer;
+use universe_simulation::body_definitions::load_body_data;
+use universe_simulation::simulation::Simulation;
+use universe_simulation::universe_simulation_updater_system::UniverseSimulationUpdaterSystem;
 use vengine_rs::core::toolkit::VEToolkit;
 use winit::window::Window;
 
@@ -60,7 +60,7 @@ impl Game {
         let game_event_system = Arc::new(GameEventSystem::new());
         let controls = Arc::new(Controls::new(game_event_system.clone()));
 
-        let universe_simulation = Arc::new(RwLock::new(Simulation::new(toolkit.clone())));
+        let universe_simulation = Arc::new(RwLock::new(Simulation::new()));
         let ui_renderer = UIRenderer::new(toolkit.clone(), &config);
         let renderer = Arc::new(Mutex::from(Renderer::new(
             toolkit.clone(),

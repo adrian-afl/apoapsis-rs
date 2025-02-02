@@ -1,8 +1,8 @@
 use crate::geometry::mesh_drawer::MESH_DRAWER_VERTEX_ATTRIBUTES;
 use crate::renderer::Renderer;
+use crate::scene::celestial_hierarchy::CelestialHierarchy;
 use crate::scene::material::{ColorOrTexture, Material, ScaledTexture, ValueOrTexture};
 use crate::scene::mesh::Mesh;
-use crate::simulation::simulation::Simulation;
 use ecs::component_trait::Components;
 use ecs::components::rendering::mesh_component::{
     ColorOrTextureDescription, MeshDescription, ValueOrTextureDescription,
@@ -15,6 +15,7 @@ use rayon::iter::ParallelIterator;
 use renderer_common::errors::RenderingError;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, RwLock};
+use universe_simulation::simulation::Simulation;
 use vengine_rs::core::toolkit::VEToolkit;
 use vengine_rs::image::image::VEImageUsage;
 
@@ -22,6 +23,7 @@ pub struct RenderingSystem {
     toolkit: Arc<VEToolkit>,
     renderer: Arc<Mutex<Renderer>>,
     universe_simulation: Arc<RwLock<Simulation>>,
+    celestial_hierarchy: CelestialHierarchy,
     currently_rendered_meshes: RwLock<HashMap<u64, Mesh>>,
     rendering_cutoff: f64,
 }
@@ -33,9 +35,13 @@ impl RenderingSystem {
         universe_simulation: Arc<RwLock<Simulation>>,
     ) -> Self {
         Self {
-            toolkit,
+            toolkit: toolkit.clone(),
             renderer,
-            universe_simulation,
+            universe_simulation: universe_simulation.clone(),
+            celestial_hierarchy: CelestialHierarchy::new(
+                toolkit.clone(),
+                universe_simulation.clone(),
+            ),
             currently_rendered_meshes: RwLock::new(HashMap::new()),
             rendering_cutoff: 100.0,
         }
@@ -200,28 +206,22 @@ impl SystemTrait for RenderingSystem {
 
         // TODO this should clear up meshes that are removed from the ECS completely
         // does it work? maybe
-        let locked_map = self.currently_rendered_meshes.try_read().unwrap();
+        let mut locked_map = self.currently_rendered_meshes.try_write().unwrap();
         let detected_mesh_component_ids = detected_mesh_component_ids.lock().unwrap();
-        let keys: Vec<&u64> = locked_map.keys().collect();
-
-        keys.par_iter().for_each(|key| {
-            if !detected_mesh_component_ids.contains(key) {
-                let mut locked_map = self.currently_rendered_meshes.try_write().unwrap();
-                locked_map.remove(key);
-            }
-        });
+        locked_map.retain(|k, _| detected_mesh_component_ids.contains(k));
 
         println!("RenderingSystem / After render");
 
         println!("RenderingSystem / Draw");
+
         let render_result = self.renderer.lock().unwrap().draw(
-            &self.universe_simulation.try_read().unwrap(),
             &self
                 .currently_rendered_meshes
                 .try_read()
                 .unwrap()
                 .values()
                 .collect::<Vec<_>>(),
+            &mut self.celestial_hierarchy,
             &locked_state.current_camera,
             locked_state.elapsed,
             locked_state.delta_time,

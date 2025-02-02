@@ -1,6 +1,5 @@
 use crate::build_collider::build_collider;
 use crate::real_physics_system::{RealPhysicsSystem, SetRealPhysicsBodyKinematics};
-use celestial_renderer::simulation::simulation::Simulation;
 use dashu_float::DBig;
 use ecs::component_trait::Components;
 use ecs::components::common::transform_component::TransformComponent;
@@ -17,6 +16,7 @@ use rayon::iter::IntoParallelRefIterator;
 use rayon::iter::ParallelIterator;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, RwLock};
+use universe_simulation::simulation::Simulation;
 
 struct SimulatedBody {
     rigid_body: RigidBodyHandle,

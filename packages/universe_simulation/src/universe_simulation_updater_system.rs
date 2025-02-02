@@ -1,4 +1,4 @@
-use crate::simulation::simulation::Simulation;
+use crate::simulation::Simulation;
 use ecs::ecs_world::ECSWorld;
 use ecs::game_state::GameState;
 use ecs::system_trait::SystemTrait;

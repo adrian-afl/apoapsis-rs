@@ -1,4 +1,3 @@
-use crate::simulation::simulation::SimulatedBody;
 use dashu_float::DBig;
 use glam::DVec3;
 use math::decimal_vector_3d::DecimalVector3d;
@@ -7,6 +6,7 @@ use renderer_common::buffer_writers::{
 };
 use renderer_common::errors::RenderingError;
 use std::fmt::{Debug, Formatter, Write};
+use universe_simulation::simulation::SimulatedBody;
 use vengine_rs::buffer::buffer::{VEBuffer, VEBufferUsage};
 use vengine_rs::core::memory_properties::VEMemoryProperties;
 use vengine_rs::core::toolkit::VEToolkit;

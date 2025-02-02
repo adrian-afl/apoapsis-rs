@@ -1,10 +1,6 @@
 use crate::buffers::common_buffer::CommonBuffer;
-use crate::buffers::terrain_icosphere_data_buffer::TerrainIcosphereDataBuffer;
 use crate::geometry::g_buffer::GBuffer;
-use crate::geometry::icosphere::Icosphere;
-use crate::simulation::simulation::SimulatedBody;
-use glam::DQuat;
-use math::decimal_vector_3d::DecimalVector3d;
+use crate::geometry::terrain_icosphere::TerrainIcosphere;
 use renderer_common::errors::RenderingError;
 use renderer_common::resolution_config::ResolutionConfig;
 use std::fmt::{Debug, Formatter};
@@ -20,14 +16,19 @@ use vengine_rs::graphics::render_stage::{VECullMode, VEPrimitiveTopology, VERend
 use vengine_rs::graphics::vertex_attributes::VertexAttribFormat;
 use vengine_rs::image::image::VEImageViewCreateInfo;
 
+pub static TERRAIN_ICOSPHERE_VERTEX_ATTRIBUTES: [VertexAttribFormat; 6] = [
+    VertexAttribFormat::RGB32f,    // pos
+    VertexAttribFormat::RGB8inorm, // normal
+    VertexAttribFormat::Padding8,
+    VertexAttribFormat::RGBA8unorm, // color roughness
+    VertexAttribFormat::R16u,       // part number
+    VertexAttribFormat::Padding16,
+];
+
 pub struct TerrainIcosphereDrawer {
-    icosphere: Icosphere,
     pub render_stage: VERenderStage,
 
-    buffer: TerrainIcosphereDataBuffer,
-
-    data_set_layout: VEDescriptorSetLayout,
-    data_set: VEDescriptorSet,
+    pub data_set_layout: VEDescriptorSetLayout,
 
     common_set_layout: VEDescriptorSetLayout,
     common_set: VEDescriptorSet,
@@ -45,22 +46,7 @@ impl TerrainIcosphereDrawer {
         toolkit: &VEToolkit,
         g_buffer: &mut GBuffer,
         common_buffer: &CommonBuffer,
-        dir_path: String,
-        thresholds: Vec<f64>,
     ) -> Result<TerrainIcosphereDrawer, RenderingError> {
-        let vertex_attributes = vec![
-            VertexAttribFormat::RGB32f,    // pos
-            VertexAttribFormat::RGB8inorm, // normal
-            VertexAttribFormat::Padding8,
-            VertexAttribFormat::RGBA8unorm, // color roughness
-            VertexAttribFormat::R16u,       // part number
-            VertexAttribFormat::Padding16,
-        ];
-
-        let icosphere = Icosphere::new(dir_path, thresholds, vertex_attributes.clone())?;
-
-        // no clear!! mesh stage clears!
-
         let color_rgb_roughness_a_view = g_buffer
             .color_rgb_roughness_a
             .get_view(VEImageViewCreateInfo::simple_2d())?;
@@ -105,8 +91,6 @@ impl TerrainIcosphereDrawer {
             None,
         )?;
 
-        let data_buffer = TerrainIcosphereDataBuffer::new(&toolkit)?;
-
         let mut data_set_layout =
             toolkit.create_descriptor_set_layout(&[VEDescriptorSetLayoutField {
                 // data buffer
@@ -114,9 +98,6 @@ impl TerrainIcosphereDrawer {
                 typ: VEDescriptorSetFieldType::StorageBuffer,
                 stage: VEDescriptorSetFieldStage::AllGraphics,
             }])?;
-
-        let data_set = data_set_layout.create_descriptor_set()?;
-        data_set.bind_buffer(0, &data_buffer.buffer)?;
 
         let mut common_set_layout =
             toolkit.create_descriptor_set_layout(&[VEDescriptorSetLayoutField {
@@ -151,44 +132,29 @@ impl TerrainIcosphereDrawer {
             &[&data_set_layout, &common_set_layout],
             &vertex_shader,
             &fragment_shader,
-            &vertex_attributes,
+            &TERRAIN_ICOSPHERE_VERTEX_ATTRIBUTES,
             VEPrimitiveTopology::TriangleList,
             VECullMode::Back,
         )?;
 
         Ok(TerrainIcosphereDrawer {
-            icosphere,
-            buffer: data_buffer,
             render_stage,
             data_set_layout,
-            data_set,
             common_set_layout,
             common_set,
         })
     }
 
-    pub fn update_buffer(
+    pub fn record(
         &mut self,
-        camera_position: &DecimalVector3d,
-        simulated_body: &SimulatedBody,
+        toolkit: &VEToolkit,
+        ico: &mut TerrainIcosphere,
     ) -> Result<(), RenderingError> {
-        let matrices = self.icosphere.update_and_get_part_matrices(
-            &camera_position,
-            &simulated_body.position,
-            DQuat::from_mat4(&simulated_body.orientation.as_dmat4()),
-        );
-
-        self.buffer.update(matrices)?;
-
-        Ok(())
-    }
-
-    pub fn record(&mut self, toolkit: &VEToolkit) -> Result<(), RenderingError> {
         self.render_stage.begin_recording()?;
 
-        self.render_stage.set_descriptor_set(0, &self.data_set);
+        self.render_stage.set_descriptor_set(0, &ico.data_set);
         self.render_stage.set_descriptor_set(1, &self.common_set);
-        self.icosphere.draw(toolkit, &self.render_stage)?;
+        ico.icosphere.draw(toolkit, &self.render_stage)?;
 
         self.render_stage.end_recording()?;
         Ok(())

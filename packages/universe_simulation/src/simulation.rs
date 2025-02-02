@@ -1,23 +1,13 @@
-use crate::body::body_definitions::{
-    BodyCelestialBodyDefinition, BodyMotion, BodyStarEmission, BodyWater,
-};
-use crate::buffers::celestial_body_buffer::CelestialBodyBuffer;
-use crate::buffers::common_buffer::CommonBuffer;
-use crate::geometry::g_buffer::GBuffer;
-use crate::geometry::icosphere::Icosphere;
-use crate::geometry::terrain_icosphere_drawer::TerrainIcosphereDrawer;
-use crate::geometry::water_icosphere_drawer::WaterIcosphereDrawer;
+use crate::body_definitions::{BodyCelestialBodyDefinition, BodyMotion};
 use dashu_float::ops::SquareRoot;
 use dashu_float::DBig;
-use glam::DVec3;
 use math::decimal_matrix_3d::DecimalMatrix3d;
 use math::decimal_vector_3d::DecimalVector3d;
 use math::sin_cos::PIMUL2;
 use renderer_common::errors::RenderingError;
 use renderer_common::resolution_config::ResolutionConfig;
 use std::str::FromStr;
-use std::sync::{Arc, LazyLock, Mutex};
-use vengine_rs::core::toolkit::VEToolkit;
+use std::sync::{Arc, LazyLock};
 
 static G_CONSTANT: LazyLock<DBig> = LazyLock::new(|| DBig::from_str("0.0000000000667408").unwrap());
 
@@ -30,61 +20,29 @@ pub struct SimulatedBody {
     pub orientation: DecimalMatrix3d,
     parent: Option<i32>, // -1 means no
     satellites: Vec<i32>,
-    pub water_drawer: Option<Arc<Mutex<WaterIcosphereDrawer>>>,
-    pub terrain_drawer: Option<Arc<Mutex<TerrainIcosphereDrawer>>>,
-    pub celestial_body_buffer: Arc<Mutex<CelestialBodyBuffer>>,
 }
 
 pub struct Simulation {
     pub bodies: Vec<SimulatedBody>,
     id_counter: i32,
-    toolkit: Arc<VEToolkit>,
 }
 
 impl Simulation {
-    pub fn new(toolkit: Arc<VEToolkit>) -> Self {
+    pub fn new() -> Self {
         Simulation {
             bodies: vec![],
             id_counter: 0,
-            toolkit,
         }
     }
 
     pub fn add_hierarchy(
         &mut self,
         config: &ResolutionConfig,
-        g_buffer: &mut GBuffer,
-        common_buffer: &CommonBuffer,
         body: &BodyCelestialBodyDefinition,
         parent: Option<i32>,
     ) -> Result<i32, RenderingError> {
         let new_id = self.id_counter;
         self.id_counter += 1;
-
-        let terrain_drawer = match &body.terrain {
-            None => None,
-            Some(terrain_icosphere) => Some(Arc::new(Mutex::from(TerrainIcosphereDrawer::new(
-                config,
-                &self.toolkit,
-                g_buffer,
-                common_buffer,
-                terrain_icosphere.icosphere_path.to_owned(),
-                vec![2000000.0, 5000000.0],
-            )?))),
-        };
-
-        let water_drawer = match &body.water {
-            None => None,
-            Some(water) => Some(Arc::new(Mutex::from(WaterIcosphereDrawer::new(
-                config,
-                &self.toolkit,
-                g_buffer,
-                common_buffer,
-                water.icosphere_path.to_owned(),
-                vec![2000000.0, 5000000.0],
-                water.color,
-            )?))),
-        };
 
         let mut simulated_body = SimulatedBody {
             id: new_id,
@@ -94,15 +52,10 @@ impl Simulation {
             position: DecimalVector3d::zero(),
             velocity: DecimalVector3d::zero(),
             orientation: DecimalMatrix3d::identity(),
-            celestial_body_buffer: Arc::new(Mutex::from(CelestialBodyBuffer::new(&self.toolkit)?)),
-            terrain_drawer,
-            water_drawer,
         };
         for i in 0..body.dynamics.satellites.len() {
             simulated_body.satellites.push(self.add_hierarchy(
                 config,
-                g_buffer,
-                common_buffer,
                 &body.dynamics.satellites[i],
                 Some(new_id),
             )?);
@@ -252,42 +205,6 @@ impl Simulation {
                 BodyMotion::Static(_) => body,
                 BodyMotion::Orbiting(_) => self.find_closest_static(&body.position),
             };
-            let star_radiance = match &closest_static.body.star_emission {
-                None => DVec3::new(1.0, 1.0, 1.0),
-                Some(emission) => emission.radiance,
-            };
-            body.celestial_body_buffer
-                .lock()
-                .unwrap()
-                .update(
-                    &camera_position,
-                    &closest_static.position,
-                    star_radiance,
-                    body,
-                )
-                .unwrap();
-            match &body.terrain_drawer {
-                None => (),
-                Some(drawer) => {
-                    drawer
-                        .lock()
-                        .unwrap()
-                        .update_buffer(camera_position, body)
-                        .unwrap();
-                    drawer.lock().unwrap().record(&self.toolkit).unwrap();
-                }
-            }
-            match &body.water_drawer {
-                None => (),
-                Some(drawer) => {
-                    drawer
-                        .lock()
-                        .unwrap()
-                        .update_buffer(camera_position, body)
-                        .unwrap();
-                    drawer.lock().unwrap().record(&self.toolkit).unwrap();
-                }
-            }
         }
 
         self.bodies.sort_by(|a, b| {

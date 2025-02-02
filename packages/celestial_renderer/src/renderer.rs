@@ -1,15 +1,16 @@
 use crate::atmosphere::atmosphere_drawer::AtmosphereDrawer;
 use crate::atmosphere::clouds_generator_high_freq::CloudGeneratorHighFreq;
 use crate::atmosphere::clouds_generator_low_freq::CloudGeneratorLowFreq;
-use crate::body::body_definitions::BodyCelestialBodyDefinition;
 use crate::buffers::common_buffer::CommonBuffer;
 use crate::finalization::multi_merger::MultiMerger;
 use crate::finalization::output::Output;
 use crate::geometry::g_buffer::GBuffer;
 use crate::geometry::mesh_drawer::MeshDrawer;
+use crate::geometry::terrain_icosphere_drawer::TerrainIcosphereDrawer;
+use crate::geometry::water_icosphere_drawer::WaterIcosphereDrawer;
+use crate::scene::celestial_hierarchy::CelestialHierarchy;
 use crate::scene::material::Material;
 use crate::scene::mesh::Mesh;
-use crate::simulation::simulation::Simulation;
 use glam::DVec4;
 use renderer_common::camera::Camera;
 use renderer_common::empty_textures::EMPTY_TEXTURES;
@@ -18,6 +19,8 @@ use renderer_common::resolution_config::ResolutionConfig;
 use std::sync::{Arc, Mutex};
 use std::time::SystemTime;
 use ui_renderer::ui_drawer::UIDrawer;
+use universe_simulation::body_definitions::BodyCelestialBodyDefinition;
+use universe_simulation::simulation::Simulation;
 use vengine_rs::core::semaphore::VESemaphore;
 use vengine_rs::core::toolkit::VEToolkit;
 use vengine_rs::graphics::vertex_buffer::VEVertexBuffer;
@@ -33,6 +36,8 @@ pub struct Renderer {
 
     ui_drawer: Arc<Mutex<UIDrawer>>,
     mesh_drawer: MeshDrawer,
+    terrain_icosphere_drawer: TerrainIcosphereDrawer,
+    water_icosphere_drawer: WaterIcosphereDrawer,
     cloud_generator_high_freq: CloudGeneratorHighFreq,
     cloud_generator_low_freq: CloudGeneratorLowFreq,
     atmosphere_drawer: AtmosphereDrawer,
@@ -63,6 +68,14 @@ impl Renderer {
         let mut g_buffer = GBuffer::new(&config, &toolkit).expect("Failed to create G-Buffer");
         let mesh_drawer = MeshDrawer::new(&config, &toolkit, &mut g_buffer, &common_buffer)
             .expect("Failed to create MeshDrawer");
+
+        let terrain_icosphere_drawer =
+            TerrainIcosphereDrawer::new(&config, &toolkit, &mut g_buffer, &common_buffer)
+                .expect("Failed to create TerrainIcosphereDrawer");
+
+        let water_icosphere_drawer =
+            WaterIcosphereDrawer::new(&config, &toolkit, &mut g_buffer, &common_buffer)
+                .expect("Failed to create WaterIcosphereDrawer");
 
         let mut multi_merger =
             MultiMerger::new(&config, &toolkit).expect("Failed to create MultiMerger");
@@ -95,6 +108,8 @@ impl Renderer {
             cloud_generator_high_freq,
             cloud_generator_low_freq,
             mesh_drawer,
+            terrain_icosphere_drawer,
+            water_icosphere_drawer,
             g_buffer,
             common_buffer,
 
@@ -118,8 +133,8 @@ impl Renderer {
 
     pub fn draw(
         &mut self,
-        simulation: &Simulation,
         meshes: &[&Mesh],
+        celestial_hierarchy: &mut CelestialHierarchy,
         camera: &Camera,
         elapsed: f64,
         delta_time: f64,
@@ -156,11 +171,17 @@ impl Renderer {
                 .expect("Failed to draw mesh_drawer");
         }
 
-        let closest_hierarchy = simulation.find_closest_hierarchy(&camera.position);
-
         let mut wait_for_semaphores = vec![self.mesh_drawing_semaphore.clone()];
 
-        for body in closest_hierarchy {
+        celestial_hierarchy.update(
+            &camera.position,
+            &mut self.terrain_icosphere_drawer,
+            &mut self.water_icosphere_drawer,
+        )?;
+
+        let celestial_bodies = celestial_hierarchy.get_rendered_bodies();
+
+        for mut body in celestial_bodies {
             match &body.body.atmosphere {
                 None => (),
                 Some(atmosphere) => {
@@ -219,25 +240,22 @@ impl Renderer {
                         }
                     }
                     self.atmosphere_drawer
-                        .set_celestial_buffer(
-                            &body.celestial_body_buffer.lock().unwrap(),
-                            &self.config,
-                        )
+                        .set_celestial_buffer(&body.celestial_body_buffer, &self.config)
                         .expect("Failed to set_celestial_buffer for atmosphere_drawer");
                 }
             }
 
-            match &body.terrain_drawer {
+            match &mut body.terrain {
                 None => (),
-                Some(drawer) => {
+                Some(ref mut terrain) => {
                     let queue = &self
                         .toolkit
                         .queue
                         .lock()
                         .map_err(|_| RenderingError::QueueLockingFailed)?;
-                    drawer
-                        .lock()
-                        .unwrap()
+                    self.terrain_icosphere_drawer
+                        .record(&self.toolkit, terrain)?;
+                    self.terrain_icosphere_drawer
                         .render_stage
                         .command_buffer
                         .submit(
@@ -250,17 +268,16 @@ impl Renderer {
                 }
             }
 
-            match &body.water_drawer {
+            match &mut body.water {
                 None => (),
-                Some(drawer) => {
+                Some(ref mut water) => {
                     let queue = &self
                         .toolkit
                         .queue
                         .lock()
                         .map_err(|_| RenderingError::QueueLockingFailed)?;
-                    drawer
-                        .lock()
-                        .unwrap()
+                    self.water_icosphere_drawer.record(&self.toolkit, water)?;
+                    self.water_icosphere_drawer
                         .render_stage
                         .command_buffer
                         .submit(
@@ -388,12 +405,6 @@ impl Renderer {
         simulation: &mut Simulation,
         body: &BodyCelestialBodyDefinition,
     ) -> Result<i32, RenderingError> {
-        Ok(simulation.add_hierarchy(
-            &self.config,
-            &mut self.g_buffer,
-            &self.common_buffer,
-            body,
-            None,
-        )?)
+        Ok(simulation.add_hierarchy(&self.config, body, None)?)
     }
 }
