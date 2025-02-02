@@ -33,5 +33,13 @@
       //      "media/universe/solar_system/earth/neptune.json",
       //      "media/universe/solar_system/earth/pluto.json"
     ]
+  },
+  "starEmission": {
+    "radius": 696340000,
+    "radiance": [
+      1.0,
+      1.0,
+      1.0
+    ]
   }
 }

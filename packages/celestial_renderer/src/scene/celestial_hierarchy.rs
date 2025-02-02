@@ -92,6 +92,7 @@ impl CelestialHierarchy {
                     .rendered_bodies
                     .get_mut(&closest_hierarchy_body.body.name)
                     .unwrap();
+                println!("{:?}", closest_star.body);
                 body.celestial_body_buffer.update(
                     &camera_position,
                     &closest_star.position,
@@ -119,6 +120,7 @@ impl CelestialHierarchy {
     }
 
     pub fn get_rendered_bodies(&mut self) -> Vec<&mut RenderedBody> {
+        // TODO here sorting is needed but its not really possible yet, it needs some work
         let mut refs = vec![];
         for body in self.rendered_bodies.values_mut() {
             refs.push(body);

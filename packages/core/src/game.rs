@@ -171,6 +171,10 @@ impl Game {
             let player_position = earth_position + DecimalVector3d::from_f64(0.0, 0.0, 9398000.0);
             transform.position.assign(&player_position);
             println!("transform.position {}", transform.position);
+            println!(
+                "transform distance to earth {}",
+                transform.position.distance_to(&earth_position)
+            );
         }
 
         self.game_event_system.cleanup();

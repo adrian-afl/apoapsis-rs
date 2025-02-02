@@ -37,6 +37,8 @@ pub struct Icosphere {
     part_matrices: Vec<DMat4>,
 }
 
+static GLOBAL_LOCK: Mutex<()> = Mutex::new(());
+
 impl Icosphere {
     pub fn new(
         dir_path: String,
@@ -109,7 +111,6 @@ impl Icosphere {
             self.part_matrices[i] = pre_final_matrix * model_offset_matrix;
         }
 
-        println!("FD {}", relative_camera_position);
         self.part_matrices.as_slice()
     }
 
@@ -118,7 +119,6 @@ impl Icosphere {
         toolkit: &VEToolkit,
         stage: &VERenderStage,
     ) -> Result<(), RenderingError> {
-        let lock = Mutex::new(());
         self.metadata.par_iter().enumerate().for_each(|(i, m)| {
             let m = &self.metadata[i];
 
@@ -146,7 +146,7 @@ impl Icosphere {
                     .unwrap()
                     .level;
                 if (mapped_level != level) {
-                    let geometry = self.load_geometry(&toolkit, &lock, &m.name, level).unwrap();
+                    let geometry = self.load_geometry(&toolkit, &m.name, level).unwrap();
                     let mut locked = self.currently_loaded.lock().unwrap();
                     let mut mapped_mut = locked.get_mut(&m.name).unwrap();
                     mapped_mut.level = level;
@@ -157,7 +157,7 @@ impl Icosphere {
                     stage.draw_instanced(&mapped.vertex_buffer, 1);
                 }
             } else {
-                let geometry = self.load_geometry(&toolkit, &lock, &m.name, level).unwrap();
+                let geometry = self.load_geometry(&toolkit, &m.name, level).unwrap();
                 self.currently_loaded.lock().unwrap().insert(
                     m.name.clone(),
                     LoadedGeometry {
@@ -174,19 +174,19 @@ impl Icosphere {
     fn load_geometry(
         &self,
         toolkit: &VEToolkit,
-        lock: &Mutex<()>,
         name: &str,
         level: u8,
     ) -> Result<VEVertexBuffer, RenderingError> {
         let path = format!("{}/{name}.l{level}.raw", self.dir_path);
-        //println!("LOADING {}", path);
         let file = File::open(path)?;
         let mut brotli_stream = brotli::Decompressor::new(file, 40960);
         let mut decompressed = vec![];
         brotli_stream.read_to_end(&mut decompressed)?;
-        Ok({
-            let _exclusivity_lock = lock.lock().unwrap(); // this probably could be done better if i did it in vengine
-            toolkit.create_vertex_buffer_from_data(decompressed, &self.vertex_attributes)?
-        })
+
+        let _exclusivity_lock = GLOBAL_LOCK.lock().unwrap(); // this probably could be done better if i did it in vengine
+        let result =
+            toolkit.create_vertex_buffer_from_data(decompressed, &self.vertex_attributes)?;
+        drop(_exclusivity_lock);
+        Ok(result)
     }
 }

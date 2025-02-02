@@ -182,6 +182,12 @@ impl Renderer {
         let celestial_bodies = celestial_hierarchy.get_rendered_bodies();
 
         for mut body in celestial_bodies {
+            println!("DRAWING BODY {}", body.body.name);
+
+            self.atmosphere_drawer
+                .set_celestial_buffer(&body.celestial_body_buffer, &self.config)
+                .expect("Failed to set_celestial_buffer for atmosphere_drawer");
+
             match &body.body.atmosphere {
                 None => (),
                 Some(atmosphere) => {
@@ -239,22 +245,19 @@ impl Renderer {
                                 .expect("Failed to compute cloud_generator_low_freq");
                         }
                     }
-                    self.atmosphere_drawer
-                        .set_celestial_buffer(&body.celestial_body_buffer, &self.config)
-                        .expect("Failed to set_celestial_buffer for atmosphere_drawer");
                 }
             }
 
             match &mut body.terrain {
                 None => (),
                 Some(ref mut terrain) => {
+                    self.terrain_icosphere_drawer
+                        .record(&self.toolkit, terrain)?;
                     let queue = &self
                         .toolkit
                         .queue
                         .lock()
                         .map_err(|_| RenderingError::QueueLockingFailed)?;
-                    self.terrain_icosphere_drawer
-                        .record(&self.toolkit, terrain)?;
                     self.terrain_icosphere_drawer
                         .render_stage
                         .command_buffer
@@ -271,12 +274,12 @@ impl Renderer {
             match &mut body.water {
                 None => (),
                 Some(ref mut water) => {
+                    self.water_icosphere_drawer.record(&self.toolkit, water)?;
                     let queue = &self
                         .toolkit
                         .queue
                         .lock()
                         .map_err(|_| RenderingError::QueueLockingFailed)?;
-                    self.water_icosphere_drawer.record(&self.toolkit, water)?;
                     self.water_icosphere_drawer
                         .render_stage
                         .command_buffer

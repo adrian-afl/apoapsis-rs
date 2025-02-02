@@ -209,6 +209,7 @@ impl SystemTrait for RenderingSystem {
         let mut locked_map = self.currently_rendered_meshes.try_write().unwrap();
         let detected_mesh_component_ids = detected_mesh_component_ids.lock().unwrap();
         locked_map.retain(|k, _| detected_mesh_component_ids.contains(k));
+        drop(locked_map);
 
         println!("RenderingSystem / After render");
 
