@@ -119,8 +119,8 @@ impl Icosphere {
         toolkit: &VEToolkit,
         stage: &VERenderStage,
     ) -> Result<(), RenderingError> {
-        self.metadata.iter().enumerate().for_each(|(i, m)| {
-            println!("ico draw {}", i);
+        self.metadata.par_iter().enumerate().for_each(|(i, m)| {
+            // println!("ico draw {}", i);
             let m = &self.metadata[i];
 
             let final_matrix = self.part_matrices[i];

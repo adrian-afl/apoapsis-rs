@@ -1,6 +1,7 @@
 use crate::buffers::water_icosphere_data_buffer::WaterIcosphereDataBuffer;
 use crate::geometry::icosphere::Icosphere;
 use crate::geometry::terrain_icosphere_drawer::TERRAIN_ICOSPHERE_VERTEX_ATTRIBUTES;
+use crate::geometry::water_icosphere_drawer::WATER_ICOSPHERE_VERTEX_ATTRIBUTES;
 use glam::{DQuat, DVec3};
 use math::decimal_vector_3d::DecimalVector3d;
 use renderer_common::errors::RenderingError;
@@ -27,7 +28,7 @@ impl WaterIcosphere {
         let icosphere = Icosphere::new(
             dir_path,
             thresholds,
-            TERRAIN_ICOSPHERE_VERTEX_ATTRIBUTES.to_vec(),
+            WATER_ICOSPHERE_VERTEX_ATTRIBUTES.to_vec(),
         )?;
         let data_buffer = WaterIcosphereDataBuffer::new(&toolkit)?;
         let data_set = data_set_layout.create_descriptor_set()?;
