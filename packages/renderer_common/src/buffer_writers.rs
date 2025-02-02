@@ -1,7 +1,9 @@
 #![allow(clippy::not_unsafe_ptr_arg_deref)]
 // all here return count of elements written, to be added to offset
 
-use glam::{DMat4, DVec3, DVec4};
+// TODO this can all take references instead of copies .......
+
+use glam::{DMat4, DVec2, DVec3, DVec4};
 
 pub fn write_mat4(ptr: *mut f32, base_offset: isize, data: DMat4) -> isize {
     let mut offset = base_offset;
@@ -16,6 +18,17 @@ pub fn write_mat4(ptr: *mut f32, base_offset: isize, data: DMat4) -> isize {
     // offset += write_vec4(ptr, offset, data.z_axis);
     // offset += write_vec4(ptr, offset, data.w_axis);
     16
+}
+
+pub fn write_vec2(ptr: *mut f32, base_offset: isize, data: DVec2) -> isize {
+    let mut offset = base_offset;
+    unsafe {
+        ptr.offset(offset).write(data.x as f32);
+        offset += 1;
+        ptr.offset(offset).write(data.y as f32);
+        offset += 1;
+    }
+    2
 }
 
 pub fn write_vec3_zero(ptr: *mut f32, base_offset: isize, data: DVec3) -> isize {
@@ -77,6 +90,14 @@ pub fn write_float(ptr: *mut f32, base_offset: isize, data: f64) -> isize {
 
 pub fn write_int(ptr: *mut f32, base_offset: isize, data: i32) -> isize {
     let ptr_int = ptr as *mut i32;
+    unsafe {
+        ptr_int.offset(base_offset).write(data);
+    }
+    1
+}
+
+pub fn write_uint(ptr: *mut f32, base_offset: isize, data: u32) -> isize {
+    let ptr_int = ptr as *mut u32;
     unsafe {
         ptr_int.offset(base_offset).write(data);
     }

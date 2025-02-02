@@ -14,7 +14,7 @@ impl UICommonBuffer {
         Ok(Self {
             buffer: toolkit.create_buffer(
                 &[VEBufferUsage::Uniform],
-                512,
+                8 * 1024,
                 Some(VEMemoryProperties::HostCoherent),
             )?,
         })

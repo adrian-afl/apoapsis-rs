@@ -16,7 +16,7 @@ use thiserror::Error;
 use vengine_rs::core::toolkit::VEToolkit;
 use vengine_rs::image::image::VEImageUsage;
 
-pub struct UIRenderer {
+pub struct UISystem {
     config: ResolutionConfig,
 
     toolkit: Arc<VEToolkit>,
@@ -31,7 +31,7 @@ pub enum UIRendererError {
     RenderingError(#[from] RenderingError),
 }
 
-impl UIRenderer {
+impl UISystem {
     pub fn new(toolkit: Arc<VEToolkit>, config: &ResolutionConfig) -> Self {
         Self {
             config: config.clone(),
@@ -44,7 +44,7 @@ impl UIRenderer {
     }
 }
 
-impl SystemTrait for UIRenderer {
+impl SystemTrait for UISystem {
     fn update(&mut self, game_state: Arc<Mutex<GameState>>, ecs: Arc<Mutex<ECSWorld>>) {
         println!("UIRenderer / update");
 
@@ -115,6 +115,20 @@ impl SystemTrait for UIRenderer {
                     *cursor_type.lock().unwrap() = cursor.typ.clone();
                 }
             }
+
+            if let Some(text) = &entity.components.ui_text {
+                item.text = text.content.clone();
+                item.text_color = text.color;
+                item.font_size = text.font_size.clone();
+            }
+
+            let ui_drawer = self.ui_drawer.lock().unwrap();
+            item.update_buffer(
+                &ui_drawer.font_atlas_small,
+                &ui_drawer.font_atlas_medium,
+                &ui_drawer.font_atlas_large,
+            )
+            .unwrap();
         });
 
         let locked_map = self.currently_rendered_items.try_read().unwrap();
@@ -128,8 +142,9 @@ impl SystemTrait for UIRenderer {
             }
         });
 
-        let drawer = self.ui_drawer.lock().unwrap();
-        drawer
+        let mut ui_drawer = self.ui_drawer.lock().unwrap();
+        ui_drawer.update_buffer().unwrap();
+        ui_drawer
             .record(
                 &self
                     .currently_rendered_items

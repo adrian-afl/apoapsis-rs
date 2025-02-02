@@ -15,7 +15,7 @@ use vengine_rs::graphics::attachment::{AttachmentBlending, VEAttachment};
 use vengine_rs::graphics::render_stage::{VECullMode, VEPrimitiveTopology, VERenderStage};
 use vengine_rs::graphics::vertex_attributes::VertexAttribFormat;
 use vengine_rs::graphics::vertex_buffer::VEVertexBuffer;
-use vengine_rs::image::image::{VEImageUsage, VEImageViewCreateInfo};
+use vengine_rs::image::image::{VEImage, VEImageUsage, VEImageViewCreateInfo};
 use vengine_rs::image::image_format::VEImageFormat;
 
 pub struct UIDrawer {
@@ -29,6 +29,8 @@ pub struct UIDrawer {
     pub font_atlas_small: FontAtlas,
     pub font_atlas_medium: FontAtlas,
     pub font_atlas_large: FontAtlas,
+
+    pub out_color: VEImage,
 }
 
 pub const MESH_DRAWER_VERTEX_ATTRIBUTES: [VertexAttribFormat; 2] = [
@@ -146,7 +148,16 @@ impl UIDrawer {
             font_atlas_small,
             font_atlas_medium,
             font_atlas_large,
+            out_color,
         })
+    }
+
+    pub fn update_buffer(&mut self) -> Result<(), RenderingError> {
+        self.common_buffer.update(
+            &self.font_atlas_small,
+            &self.font_atlas_medium,
+            &self.font_atlas_large,
+        )
     }
 
     pub fn record(&self, items: &[&UIRenderedItem]) -> Result<(), RenderingError> {

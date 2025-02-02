@@ -5,10 +5,13 @@ use ecs::component_trait::Components;
 use ecs::components::camera::camera_focus_component::CameraFocusComponent;
 use ecs::components::camera::first_person_camera_control_component::FirstPersonCameraControlComponent;
 use ecs::components::common::transform_component::TransformComponent;
+use ecs::components::ui::ui_box_component::UIBoxComponent;
+use ecs::components::ui::ui_color_component::UIColorComponent;
 use ecs::ecs_world::{ECSWorld, ECSWorldSerializedRepresentation};
 use ecs::entity::Entity;
 use ecs::game_state::GameState;
 use ecs::system_trait::SystemTrait;
+use glam::{DVec2, DVec4};
 use input::control_event_system::{GameEvent, GameEventSystem};
 use input::controls::{ControlMapItem, Controls};
 use input::keyboard_input::KeyboardInput;
@@ -18,7 +21,7 @@ use real_physics_engine::physics_system::PhysicsSystem;
 use renderer_common::resolution_config::ResolutionConfig;
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex, RwLock};
-use ui_renderer::ui_system::UIRenderer;
+use ui_renderer::ui_system::UISystem;
 use universe_simulation::body_definitions::load_body_data;
 use universe_simulation::simulation::Simulation;
 use universe_simulation::universe_simulation_updater_system::UniverseSimulationUpdaterSystem;
@@ -61,7 +64,7 @@ impl Game {
         let controls = Arc::new(Controls::new(game_event_system.clone()));
 
         let universe_simulation = Arc::new(RwLock::new(Simulation::new()));
-        let ui_renderer = UIRenderer::new(toolkit.clone(), &config);
+        let ui_renderer = UISystem::new(toolkit.clone(), &config);
         let renderer = Arc::new(Mutex::from(Renderer::new(
             toolkit.clone(),
             &config,
@@ -74,6 +77,7 @@ impl Game {
                 universe_simulation.clone(),
             )),
             Box::new(CameraSystem::new()),
+            Box::new(ui_renderer),
             Box::new(PhysicsSystem::new(universe_simulation.clone())),
             Box::new(RenderingSystem::new(
                 toolkit.clone(),
@@ -115,6 +119,24 @@ impl Game {
             player_entity.components.first_person_camera_control =
                 Some(FirstPersonCameraControlComponent::new());
             ecs.lock().unwrap().add(player_entity);
+
+            let mut box_top_left = Entity::new(None);
+            box_top_left.components.ui_color =
+                Some(UIColorComponent::new(DVec4::new(1.0, 0.0, 0.0, 1.0)));
+            box_top_left.components.ui_box = Some(
+                UIBoxComponent::default()
+                    .with_position(DVec2::new(0.0, 0.0))
+                    .with_size(DVec2::new(0.1, 0.1)),
+            );
+
+            let mut box_bottom_right = Entity::new(None);
+            box_bottom_right.components.ui_color =
+                Some(UIColorComponent::new(DVec4::new(0.0, 1.0, 0.0, 1.0)));
+            box_bottom_right.components.ui_box = Some(
+                UIBoxComponent::default()
+                    .with_position(DVec2::new(0.9, 0.9))
+                    .with_size(DVec2::new(0.1, 0.1)),
+            );
         }
 
         Self {

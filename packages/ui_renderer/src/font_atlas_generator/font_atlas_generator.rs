@@ -76,7 +76,7 @@ fn blit_box(
 
 pub struct FontAtlas {
     pub font_size: u8,
-    pub letters: HashMap<char, CharPosition>,
+    pub letters_indices: HashMap<char, usize>,
     pub letters_array: Vec<CharPositionArrayItem>,
     pub bitmap_width: usize,
     pub bitmap_height: usize,
@@ -102,7 +102,9 @@ impl FontAtlas {
         let mut bitmap = vec![0; width_sum * height_max];
 
         let mut x_cursor: usize = 0;
-        let mut letters = HashMap::new();
+        let mut letters_indices = HashMap::new();
+
+        let mut letters_array = vec![];
 
         for c in generated {
             blit_box(
@@ -123,15 +125,14 @@ impl FontAtlas {
                     height: c.metrics.height,
                 },
             );
-            letters.insert(
-                c.c,
-                CharPosition {
-                    w: c.metrics.width,
-                    h: c.metrics.height,
-                    x: x_cursor,
-                    y: 0,
-                },
-            );
+            letters_indices.insert(c.c, letters_array.len());
+            letters_array.push(CharPositionArrayItem {
+                c: c.c,
+                w: c.metrics.width,
+                h: c.metrics.height,
+                x: x_cursor,
+                y: 0,
+            });
             x_cursor += c.metrics.width;
         }
 
@@ -146,37 +147,14 @@ impl FontAtlas {
             )
             .unwrap();
 
-        let letters_array: Vec<CharPositionArrayItem> = letters
-            .iter()
-            .map(|(k, v)| CharPositionArrayItem {
-                c: *k,
-                x: v.x,
-                y: v.y,
-                w: v.w,
-                h: v.h,
-            })
-            .collect();
-
         Self {
-            letters,
+            letters_indices,
             letters_array,
             bitmap,
             bitmap_width: width_sum,
             bitmap_height: height_max,
             font_size: 0,
             texture,
-        }
-    }
-
-    pub fn get_char_pos(&self, c: char) -> CharPosition {
-        if let Some(data) = self.letters.get(&c) {
-            return data.clone();
-        }
-        CharPosition {
-            h: 0,
-            w: 0,
-            x: 0,
-            y: 0,
         }
     }
 }

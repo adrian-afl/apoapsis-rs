@@ -1,4 +1,6 @@
+use crate::font_atlas_generator::font_atlas_generator::FontAtlas;
 use crate::ui_item_buffer::UIItemBuffer;
+use ecs::components::ui::ui_text_component::UIFontSize;
 use glam::{DVec2, DVec4};
 use renderer_common::errors::RenderingError;
 use std::sync::Mutex;
@@ -19,9 +21,13 @@ pub struct UIRenderedItem {
     pub texture: Option<VEImage>,
     pub texture_component_id: Option<u64>,
 
+    pub text_color: DVec4,
+    pub text: String,
+    pub font_size: UIFontSize,
+
     pub descriptor_set: VEDescriptorSet,
     sampler: VESampler,
-    item_buffer: Mutex<UIItemBuffer>,
+    pub item_buffer: Mutex<UIItemBuffer>,
 }
 
 impl UIRenderedItem {
@@ -38,6 +44,10 @@ impl UIRenderedItem {
             texture: None,
             texture_component_id: None,
 
+            text_color: DVec4::new(0.0, 0.0, 0.0, 0.0),
+            text: "".to_owned(),
+            font_size: UIFontSize::Medium,
+
             descriptor_set: layout.create_descriptor_set()?,
             item_buffer: Mutex::from(UIItemBuffer::new(toolkit)?),
             sampler: toolkit.create_sampler(
@@ -47,5 +57,19 @@ impl UIRenderedItem {
                 true,
             )?,
         })
+    }
+
+    pub fn update_buffer(
+        &self,
+        font_atlas_small: &FontAtlas,
+        font_atlas_medium: &FontAtlas,
+        font_atlas_large: &FontAtlas,
+    ) -> Result<(), RenderingError> {
+        self.item_buffer.lock().unwrap().update(
+            self,
+            font_atlas_small,
+            font_atlas_medium,
+            font_atlas_large,
+        )
     }
 }

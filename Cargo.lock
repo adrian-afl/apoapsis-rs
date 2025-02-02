@@ -459,6 +459,7 @@ version = "0.1.0"
 dependencies = [
  "celestial_renderer",
  "ecs",
+ "glam",
  "input",
  "math",
  "real_physics_engine",
