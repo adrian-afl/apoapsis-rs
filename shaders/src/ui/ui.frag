@@ -7,6 +7,13 @@
 
 layout(set = 0, binding = 1) uniform sampler2D colorTexture;
 
+#define COMMON_BUFFER_SET 1
+#define COMMON_BUFFER_BINDING 0
+#define COMMON_BUFFER_BINDING_ATLAS_SMALL 1
+#define COMMON_BUFFER_BINDING_ATLAS_MEDIUM 2
+#define COMMON_BUFFER_BINDING_ATLAS_LARGE 3
+#include "buffers/ui-common-buffer.glsl"
+
 layout (location = 0) in vec2 inoutUV;
 
 layout (location = 0) out vec4 outColor;
@@ -17,5 +24,32 @@ void main() {
         c = texture(colorTexture, inoutUV); // TODO influence
     }
     // outColor = color;
-    outColor = color;
+
+    if(textLength > 0) {
+        float letter_x = fract(inoutUV.x * float(textLength));
+        int letter_index = min(512, int(floor(inoutUV.x * float(textLength))));
+        
+        uint letter = itemData.text[letter_index];
+
+        FontAtlasIndices indices = fontAtlasSmallData[letter];
+        if(textFontSize == 2) indices = fontAtlasMediumData[letter];
+        else if(textFontSize == 3) indices = fontAtlasLargeData[letter];
+
+        vec2 lookup = vec2(
+            mix(indices.x, indices.x + indices.w, letter_x),
+            mix(indices.y, indices.y + indices.h, inoutUV.y)
+        );
+
+        float textResult = 0.0;
+        if(textFontSize == 1) 
+            textResult = texture(atlasSmallTexture, lookup / textureSize(atlasSmallTexture, 0), 0).r;
+        else if(textFontSize == 2) 
+            textResult = texture(atlasMediumTexture, lookup / textureSize(atlasMediumTexture, 0), 0).r;
+        else if(textFontSize == 3) 
+            textResult = texture(atlasLargeTexture, lookup / textureSize(atlasLargeTexture, 0), 0).r;
+
+        c = vec4(text_color.rgb, text_color.a * textResult) + vec4(0.5, 0.0, 0.0, 0.5);
+    }
+
+    outColor = c;
 }

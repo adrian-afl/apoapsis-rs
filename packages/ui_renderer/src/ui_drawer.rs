@@ -15,8 +15,10 @@ use vengine_rs::graphics::attachment::{AttachmentBlending, VEAttachment};
 use vengine_rs::graphics::render_stage::{VECullMode, VEPrimitiveTopology, VERenderStage};
 use vengine_rs::graphics::vertex_attributes::VertexAttribFormat;
 use vengine_rs::graphics::vertex_buffer::VEVertexBuffer;
+use vengine_rs::image::filtering::VEFiltering;
 use vengine_rs::image::image::{VEImage, VEImageUsage, VEImageViewCreateInfo};
 use vengine_rs::image::image_format::VEImageFormat;
+use vengine_rs::image::sampler::{VESampler, VESamplerAddressMode};
 
 pub struct UIDrawer {
     pub render_stage: VERenderStage,
@@ -31,6 +33,7 @@ pub struct UIDrawer {
     pub font_atlas_large: FontAtlas,
 
     pub out_color: VEImage,
+    sampler: VESampler,
 }
 
 pub const UI_ITEM_DRAWER_VERTEX_ATTRIBUTES: [VertexAttribFormat; 2] = [
@@ -108,13 +111,32 @@ impl UIDrawer {
             },
         ])?;
 
-        let mut common_set_layout =
-            toolkit.create_descriptor_set_layout(&[VEDescriptorSetLayoutField {
+        let mut common_set_layout = toolkit.create_descriptor_set_layout(&[
+            VEDescriptorSetLayoutField {
                 // data buffer
                 binding: 0,
                 typ: VEDescriptorSetFieldType::UniformBuffer,
                 stage: VEDescriptorSetFieldStage::AllGraphics,
-            }])?;
+            },
+            VEDescriptorSetLayoutField {
+                // atlas small tex
+                binding: 1,
+                typ: VEDescriptorSetFieldType::Sampler,
+                stage: VEDescriptorSetFieldStage::Fragment,
+            },
+            VEDescriptorSetLayoutField {
+                // atlas medium tex
+                binding: 2,
+                typ: VEDescriptorSetFieldType::Sampler,
+                stage: VEDescriptorSetFieldStage::Fragment,
+            },
+            VEDescriptorSetLayoutField {
+                // atlas large tex
+                binding: 3,
+                typ: VEDescriptorSetFieldType::Sampler,
+                stage: VEDescriptorSetFieldStage::Fragment,
+            },
+        ])?;
 
         let common_buffer = UICommonBuffer::new(&toolkit).expect("Failed to create UICommonBuffer");
 
@@ -143,26 +165,48 @@ impl UIDrawer {
             VECullMode::None,
         )?;
 
-        let font_atlas_small = FontAtlas::new(
+        let mut font_atlas_small = FontAtlas::new(
             toolkit,
             "media/inter_font.ttf",
             8,
             " !\\\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~",
         );
 
-        let font_atlas_medium = FontAtlas::new(
+        let mut font_atlas_medium = FontAtlas::new(
             toolkit,
             "media/inter_font.ttf",
             12,
             " !\\\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~",
         );
 
-        let font_atlas_large = FontAtlas::new(
+        let mut font_atlas_large = FontAtlas::new(
             toolkit,
             "media/inter_font.ttf",
             18,
             " !\\\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~",
         );
+
+        let sampler = toolkit.create_sampler(
+            VESamplerAddressMode::Repeat,
+            VEFiltering::Linear,
+            VEFiltering::Linear,
+            false,
+        )?;
+
+        let view = font_atlas_small
+            .texture
+            .get_view(VEImageViewCreateInfo::simple_2d())?;
+        common_set.bind_image_sampler(1, &font_atlas_small.texture, view, &sampler)?;
+
+        let view = font_atlas_medium
+            .texture
+            .get_view(VEImageViewCreateInfo::simple_2d())?;
+        common_set.bind_image_sampler(2, &font_atlas_medium.texture, view, &sampler)?;
+
+        let view = font_atlas_large
+            .texture
+            .get_view(VEImageViewCreateInfo::simple_2d())?;
+        common_set.bind_image_sampler(3, &font_atlas_large.texture, view, &sampler)?;
 
         Ok(Self {
             render_stage,
@@ -175,6 +219,7 @@ impl UIDrawer {
             font_atlas_medium,
             font_atlas_large,
             out_color,
+            sampler,
         })
     }
 

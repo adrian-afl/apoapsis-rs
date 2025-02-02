@@ -10,7 +10,7 @@ use vengine_rs::core::descriptor_set::VEDescriptorSet;
 use vengine_rs::core::descriptor_set_layout::VEDescriptorSetLayout;
 use vengine_rs::core::toolkit::VEToolkit;
 use vengine_rs::image::filtering::VEFiltering;
-use vengine_rs::image::image::VEImage;
+use vengine_rs::image::image::{VEImage, VEImageViewCreateInfo};
 use vengine_rs::image::sampler::{VESampler, VESamplerAddressMode};
 
 pub struct UIRenderedItem {
@@ -21,7 +21,7 @@ pub struct UIRenderedItem {
 
     pub color: DVec4,
     pub texture: Option<VEImage>,
-    pub texture_component_id: Option<u64>,
+    pub texture_path_loaded: Option<String>,
 
     pub text_color: DVec4,
     pub text: String,
@@ -73,7 +73,7 @@ impl UIRenderedItem {
             z_index: 0,
             color: DVec4::new(0.0, 0.0, 0.0, 0.0),
             texture: None,
-            texture_component_id: None,
+            texture_path_loaded: None,
 
             text_color: DVec4::new(0.0, 0.0, 0.0, 0.0),
             text: "".to_owned(),
@@ -83,6 +83,21 @@ impl UIRenderedItem {
             item_buffer: Mutex::from(item_buffer),
             sampler,
         })
+    }
+
+    pub fn bind_texture(&mut self) {
+        if self.texture.is_none() {
+            return;
+        }
+
+        let mut texture = self.texture.as_mut().unwrap();
+        let view = texture
+            .get_view(VEImageViewCreateInfo::simple_2d())
+            .unwrap();
+
+        self.descriptor_set
+            .bind_image_sampler(1, texture, view, &self.sampler)
+            .unwrap();
     }
 
     pub fn update_buffer(

@@ -7,6 +7,9 @@
 
 #define COMMON_BUFFER_SET 1
 #define COMMON_BUFFER_BINDING 0
+#define COMMON_BUFFER_BINDING_ATLAS_SMALL 1
+#define COMMON_BUFFER_BINDING_ATLAS_MEDIUM 2
+#define COMMON_BUFFER_BINDING_ATLAS_LARGE 3
 #include "buffers/ui-common-buffer.glsl"
 
 layout (location = 0) in vec2 inVertexPos;

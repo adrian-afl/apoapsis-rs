@@ -78,15 +78,18 @@ impl SystemTrait for UISystem {
             let item = map_locked.get_mut(&entity.id).unwrap();
 
             if let Some(texture) = &entity.components.ui_texture {
-                if item.texture_component_id != Some(texture.id) {
+                if item.texture_path_loaded.is_none()
+                    || *item.texture_path_loaded.as_ref().unwrap() != texture.texture_path
+                {
                     item.texture = Some(
                         self.toolkit
                             .create_image_from_file(&texture.texture_path, &[VEImageUsage::Sampled])
                             .unwrap(),
                     );
+                    item.bind_texture();
                 }
             } else {
-                item.texture_component_id = None;
+                item.texture_path_loaded = None;
                 item.texture = None;
             }
 

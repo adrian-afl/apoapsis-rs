@@ -7,6 +7,8 @@ use ecs::components::camera::first_person_camera_control_component::FirstPersonC
 use ecs::components::common::transform_component::TransformComponent;
 use ecs::components::ui::ui_box_component::UIBoxComponent;
 use ecs::components::ui::ui_color_component::UIColorComponent;
+use ecs::components::ui::ui_text_component::{UIFontSize, UITextComponent};
+use ecs::components::ui::ui_texture_component::UITextureComponent;
 use ecs::ecs_world::{ECSWorld, ECSWorldSerializedRepresentation};
 use ecs::entity::Entity;
 use ecs::game_state::GameState;
@@ -123,6 +125,7 @@ impl Game {
             let mut box_top_left = Entity::new(None);
             box_top_left.components.ui_color =
                 Some(UIColorComponent::new(DVec4::new(1.0, 0.0, 0.0, 1.0)));
+            box_top_left.components.ui_texture = Some(UITextureComponent::new("media/dingus.jpg"));
             box_top_left.components.ui_box = Some(
                 UIBoxComponent::default()
                     .with_position(DVec2::new(0.0, 0.0))
@@ -130,12 +133,15 @@ impl Game {
             );
 
             let mut box_bottom_right = Entity::new(None);
-            box_bottom_right.components.ui_color =
-                Some(UIColorComponent::new(DVec4::new(0.0, 1.0, 0.0, 1.0)));
+            box_bottom_right.components.ui_text = Some(UITextComponent::new(
+                "This is a test!!",
+                DVec4::new(0.0, 1.0, 0.0, 1.0),
+                UIFontSize::Medium,
+            ));
             box_bottom_right.components.ui_box = Some(
                 UIBoxComponent::default()
-                    .with_position(DVec2::new(0.9, 0.9))
-                    .with_size(DVec2::new(0.1, 0.1)),
+                    .with_position(DVec2::new(0.5, 0.9))
+                    .with_size(DVec2::new(0.4, 0.1)),
             );
 
             ecs.lock().unwrap().add(box_top_left);
