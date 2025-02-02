@@ -19,7 +19,7 @@ impl UIItemBuffer {
     pub fn new(toolkit: &VEToolkit) -> Result<Self, RenderingError> {
         Ok(Self {
             buffer: toolkit.create_buffer(
-                &[VEBufferUsage::Uniform],
+                &[VEBufferUsage::Storage],
                 8 * 1024,
                 Some(VEMemoryProperties::HostCoherent),
             )?,
@@ -90,6 +90,7 @@ impl UIItemBuffer {
                 None => 0,
                 Some(index) => *index,
             };
+            println!("FOR {char} INDEX IS {index}");
             offset += write_uint(ptr, offset, index as u32);
         }
 

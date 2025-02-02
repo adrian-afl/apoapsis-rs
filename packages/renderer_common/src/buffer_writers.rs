@@ -97,9 +97,9 @@ pub fn write_int(ptr: *mut f32, base_offset: isize, data: i32) -> isize {
 }
 
 pub fn write_uint(ptr: *mut f32, base_offset: isize, data: u32) -> isize {
-    let ptr_int = ptr as *mut u32;
+    let ptr_uint = ptr as *mut u32;
     unsafe {
-        ptr_int.offset(base_offset).write(data);
+        ptr_uint.offset(base_offset).write(data);
     }
     1
 }

@@ -26,18 +26,21 @@ void main() {
     // outColor = color;
 
     if(textLength > 0) {
-        float letter_x = fract(inoutUV.x * float(textLength));
-        int letter_index = min(512, int(floor(inoutUV.x * float(textLength))));
+        float mult = inoutUV.x * float(textLength);
+        float letter_x = fract(mult);
+        // letter_index is from 0 to text length
+        uint letter_index = uint(min(1023.0, floor(mult)));
         
+        // letter is text letter index at position of letter_index
         uint letter = itemData.text[letter_index];
 
-        FontAtlasIndices indices = fontAtlasSmallData[letter];
-        if(textFontSize == 2) indices = fontAtlasMediumData[letter];
-        else if(textFontSize == 3) indices = fontAtlasLargeData[letter];
+        vec4 indices = commonData.fontAtlasSmallData[letter];
+        if(textFontSize == 2) indices = commonData.fontAtlasMediumData[letter];
+        else if(textFontSize == 3) indices = commonData.fontAtlasLargeData[letter];
 
         vec2 lookup = vec2(
-            mix(indices.x, indices.x + indices.w, letter_x),
-            mix(indices.y, indices.y + indices.h, inoutUV.y)
+            mix(indices.x, indices.x + indices.z, letter_x),
+            mix(indices.y, indices.y + indices.w, inoutUV.y)
         );
 
         float textResult = 0.0;
@@ -49,6 +52,7 @@ void main() {
             textResult = texture(atlasLargeTexture, lookup / textureSize(atlasLargeTexture, 0), 0).r;
 
         c = vec4(text_color.rgb, text_color.a * textResult) + vec4(0.5, 0.0, 0.0, 0.5);
+        //c =  vec4(float(itemData.text[letter_index]) / 100.0, 0.0, 0.0, 1.0);
     }
 
     outColor = c;

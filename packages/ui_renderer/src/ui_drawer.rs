@@ -100,7 +100,7 @@ impl UIDrawer {
             VEDescriptorSetLayoutField {
                 // data buffer
                 binding: 0,
-                typ: VEDescriptorSetFieldType::UniformBuffer,
+                typ: VEDescriptorSetFieldType::StorageBuffer,
                 stage: VEDescriptorSetFieldStage::AllGraphics,
             },
             VEDescriptorSetLayoutField {
@@ -168,21 +168,21 @@ impl UIDrawer {
         let mut font_atlas_small = FontAtlas::new(
             toolkit,
             "media/inter_font.ttf",
-            8,
+            16,
             " !\\\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~",
         );
 
         let mut font_atlas_medium = FontAtlas::new(
             toolkit,
             "media/inter_font.ttf",
-            12,
+            24,
             " !\\\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~",
         );
 
         let mut font_atlas_large = FontAtlas::new(
             toolkit,
             "media/inter_font.ttf",
-            18,
+            32,
             " !\\\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~",
         );
 

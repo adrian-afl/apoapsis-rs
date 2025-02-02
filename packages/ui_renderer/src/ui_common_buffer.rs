@@ -50,12 +50,13 @@ impl UICommonBuffer {
             for i in 0..255 {
                 let c = atlas.letters_array.get(i);
                 let c = c.unwrap_or_else(|| &CharPositionArrayItem {
-                    c: ' ',
-                    x: 0,
-                    y: 0,
-                    w: 0,
-                    h: 0,
+                    c: ' ', // in vec4:
+                    x: 0,   // x
+                    y: 0,   // y
+                    w: 0,   // z
+                    h: 0,   // w
                 });
+                println!("for index {i} eek is {:?}", c);
                 offset += write_float(ptr, offset, c.x as f64);
                 offset += write_float(ptr, offset, c.y as f64);
                 offset += write_float(ptr, offset, c.w as f64);
