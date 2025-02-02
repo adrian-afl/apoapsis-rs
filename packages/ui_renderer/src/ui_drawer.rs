@@ -168,28 +168,28 @@ impl UIDrawer {
         let mut font_atlas_small = FontAtlas::new(
             toolkit,
             "media/inter_font.ttf",
-            16,
+            24,
             " !\\\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~",
         );
 
         let mut font_atlas_medium = FontAtlas::new(
             toolkit,
             "media/inter_font.ttf",
-            24,
+            32,
             " !\\\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~",
         );
 
         let mut font_atlas_large = FontAtlas::new(
             toolkit,
             "media/inter_font.ttf",
-            32,
+            48,
             " !\\\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~",
         );
 
         let sampler = toolkit.create_sampler(
             VESamplerAddressMode::Repeat,
-            VEFiltering::Linear,
-            VEFiltering::Linear,
+            VEFiltering::Nearest,
+            VEFiltering::Nearest,
             false,
         )?;
 

@@ -1,11 +1,7 @@
 use crate::font_atlas_generator::font_atlas_generator::FontAtlas;
 use crate::ui_rendered_item::UIRenderedItem;
 use ecs::components::ui::ui_text_component::UIFontSize;
-use glam::{DVec3, DVec4};
-use renderer_common::buffer_writers::{
-    write_bool_as_uint, write_float, write_int, write_mat4, write_uint, write_vec2,
-    write_vec3_zero, write_vec4,
-};
+use renderer_common::buffer_writers::{write_float, write_uint, write_vec2, write_vec4};
 use renderer_common::errors::RenderingError;
 use vengine_rs::buffer::buffer::{VEBuffer, VEBufferUsage};
 use vengine_rs::core::memory_properties::VEMemoryProperties;

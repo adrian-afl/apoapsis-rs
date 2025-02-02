@@ -96,7 +96,7 @@ impl FontAtlas {
         for c in supported_chars.chars() {
             generated.push(GeneratedChar::generate(&font, font_size, c));
         }
-        let width_sum: usize = generated.iter().map(|e| e.metrics.width).sum();
+        let width_sum: usize = generated.iter().map(|e| e.metrics.width + 5).sum();
         let height_max = generated.iter().map(|e| e.metrics.height).max().unwrap();
 
         let mut bitmap = vec![0; width_sum * height_max];
@@ -119,7 +119,11 @@ impl FontAtlas {
                     height: height_max,
                 },
                 Offset { x: 0, y: 0 },
-                Offset { x: x_cursor, y: 0 },
+                Offset {
+                    x: x_cursor,
+                    // if metrics height == heightmax then this is 0
+                    y: (height_max - c.metrics.height) - c.metrics.ymin.max(0) as usize,
+                },
                 Size {
                     width: c.metrics.width,
                     height: c.metrics.height,
@@ -133,7 +137,7 @@ impl FontAtlas {
                 x: x_cursor,
                 y: 0,
             });
-            x_cursor += c.metrics.width;
+            x_cursor += c.metrics.width + 5;
         }
 
         let texture = toolkit

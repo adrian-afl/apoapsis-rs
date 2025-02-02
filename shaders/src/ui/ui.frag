@@ -47,16 +47,26 @@ void main() {
                 
                 vec2 lookup = vec2(
                     mix(indices.x, indices.x + indices.z, m),
-                    mix(indices.y, indices.y + indices.w, inoutUV.y)
+                    inoutUV.y
                 );
+
+                vec2 texSize = vec2(0.0);
+                if(textFontSize == 1) 
+                    texSize = textureSize(atlasSmallTexture, 0);
+                else if(textFontSize == 2) 
+                    texSize =  textureSize(atlasMediumTexture, 0);
+                else if(textFontSize == 3) 
+                    texSize = textureSize(atlasLargeTexture, 0);
+
+                lookup.y *= texSize.y;
 
                 float textResult = 0.0;
                 if(textFontSize == 1) 
-                    textResult = texture(atlasSmallTexture, lookup / textureSize(atlasSmallTexture, 0), 0).r;
+                    textResult = texture(atlasSmallTexture, lookup / texSize, 0).r;
                 else if(textFontSize == 2) 
-                    textResult = texture(atlasMediumTexture, lookup / textureSize(atlasMediumTexture, 0), 0).r;
+                    textResult = texture(atlasMediumTexture, lookup / texSize, 0).r;
                 else if(textFontSize == 3) 
-                    textResult = texture(atlasLargeTexture, lookup / textureSize(atlasLargeTexture, 0), 0).r;
+                    textResult = texture(atlasLargeTexture, lookup / texSize, 0).r;
 
                 c = vec4(text_color.rgb, text_color.a * textResult);
 

@@ -134,7 +134,7 @@ impl Game {
 
             let mut box_bottom_right = Entity::new(None);
             box_bottom_right.components.ui_text = Some(UITextComponent::new(
-                "This is a test!!",
+                "This is a - test!!",
                 DVec4::new(0.0, 1.0, 0.0, 1.0),
                 UIFontSize::Medium,
             ));
