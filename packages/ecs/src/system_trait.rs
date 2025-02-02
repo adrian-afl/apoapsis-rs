@@ -1,5 +1,5 @@
+use crate::ecs_world::ECSWorld;
 use crate::game_state::GameState;
-use ecs::ecs_world::ECSWorld;
 use std::sync::{Arc, Mutex};
 
 pub trait SystemTrait {

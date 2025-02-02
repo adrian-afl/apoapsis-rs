@@ -1,6 +1,6 @@
-use celestial_renderer::scene::camera::Camera;
 use dashu_float::DBig;
 use math::sin_cos::f64_to_dbig;
+use renderer_common::camera::Camera;
 use std::ops::Add;
 use std::time::SystemTime;
 

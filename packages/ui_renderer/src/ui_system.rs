@@ -1,8 +1,10 @@
-use crate::game_state::GameState;
-use crate::system_trait::SystemTrait;
+use crate::ui_drawer::UIDrawer;
+use crate::ui_rendered_item::UIRenderedItem;
 use ecs::component_trait::Components;
 use ecs::components::ui::cursor_type::UICursorType;
 use ecs::ecs_world::ECSWorld;
+use ecs::game_state::GameState;
+use ecs::system_trait::SystemTrait;
 use glam::DVec2;
 use rayon::iter::IntoParallelRefIterator;
 use rayon::iter::ParallelIterator;
@@ -11,8 +13,6 @@ use renderer_common::resolution_config::ResolutionConfig;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, RwLock};
 use thiserror::Error;
-use ui_renderer::ui_drawer::UIDrawer;
-use ui_renderer::ui_rendered_item::UIRenderedItem;
 use vengine_rs::core::toolkit::VEToolkit;
 use vengine_rs::image::image::VEImageUsage;
 

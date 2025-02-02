@@ -1,6 +1,42 @@
 use crate::component_trait::acquire_next_id;
-use real_physics_engine::build_collider::ShapeDescription;
 use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct BallColliderDescription {
+    pub radius: f64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct BoxColliderDescription {
+    pub size_x: f64,
+    pub size_y: f64,
+    pub size_z: f64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CylinderColliderDescription {
+    pub height: f64,
+    pub radius: f64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ConeColliderDescription {
+    pub height: f64,
+    pub radius: f64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ShapeDescription {
+    Ball(BallColliderDescription),
+    Box(BoxColliderDescription),
+    Cylinder(CylinderColliderDescription),
+    Cone(ConeColliderDescription),
+}
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct RealPhysicsComponent {

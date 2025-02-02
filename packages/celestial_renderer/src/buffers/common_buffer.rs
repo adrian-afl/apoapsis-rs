@@ -1,5 +1,5 @@
-use crate::scene::camera::Camera;
 use renderer_common::buffer_writers::{write_float, write_mat4, write_vec3_zero};
+use renderer_common::camera::Camera;
 use renderer_common::errors::RenderingError;
 use vengine_rs::buffer::buffer::{VEBuffer, VEBufferUsage};
 use vengine_rs::core::memory_properties::VEMemoryProperties;

@@ -1,42 +1,5 @@
+use ecs::components::physics::real_physics_component::ShapeDescription;
 use rapier3d_f64::prelude::ColliderBuilder;
-use serde::{Deserialize, Serialize};
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct BallColliderDescription {
-    pub radius: f64,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct BoxColliderDescription {
-    pub size_x: f64,
-    pub size_y: f64,
-    pub size_z: f64,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct CylinderColliderDescription {
-    pub height: f64,
-    pub radius: f64,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ConeColliderDescription {
-    pub height: f64,
-    pub radius: f64,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ShapeDescription {
-    Ball(BallColliderDescription),
-    Box(BoxColliderDescription),
-    Cylinder(CylinderColliderDescription),
-    Cone(ConeColliderDescription),
-}
 
 pub fn build_collider(shape_description: &ShapeDescription) -> ColliderBuilder {
     let collider_builder = match shape_description {

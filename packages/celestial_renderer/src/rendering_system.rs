@@ -1,17 +1,15 @@
-use crate::game_state::GameState;
-use crate::system_trait::SystemTrait;
-use celestial_renderer::geometry::mesh_drawer::MESH_DRAWER_VERTEX_ATTRIBUTES;
-use celestial_renderer::renderer::Renderer;
-use celestial_renderer::scene::material::{
-    ColorOrTexture, Material, ScaledTexture, ValueOrTexture,
-};
-use celestial_renderer::scene::mesh::Mesh;
-use celestial_renderer::simulation::simulation::Simulation;
+use crate::geometry::mesh_drawer::MESH_DRAWER_VERTEX_ATTRIBUTES;
+use crate::renderer::Renderer;
+use crate::scene::material::{ColorOrTexture, Material, ScaledTexture, ValueOrTexture};
+use crate::scene::mesh::Mesh;
+use crate::simulation::simulation::Simulation;
 use ecs::component_trait::Components;
 use ecs::components::rendering::mesh_component::{
     ColorOrTextureDescription, MeshDescription, ValueOrTextureDescription,
 };
 use ecs::ecs_world::ECSWorld;
+use ecs::game_state::GameState;
+use ecs::system_trait::SystemTrait;
 use rayon::iter::IntoParallelRefIterator;
 use rayon::iter::ParallelIterator;
 use renderer_common::errors::RenderingError;

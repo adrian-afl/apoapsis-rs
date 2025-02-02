@@ -352,14 +352,15 @@ dependencies = [
  "brotli",
  "common_util",
  "dashu-float",
+ "ecs",
  "glam",
  "math",
+ "rayon",
  "renderer_common",
  "serde",
  "serde_json",
  "ui_renderer",
  "vengine-rs",
- "winit",
 ]
 
 [[package]]
@@ -457,11 +458,10 @@ name = "core"
 version = "0.1.0"
 dependencies = [
  "celestial_renderer",
- "dashu-float",
  "ecs",
- "ecs_systems",
  "input",
  "math",
+ "real_physics_engine",
  "renderer_common",
  "serde",
  "serde_json",
@@ -673,27 +673,8 @@ dependencies = [
  "glam",
  "math",
  "rayon",
- "real_physics_engine",
- "serde",
- "vengine-rs",
-]
-
-[[package]]
-name = "ecs_systems"
-version = "0.1.0"
-dependencies = [
- "celestial_renderer",
- "dashu-float",
- "ecs",
- "glam",
- "math",
- "rapier3d-f64",
- "rayon",
- "real_physics_engine",
  "renderer_common",
- "thiserror 2.0.11",
- "ui_renderer",
- "vengine-rs",
+ "serde",
 ]
 
 [[package]]
@@ -2063,9 +2044,13 @@ dependencies = [
 name = "real_physics_engine"
 version = "0.1.0"
 dependencies = [
+ "celestial_renderer",
+ "dashu-float",
+ "ecs",
  "glam",
+ "math",
  "rapier3d-f64",
- "serde",
+ "rayon",
  "thiserror 2.0.11",
 ]
 
@@ -2122,6 +2107,7 @@ version = "0.1.0"
 dependencies = [
  "ash",
  "glam",
+ "math",
  "thiserror 2.0.11",
  "vengine-rs",
 ]
@@ -2609,9 +2595,12 @@ checksum = "42ff0bf0c66b8238c6f3b578df37d0b7848e55df8577b3f74f92a69acceeb825"
 name = "ui_renderer"
 version = "0.1.0"
 dependencies = [
+ "ecs",
  "fontdue",
  "glam",
+ "rayon",
  "renderer_common",
+ "thiserror 2.0.11",
  "vengine-rs",
 ]
 

@@ -1,7 +1,7 @@
-use crate::game_state::GameState;
-use crate::system_trait::SystemTrait;
-use celestial_renderer::simulation::simulation::Simulation;
+use crate::simulation::simulation::Simulation;
 use ecs::ecs_world::ECSWorld;
+use ecs::game_state::GameState;
+use ecs::system_trait::SystemTrait;
 use math::sin_cos::f64_to_dbig;
 use std::sync::{Arc, Mutex, RwLock};
 

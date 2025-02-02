@@ -1,10 +1,15 @@
 use glam::{DMat4, DQuat, DVec3};
 use math::decimal_vector_3d::DecimalVector3d;
+use rayon::iter::IndexedParallelIterator;
+use rayon::iter::ParallelIterator;
+use rayon::prelude::{IntoParallelIterator, IntoParallelRefIterator, IntoParallelRefMutIterator};
 use renderer_common::errors::RenderingError;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs::read_to_string;
 use std::fs::File;
 use std::io::Read;
+use std::sync::{Arc, Mutex};
 use vengine_rs::core::toolkit::VEToolkit;
 use vengine_rs::graphics::render_stage::VERenderStage;
 use vengine_rs::graphics::vertex_attributes::VertexAttribFormat;
@@ -24,7 +29,7 @@ struct MetadataItem {
 }
 
 pub struct Icosphere {
-    currently_loaded: HashMap<String, LoadedGeometry>,
+    currently_loaded: Mutex<HashMap<String, LoadedGeometry>>,
     metadata: Vec<MetadataItem>,
     dir_path: String,
     thresholds: Vec<f64>,
@@ -41,7 +46,7 @@ impl Icosphere {
         let path = format!("{}/metadata.ini", dir_path);
 
         let mut ico = Icosphere {
-            currently_loaded: HashMap::new(),
+            currently_loaded: Mutex::new(HashMap::new()),
             metadata: vec![],
             dir_path,
             thresholds,
@@ -113,7 +118,8 @@ impl Icosphere {
         toolkit: &VEToolkit,
         stage: &VERenderStage,
     ) -> Result<(), RenderingError> {
-        for i in 0..self.metadata.len() {
+        let lock = Mutex::new(());
+        self.metadata.par_iter().enumerate().for_each(|(i, m)| {
             let m = &self.metadata[i];
 
             let final_matrix = self.part_matrices[i];
@@ -130,29 +136,37 @@ impl Icosphere {
                 level = 3;
             }
 
-            let mapped = self.currently_loaded.get(&m.name);
-            match mapped {
-                None => {
-                    self.currently_loaded.insert(
-                        m.name.clone(),
-                        LoadedGeometry {
-                            vertex_buffer: self.load_geometry(&toolkit, &m.name, level)?,
-                            level,
-                        },
-                    );
+            let exists = self.currently_loaded.lock().unwrap().contains_key(&m.name);
+            if exists {
+                let mapped_level = self
+                    .currently_loaded
+                    .lock()
+                    .unwrap()
+                    .get(&m.name)
+                    .unwrap()
+                    .level;
+                if (mapped_level != level) {
+                    let geometry = self.load_geometry(&toolkit, &lock, &m.name, level).unwrap();
+                    let mut locked = self.currently_loaded.lock().unwrap();
+                    let mut mapped_mut = locked.get_mut(&m.name).unwrap();
+                    mapped_mut.level = level;
+                    mapped_mut.vertex_buffer = geometry;
+                } else {
+                    let locked = self.currently_loaded.lock().unwrap();
+                    let mapped = locked.get(&m.name).unwrap();
+                    stage.draw_instanced(&mapped.vertex_buffer, 1);
                 }
-                Some(mapped) => {
-                    if (mapped.level != level) {
-                        let geometry = self.load_geometry(&toolkit, &m.name, level)?;
-                        let mut mapped_mut = self.currently_loaded.get_mut(&m.name).unwrap();
-                        mapped_mut.level = level;
-                        mapped_mut.vertex_buffer = geometry;
-                    } else {
-                        stage.draw_instanced(&mapped.vertex_buffer, 1);
-                    }
-                }
+            } else {
+                let geometry = self.load_geometry(&toolkit, &lock, &m.name, level).unwrap();
+                self.currently_loaded.lock().unwrap().insert(
+                    m.name.clone(),
+                    LoadedGeometry {
+                        vertex_buffer: geometry,
+                        level,
+                    },
+                );
             }
-        }
+        });
 
         Ok(())
     }
@@ -160,6 +174,7 @@ impl Icosphere {
     fn load_geometry(
         &self,
         toolkit: &VEToolkit,
+        lock: &Mutex<()>,
         name: &str,
         level: u8,
     ) -> Result<VEVertexBuffer, RenderingError> {
@@ -169,6 +184,9 @@ impl Icosphere {
         let mut brotli_stream = brotli::Decompressor::new(file, 40960);
         let mut decompressed = vec![];
         brotli_stream.read_to_end(&mut decompressed)?;
-        Ok(toolkit.create_vertex_buffer_from_data(decompressed, &self.vertex_attributes)?)
+        Ok({
+            let _exclusivity_lock = lock.lock().unwrap(); // this probably could be done better if i did it in vengine
+            toolkit.create_vertex_buffer_from_data(decompressed, &self.vertex_attributes)?
+        })
     }
 }

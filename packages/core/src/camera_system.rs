@@ -1,7 +1,7 @@
-use crate::game_state::GameState;
-use crate::system_trait::SystemTrait;
 use ecs::component_trait::Components;
 use ecs::ecs_world::ECSWorld;
+use ecs::game_state::GameState;
+use ecs::system_trait::SystemTrait;
 use std::sync::{Arc, Mutex};
 
 pub struct CameraSystem {}
