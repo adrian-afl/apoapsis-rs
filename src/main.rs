@@ -9,18 +9,6 @@ use winit::dpi::PhysicalSize;
 use winit::window::{Window, WindowAttributes};
 
 mod app;
-mod body;
-mod celestial_rendering;
-mod config;
-mod core;
-mod ecs;
-mod ecs_components;
-mod ecs_systems;
-mod input;
-mod math;
-mod simulation;
-mod ui_rendering;
-mod util;
 
 fn main() {
     let subscriber = FmtSubscriber::builder()

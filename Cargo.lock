@@ -345,6 +345,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "celestial_renderer"
+version = "0.1.0"
+dependencies = [
+ "ash",
+ "brotli",
+ "common_util",
+ "dashu-float",
+ "glam",
+ "math",
+ "renderer_common",
+ "serde",
+ "serde_json",
+ "ui_renderer",
+ "vengine-rs",
+ "winit",
+]
+
+[[package]]
 name = "cesu8"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -419,12 +437,37 @@ dependencies = [
 ]
 
 [[package]]
+name = "common_util"
+version = "0.1.0"
+dependencies = [
+ "regex",
+]
+
+[[package]]
 name = "concurrent-queue"
 version = "2.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4ca0197aee26d1ae37445ee532fefce43251d24cc7c166799f4d46817f1d3973"
 dependencies = [
  "crossbeam-utils",
+]
+
+[[package]]
+name = "core"
+version = "0.1.0"
+dependencies = [
+ "celestial_renderer",
+ "dashu-float",
+ "ecs",
+ "ecs_systems",
+ "input",
+ "math",
+ "renderer_common",
+ "serde",
+ "serde_json",
+ "ui_renderer",
+ "vengine-rs",
+ "winit",
 ]
 
 [[package]]
@@ -620,6 +663,37 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f25c0e292a7ca6d6498557ff1df68f32c99850012b6ea401cf8daf771f22ff53"
 dependencies = [
  "serde",
+]
+
+[[package]]
+name = "ecs"
+version = "0.1.0"
+dependencies = [
+ "dashu-float",
+ "glam",
+ "math",
+ "rayon",
+ "real_physics_engine",
+ "serde",
+ "vengine-rs",
+]
+
+[[package]]
+name = "ecs_systems"
+version = "0.1.0"
+dependencies = [
+ "celestial_renderer",
+ "dashu-float",
+ "ecs",
+ "glam",
+ "math",
+ "rapier3d-f64",
+ "rayon",
+ "real_physics_engine",
+ "renderer_common",
+ "thiserror 2.0.11",
+ "ui_renderer",
+ "vengine-rs",
 ]
 
 [[package]]
@@ -931,6 +1005,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "input"
+version = "0.1.0"
+dependencies = [
+ "common_util",
+ "glam",
+ "serde",
+ "serde_json",
+ "winit",
+]
+
+[[package]]
 name = "interpolate_name"
 version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1115,6 +1200,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "62bb907fe88d54d8d9ce32a3cceab4218ed2f6b7d35617cafe9adf84e43919cb"
 dependencies = [
  "libc",
+]
+
+[[package]]
+name = "math"
+version = "0.1.0"
+dependencies = [
+ "dashu-float",
+ "glam",
+ "serde",
 ]
 
 [[package]]
@@ -1692,6 +1786,7 @@ version = "0.1.0"
 dependencies = [
  "ash",
  "brotli",
+ "core",
  "dashu-float",
  "fontdue",
  "gilrs",
@@ -1965,6 +2060,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "real_physics_engine"
+version = "0.1.0"
+dependencies = [
+ "glam",
+ "rapier3d-f64",
+ "serde",
+ "thiserror 2.0.11",
+]
+
+[[package]]
 name = "redox_syscall"
 version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2010,6 +2115,16 @@ name = "regex-syntax"
 version = "0.8.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2b15c43186be67a4fd63bee50d0303afffcef381492ebe2c5d87f324e1b8815c"
+
+[[package]]
+name = "renderer_common"
+version = "0.1.0"
+dependencies = [
+ "ash",
+ "glam",
+ "thiserror 2.0.11",
+ "vengine-rs",
+]
 
 [[package]]
 name = "rgb"
@@ -2489,6 +2604,16 @@ name = "typenum"
 version = "1.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "42ff0bf0c66b8238c6f3b578df37d0b7848e55df8577b3f74f92a69acceeb825"
+
+[[package]]
+name = "ui_renderer"
+version = "0.1.0"
+dependencies = [
+ "fontdue",
+ "glam",
+ "renderer_common",
+ "vengine-rs",
+]
 
 [[package]]
 name = "unicode-ident"

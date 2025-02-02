@@ -1,4 +1,4 @@
-use crate::core::game::Game;
+use core::game::Game;
 use glam::DVec2;
 use std::sync::{Arc, Mutex};
 use vengine_rs::core::toolkit::{App, VEToolkit};
