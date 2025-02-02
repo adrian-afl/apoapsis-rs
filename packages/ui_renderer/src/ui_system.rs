@@ -33,12 +33,12 @@ pub enum UIRendererError {
 
 impl UISystem {
     pub fn new(toolkit: Arc<VEToolkit>, config: &ResolutionConfig) -> Self {
+        let mut ui_drawer = UIDrawer::new(&config, &toolkit).expect("Failed to create UIDrawer");
+        ui_drawer.update_buffer().unwrap();
         Self {
             config: config.clone(),
             toolkit: toolkit.clone(),
-            ui_drawer: Arc::new(Mutex::from(
-                UIDrawer::new(&config, &toolkit).expect("Failed to create UIDrawer"),
-            )),
+            ui_drawer: Arc::new(Mutex::from(ui_drawer)),
             currently_rendered_items: RwLock::new(HashMap::new()),
         }
     }
@@ -153,7 +153,6 @@ impl SystemTrait for UISystem {
         println!("UI ELEMS {:?}", self.currently_rendered_items);
 
         let mut ui_drawer = self.ui_drawer.lock().unwrap();
-        ui_drawer.update_buffer().unwrap();
         ui_drawer
             .record(
                 &self

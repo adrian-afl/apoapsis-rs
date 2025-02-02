@@ -18,6 +18,10 @@ layout (location = 0) in vec2 inoutUV;
 
 layout (location = 0) out vec4 outColor;
 
+float linearstep(float edge0, float edge1, float x) {
+    return clamp((x - edge0) / (edge1 - edge0), 0.0, 1.0);
+}
+
 void main() {
     vec4 c = color;
     if(useTexture) {
@@ -26,32 +30,69 @@ void main() {
     // outColor = color;
 
     if(textLength > 0) {
-        float mult = inoutUV.x * float(textLength);
-        float letter_x = fract(mult);
-        // letter_index is from 0 to text length
-        uint letter_index = uint(min(1023.0, floor(mult)));
+        int letter_in_bounds = 0;
+        float x_offset = 0;
+        vec4 indices = commonData.fontAtlasSmallData[0];
+        int current_offset = int(inoutUV.x * 200.0);
+        for(; letter_in_bounds < textLength; letter_in_bounds++){
+            uint letter = itemData.text[letter_in_bounds];
+
+            if(textFontSize == 1) indices = commonData.fontAtlasSmallData[letter];
+            else if(textFontSize == 2) indices = commonData.fontAtlasMediumData[letter];
+            else if(textFontSize == 3) indices = commonData.fontAtlasLargeData[letter];
+            if(x_offset + indices.z > current_offset) {
+                float a = x_offset;
+                float b = x_offset + indices.z;
+                float m = linearstep(a, b, current_offset);
+                
+                vec2 lookup = vec2(
+                    mix(indices.x, indices.x + indices.z, m),
+                    mix(indices.y, indices.y + indices.w, inoutUV.y)
+                );
+
+                float textResult = 0.0;
+                if(textFontSize == 1) 
+                    textResult = texture(atlasSmallTexture, lookup / textureSize(atlasSmallTexture, 0), 0).r;
+                else if(textFontSize == 2) 
+                    textResult = texture(atlasMediumTexture, lookup / textureSize(atlasMediumTexture, 0), 0).r;
+                else if(textFontSize == 3) 
+                    textResult = texture(atlasLargeTexture, lookup / textureSize(atlasLargeTexture, 0), 0).r;
+
+                c = vec4(text_color.rgb, text_color.a * textResult);
+
+                break;
+            }
+
+            x_offset += letter == 0 ? 10 : indices.z;
+        }
+
+
+        // float mult = inoutUV.x * float(textLength);
+        // float letter_x = fract(mult);
+        // // letter_index is from 0 to text length
+        // uint letter_index = uint(min(1023.0, floor(mult)));
         
-        // letter is text letter index at position of letter_index
-        uint letter = itemData.text[letter_index];
+        // // letter is text letter index at position of letter_index
+        // uint letter = itemData.text[letter_index];
 
-        vec4 indices = commonData.fontAtlasSmallData[letter];
-        if(textFontSize == 2) indices = commonData.fontAtlasMediumData[letter];
-        else if(textFontSize == 3) indices = commonData.fontAtlasLargeData[letter];
+        // vec4 indices = commonData.fontAtlasSmallData[letter];
+        // if(textFontSize == 2) indices = commonData.fontAtlasMediumData[letter];
+        // else if(textFontSize == 3) indices = commonData.fontAtlasLargeData[letter];
 
-        vec2 lookup = vec2(
-            mix(indices.x, indices.x + indices.z, letter_x),
-            mix(indices.y, indices.y + indices.w, inoutUV.y)
-        );
+        // vec2 lookup = vec2(
+        //     mix(indices.x, indices.x + indices.z, letter_x),
+        //     mix(indices.y, indices.y + indices.w, inoutUV.y)
+        // );
 
-        float textResult = 0.0;
-        if(textFontSize == 1) 
-            textResult = texture(atlasSmallTexture, lookup / textureSize(atlasSmallTexture, 0), 0).r;
-        else if(textFontSize == 2) 
-            textResult = texture(atlasMediumTexture, lookup / textureSize(atlasMediumTexture, 0), 0).r;
-        else if(textFontSize == 3) 
-            textResult = texture(atlasLargeTexture, lookup / textureSize(atlasLargeTexture, 0), 0).r;
+        // float textResult = 0.0;
+        // if(textFontSize == 1) 
+        //     textResult = texture(atlasSmallTexture, lookup / textureSize(atlasSmallTexture, 0), 0).r;
+        // else if(textFontSize == 2) 
+        //     textResult = texture(atlasMediumTexture, lookup / textureSize(atlasMediumTexture, 0), 0).r;
+        // else if(textFontSize == 3) 
+        //     textResult = texture(atlasLargeTexture, lookup / textureSize(atlasLargeTexture, 0), 0).r;
 
-        c = vec4(text_color.rgb, text_color.a * textResult) + vec4(0.5, 0.0, 0.0, 0.5);
+        // c = vec4(text_color.rgb, text_color.a * textResult) + vec4(0.5, 0.0, 0.0, 0.5);
         //c =  vec4(float(itemData.text[letter_index]) / 100.0, 0.0, 0.0, 1.0);
     }
 
