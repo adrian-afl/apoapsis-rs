@@ -1,3 +1,4 @@
+use crate::font_atlas_generator::font_atlas_generator::{CharPositionArrayItem, FontAtlas};
 use renderer_common::buffer_writers::{write_float, write_mat4, write_vec3_zero};
 use renderer_common::errors::RenderingError;
 use vengine_rs::buffer::buffer::{VEBuffer, VEBufferUsage};
@@ -21,32 +22,46 @@ impl UICommonBuffer {
 
     /*
     current schema:
-    mat4 perspectiveMatrix;
-    mat4 viewMatrix;
 
-    vec4 frustumTopLeft_zero;
-    vec4 frustumBottomLeft_zero;
-    vec4 frustumTopRight_zero;
-    vec4 frustumBottomRight_zero;
+    struct FontAtlasIndices {
+        float x;
+        float y;
+        float w;
+        float h;
+    };
 
-    vec4 elapsed_zero_zero_zero;
+    FontAtlasIndices fontAtlasSmallData[255];
+    FontAtlasIndices fontAtlasMediumData[255];
+    FontAtlasIndices fontAtlasLargeData[255];
     */
-    pub fn update(&mut self) -> Result<(), RenderingError> {
+    pub fn update(
+        &mut self,
+        font_atlas_small: &FontAtlas,
+        font_atlas_medium: &FontAtlas,
+        font_atlas_large: &FontAtlas,
+    ) -> Result<(), RenderingError> {
         let ptr = self.buffer.map()? as *mut f32;
 
         let mut offset = 0;
-        //
-        // offset += write_mat4(ptr, offset, camera.projection_matrix);
-        // offset += write_mat4(ptr, offset, camera.view_matrix);
-        //
-        // let frustum_cone = &camera.frustum_cone;
-        //
-        // offset += write_vec3_zero(ptr, offset, frustum_cone.top_left);
-        // offset += write_vec3_zero(ptr, offset, frustum_cone.bottom_left);
-        // offset += write_vec3_zero(ptr, offset, frustum_cone.top_right);
-        // offset += write_vec3_zero(ptr, offset, frustum_cone.bottom_right);
-        //
-        // offset += write_float(ptr, offset, elapsed);
+
+        let atlases = [font_atlas_small, font_atlas_medium, font_atlas_large];
+
+        for atlas in atlases {
+            for i in 0..255 {
+                let c = atlas.letters_array.get(i);
+                let c = c.unwrap_or_else(|| &CharPositionArrayItem {
+                    c: ' ',
+                    x: 0,
+                    y: 0,
+                    w: 0,
+                    h: 0,
+                });
+                offset += write_float(ptr, offset, c.x as f64);
+                offset += write_float(ptr, offset, c.y as f64);
+                offset += write_float(ptr, offset, c.w as f64);
+                offset += write_float(ptr, offset, c.h as f64);
+            }
+        }
 
         self.buffer.unmap()?;
         Ok(())

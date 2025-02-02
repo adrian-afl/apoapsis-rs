@@ -13,6 +13,15 @@ pub struct CharPosition {
     pub h: usize,
 }
 
+#[derive(Debug, Clone)]
+pub struct CharPositionArrayItem {
+    pub c: char,
+    pub x: usize,
+    pub y: usize,
+    pub w: usize,
+    pub h: usize,
+}
+
 struct GeneratedChar {
     pub c: char,
     pub bitmap: Vec<u8>,
@@ -68,6 +77,7 @@ fn blit_box(
 pub struct FontAtlas {
     pub font_size: u8,
     pub letters: HashMap<char, CharPosition>,
+    pub letters_array: Vec<CharPositionArrayItem>,
     pub bitmap_width: usize,
     pub bitmap_height: usize,
     pub bitmap: Vec<u8>,
@@ -136,8 +146,20 @@ impl FontAtlas {
             )
             .unwrap();
 
+        let letters_array: Vec<CharPositionArrayItem> = letters
+            .iter()
+            .map(|(k, v)| CharPositionArrayItem {
+                c: *k,
+                x: v.x,
+                y: v.y,
+                w: v.w,
+                h: v.h,
+            })
+            .collect();
+
         Self {
             letters,
+            letters_array,
             bitmap,
             bitmap_width: width_sum,
             bitmap_height: height_max,

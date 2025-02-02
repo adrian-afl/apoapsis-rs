@@ -15,7 +15,7 @@ fn main() {
         .with_ansi(false)
         .with_writer(File::create("./log.txt").unwrap())
         .with_span_events(FmtSpan::FULL)
-        .with_max_level(Level::WARN)
+        .with_max_level(Level::TRACE)
         .finish();
 
     tracing::subscriber::set_global_default(subscriber).unwrap();

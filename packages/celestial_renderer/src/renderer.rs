@@ -89,7 +89,7 @@ impl Renderer {
         let mut cloud_generator_high_freq =
             CloudGeneratorHighFreq::new(&toolkit).expect("Failed to create CloudGeneratorHighFreq");
 
-        let atmosphere_drawer = AtmosphereDrawer::new(
+        let mut atmosphere_drawer = AtmosphereDrawer::new(
             &config,
             &toolkit,
             &common_buffer,
@@ -98,6 +98,15 @@ impl Renderer {
             &mut g_buffer,
         )
         .expect("Failed to create AtmosphereDrawer");
+
+        event!(Level::INFO, "multi_merger/update_inputs");
+        multi_merger
+            .update_inputs(
+                &mut atmosphere_drawer.out_additive_rgb,
+                &mut atmosphere_drawer.out_alpha_rgba,
+                &config,
+            )
+            .expect("Failed to update multi_merger inputs");
 
         Self {
             config: config.clone(),
@@ -151,6 +160,16 @@ impl Renderer {
             .update(camera, elapsed)
             .expect("Failed to update common_buffer");
 
+        event!(Level::INFO, "celestial_hierarchy/update");
+        celestial_hierarchy.update(
+            &camera.position,
+            &mut self.terrain_icosphere_drawer,
+            &mut self.water_icosphere_drawer,
+        )?;
+
+        event!(Level::INFO, "celestial_hierarchy/get_rendered_bodies");
+        let celestial_bodies = celestial_hierarchy.get_rendered_bodies();
+
         event!(Level::INFO, "mesh_drawer/record");
         self.mesh_drawer
             .record(meshes)
@@ -177,16 +196,6 @@ impl Renderer {
         }
 
         let mut wait_for_semaphores = vec![self.mesh_drawing_semaphore.clone()];
-
-        event!(Level::INFO, "celestial_hierarchy/update");
-        celestial_hierarchy.update(
-            &camera.position,
-            &mut self.terrain_icosphere_drawer,
-            &mut self.water_icosphere_drawer,
-        )?;
-
-        event!(Level::INFO, "celestial_hierarchy/get_rendered_bodies");
-        let celestial_bodies = celestial_hierarchy.get_rendered_bodies();
 
         for mut body in celestial_bodies {
             event!(
@@ -341,15 +350,6 @@ impl Renderer {
                 }
             }
 
-            event!(Level::INFO, "multi_merger/update_inputs");
-            self.multi_merger
-                .update_inputs(
-                    &mut self.atmosphere_drawer.out_additive_rgb,
-                    &mut self.atmosphere_drawer.out_alpha_rgba,
-                    &self.config,
-                )
-                .expect("Failed to update multi_merger inputs");
-
             let queue = &self
                 .toolkit
                 .queue
@@ -367,27 +367,31 @@ impl Renderer {
                 )
                 .expect("Failed to compute multi_merger");
             wait_for_semaphores = vec![self.multi_merging_semaphore.clone()];
+
+            queue.wait_idle().unwrap(); // TODO this could be better if i had a fence/ wait for semaphore before rerecording
+                                        // but i could do it differently, if i had just 1 command buffer and record it and then just submit
+                                        // todo later
         }
 
-        // {
-        //     let queue = &self
-        //         .toolkit
-        //         .queue
-        //         .lock()
-        //         .map_err(|_| RenderingError::QueueLockingFailed)?;
-        //     self.ui_drawer
-        //         .lock()
-        //         .unwrap()
-        //         .render_stage
-        //         .command_buffer
-        //         .submit(
-        //             queue,
-        //             wait_for_semaphores.clone(),
-        //             vec![self.ui_drawing_semaphore.clone()],
-        //         )
-        //         .expect("Failed to draw ui");
-        //     wait_for_semaphores = vec![self.ui_drawing_semaphore.clone()];
-        // }
+        {
+            let queue = &self
+                .toolkit
+                .queue
+                .lock()
+                .map_err(|_| RenderingError::QueueLockingFailed)?;
+            self.ui_drawer
+                .lock()
+                .unwrap()
+                .render_stage
+                .command_buffer
+                .submit(
+                    queue,
+                    wait_for_semaphores.clone(),
+                    vec![self.ui_drawing_semaphore.clone()],
+                )
+                .expect("Failed to draw ui");
+            wait_for_semaphores = vec![self.ui_drawing_semaphore.clone()];
+        }
 
         self.output
             .update_buffer(1.0)
