@@ -18,6 +18,7 @@ use renderer_common::errors::RenderingError;
 use renderer_common::resolution_config::ResolutionConfig;
 use std::sync::{Arc, Mutex};
 use std::time::SystemTime;
+use tracing::{event, Level};
 use ui_renderer::ui_drawer::UIDrawer;
 use universe_simulation::body_definitions::BodyCelestialBodyDefinition;
 use universe_simulation::simulation::Simulation;
@@ -139,15 +140,18 @@ impl Renderer {
         elapsed: f64,
         delta_time: f64,
     ) -> Result<(), RenderingError> {
+        event!(Level::INFO, "Renderer draw START");
         let now = SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)
             .unwrap()
             .as_secs_f64();
 
+        event!(Level::INFO, "common_buffer/update");
         self.common_buffer
             .update(camera, elapsed)
             .expect("Failed to update common_buffer");
 
+        event!(Level::INFO, "mesh_drawer/record");
         self.mesh_drawer
             .record(meshes)
             .expect("Failed to record mesh_drawer");
@@ -160,6 +164,7 @@ impl Renderer {
                 .queue
                 .lock()
                 .map_err(|_| RenderingError::QueueLockingFailed)?;
+            event!(Level::INFO, "mesh_drawer/submit");
             self.mesh_drawer
                 .render_stage
                 .command_buffer
@@ -173,17 +178,24 @@ impl Renderer {
 
         let mut wait_for_semaphores = vec![self.mesh_drawing_semaphore.clone()];
 
+        event!(Level::INFO, "celestial_hierarchy/update");
         celestial_hierarchy.update(
             &camera.position,
             &mut self.terrain_icosphere_drawer,
             &mut self.water_icosphere_drawer,
         )?;
 
+        event!(Level::INFO, "celestial_hierarchy/get_rendered_bodies");
         let celestial_bodies = celestial_hierarchy.get_rendered_bodies();
 
         for mut body in celestial_bodies {
-            println!("DRAWING BODY {}", body.body.name);
+            event!(
+                Level::INFO,
+                "celestial_hierarchy/loop with {}",
+                &body.body.name
+            );
 
+            event!(Level::INFO, "atmosphere_drawer/set_celestial_buffer");
             self.atmosphere_drawer
                 .set_celestial_buffer(&body.celestial_body_buffer, &self.config)
                 .expect("Failed to set_celestial_buffer for atmosphere_drawer");
@@ -194,6 +206,7 @@ impl Renderer {
                     match &atmosphere.clouds {
                         None => (),
                         Some(_) => {
+                            event!(Level::INFO, "cloud_generator_high_freq/update_buffer");
                             self.cloud_generator_high_freq
                                 .update_buffer(
                                     DVec4::new(
@@ -206,6 +219,7 @@ impl Renderer {
                                     1.0,
                                 )
                                 .expect("Failed to update cloud_generator_high_freq");
+                            event!(Level::INFO, "cloud_generator_low_freq/update_buffer");
                             self.cloud_generator_low_freq
                                 .update_buffer(
                                     DVec4::new(
@@ -224,6 +238,7 @@ impl Renderer {
                                 .queue
                                 .lock()
                                 .map_err(|_| RenderingError::QueueLockingFailed)?;
+                            event!(Level::INFO, "cloud_generator_high_freq/submit");
                             self.cloud_generator_high_freq
                                 .compute_stage
                                 .command_buffer
@@ -234,6 +249,7 @@ impl Renderer {
                                 )
                                 .expect("Failed to compute cloud_generator_high_freq");
 
+                            event!(Level::INFO, "cloud_generator_low_freq/submit");
                             self.cloud_generator_low_freq
                                 .compute_stage
                                 .command_buffer
@@ -251,6 +267,7 @@ impl Renderer {
             match &mut body.terrain {
                 None => (),
                 Some(ref mut terrain) => {
+                    event!(Level::INFO, "terrain_icosphere_drawer/record");
                     self.terrain_icosphere_drawer
                         .record(&self.toolkit, terrain)?;
                     let queue = &self
@@ -258,6 +275,8 @@ impl Renderer {
                         .queue
                         .lock()
                         .map_err(|_| RenderingError::QueueLockingFailed)?;
+
+                    event!(Level::INFO, "terrain_icosphere_drawer/submit");
                     self.terrain_icosphere_drawer
                         .render_stage
                         .command_buffer
@@ -274,12 +293,15 @@ impl Renderer {
             match &mut body.water {
                 None => (),
                 Some(ref mut water) => {
+                    event!(Level::INFO, "water_icosphere_drawer/record");
                     self.water_icosphere_drawer.record(&self.toolkit, water)?;
                     let queue = &self
                         .toolkit
                         .queue
                         .lock()
                         .map_err(|_| RenderingError::QueueLockingFailed)?;
+
+                    event!(Level::INFO, "water_icosphere_drawer/submit");
                     self.water_icosphere_drawer
                         .render_stage
                         .command_buffer
@@ -305,6 +327,7 @@ impl Renderer {
                         .queue
                         .lock()
                         .map_err(|_| RenderingError::QueueLockingFailed)?;
+                    event!(Level::INFO, "atmosphere_drawer/submit");
                     self.atmosphere_drawer
                         .compute_stage
                         .command_buffer
@@ -318,6 +341,7 @@ impl Renderer {
                 }
             }
 
+            event!(Level::INFO, "multi_merger/update_inputs");
             self.multi_merger
                 .update_inputs(
                     &mut self.atmosphere_drawer.out_additive_rgb,
@@ -331,6 +355,8 @@ impl Renderer {
                 .queue
                 .lock()
                 .map_err(|_| RenderingError::QueueLockingFailed)?;
+
+            event!(Level::INFO, "multi_merger/submit");
             self.multi_merger
                 .compute_stage
                 .command_buffer
@@ -343,25 +369,25 @@ impl Renderer {
             wait_for_semaphores = vec![self.multi_merging_semaphore.clone()];
         }
 
-        {
-            let queue = &self
-                .toolkit
-                .queue
-                .lock()
-                .map_err(|_| RenderingError::QueueLockingFailed)?;
-            self.ui_drawer
-                .lock()
-                .unwrap()
-                .render_stage
-                .command_buffer
-                .submit(
-                    queue,
-                    wait_for_semaphores.clone(),
-                    vec![self.ui_drawing_semaphore.clone()],
-                )
-                .expect("Failed to draw ui");
-            wait_for_semaphores = vec![self.ui_drawing_semaphore.clone()];
-        }
+        // {
+        //     let queue = &self
+        //         .toolkit
+        //         .queue
+        //         .lock()
+        //         .map_err(|_| RenderingError::QueueLockingFailed)?;
+        //     self.ui_drawer
+        //         .lock()
+        //         .unwrap()
+        //         .render_stage
+        //         .command_buffer
+        //         .submit(
+        //             queue,
+        //             wait_for_semaphores.clone(),
+        //             vec![self.ui_drawing_semaphore.clone()],
+        //         )
+        //         .expect("Failed to draw ui");
+        //     wait_for_semaphores = vec![self.ui_drawing_semaphore.clone()];
+        // }
 
         self.output
             .update_buffer(1.0)
@@ -372,6 +398,7 @@ impl Renderer {
                 .queue
                 .lock()
                 .map_err(|_| RenderingError::QueueLockingFailed)?;
+            event!(Level::INFO, "output/submit");
             self.output
                 .compute_stage
                 .command_buffer
@@ -383,6 +410,7 @@ impl Renderer {
                 .expect("Failed to compute output");
         }
 
+        event!(Level::INFO, "swapchain/blit");
         swapchain
             .blit(&self.output.output, vec![self.outputting_semaphore.clone()])
             .expect("Failed to blit to swapchain");

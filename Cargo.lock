@@ -357,6 +357,7 @@ dependencies = [
  "rayon",
  "renderer_common",
  "serde",
+ "tracing",
  "ui_renderer",
  "universe_simulation",
  "vengine-rs",
