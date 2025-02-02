@@ -99,7 +99,7 @@ impl FontAtlas {
         let width_sum: usize = generated.iter().map(|e| e.metrics.width + 5).sum();
         let height_max = generated.iter().map(|e| e.metrics.height).max().unwrap();
 
-        let mut bitmap = vec![0; width_sum * height_max];
+        let mut bitmap = vec![0; width_sum * (height_max * 2)];
 
         let mut x_cursor: usize = 0;
         let mut letters_indices = HashMap::new();
@@ -116,13 +116,14 @@ impl FontAtlas {
                 },
                 Size {
                     width: width_sum,
-                    height: height_max,
+                    height: height_max * 2,
                 },
                 Offset { x: 0, y: 0 },
                 Offset {
                     x: x_cursor,
                     // if metrics height == heightmax then this is 0
-                    y: (height_max - c.metrics.height) - c.metrics.ymin.max(0) as usize,
+                    y: ((height_max as i32 - c.metrics.height as i32) - c.metrics.ymin as i32)
+                        as usize,
                 },
                 Size {
                     width: c.metrics.width,
@@ -144,7 +145,7 @@ impl FontAtlas {
             .create_image_from_data(
                 &bitmap,
                 width_sum as u32,
-                height_max as u32,
+                (height_max * 2) as u32,
                 1,
                 VEImageFormat::R8unorm,
                 &[VEImageUsage::Sampled],

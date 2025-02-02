@@ -33,7 +33,16 @@ void main() {
         int letter_in_bounds = 0;
         float x_offset = 0;
         vec4 indices = commonData.fontAtlasSmallData[0];
-        int current_offset = int(inoutUV.x * 200.0);
+
+        vec2 texSize = vec2(0.0);
+        if(textFontSize == 1) 
+            texSize = textureSize(atlasSmallTexture, 0);
+        else if(textFontSize == 2) 
+            texSize =  textureSize(atlasMediumTexture, 0);
+        else if(textFontSize == 3) 
+            texSize = textureSize(atlasLargeTexture, 0);
+            
+        int current_offset = int(inoutUV.x * size.x * 20.0 * texSize.y);
         for(; letter_in_bounds < textLength; letter_in_bounds++){
             uint letter = itemData.text[letter_in_bounds];
 
@@ -47,16 +56,8 @@ void main() {
                 
                 vec2 lookup = vec2(
                     mix(indices.x, indices.x + indices.z, m),
-                    inoutUV.y
+                    inoutUV.y / 2.0 + 0.1
                 );
-
-                vec2 texSize = vec2(0.0);
-                if(textFontSize == 1) 
-                    texSize = textureSize(atlasSmallTexture, 0);
-                else if(textFontSize == 2) 
-                    texSize =  textureSize(atlasMediumTexture, 0);
-                else if(textFontSize == 3) 
-                    texSize = textureSize(atlasLargeTexture, 0);
 
                 lookup.y *= texSize.y;
 
