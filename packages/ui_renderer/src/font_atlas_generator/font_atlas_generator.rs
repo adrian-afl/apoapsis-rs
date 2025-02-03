@@ -1,3 +1,4 @@
+use fontdue::layout::GlyphRasterConfig;
 use fontdue::{Font, Metrics};
 use std::collections::HashMap;
 use std::fs;
@@ -98,6 +99,11 @@ impl FontAtlas {
         }
         let width_sum: usize = generated.iter().map(|e| e.metrics.width + 5).sum();
         let height_max = generated.iter().map(|e| e.metrics.height).max().unwrap();
+        let top_min = generated
+            .iter()
+            .map(|c| ((height_max as i32 - c.metrics.height as i32) - c.metrics.ymin as i32))
+            .min()
+            .unwrap();
 
         let mut bitmap = vec![0; width_sum * (height_max * 2)];
 
@@ -122,8 +128,9 @@ impl FontAtlas {
                 Offset {
                     x: x_cursor,
                     // if metrics height == heightmax then this is 0
-                    y: ((height_max as i32 - c.metrics.height as i32) - c.metrics.ymin as i32)
-                        as usize,
+                    y: ((height_max as i32 - c.metrics.height as i32)
+                        - c.metrics.ymin as i32
+                        - top_min) as usize,
                 },
                 Size {
                     width: c.metrics.width,

@@ -42,7 +42,8 @@ void main() {
         else if(textFontSize == 3) 
             texSize = textureSize(atlasLargeTexture, 0);
             
-        int current_offset = int(inoutUV.x * size.x * 20.0 * texSize.y);
+        vec2 size_pixels = size * resolution;
+        int current_offset = int(inoutUV.x * size_pixels.x);
         for(; letter_in_bounds < textLength; letter_in_bounds++){
             uint letter = itemData.text[letter_in_bounds];
 
@@ -54,20 +55,24 @@ void main() {
                 float b = x_offset + indices.z;
                 float m = linearstep(a, b, current_offset);
                 
-                vec2 lookup = vec2(
-                    mix(indices.x, indices.x + indices.z, m),
-                    inoutUV.y / 2.0 + 0.1
+                int current_offset_y = int(inoutUV.y * size_pixels.y);
+                ivec2 lookup = ivec2(
+                    int(mix(indices.x, indices.x + indices.z, m)),
+                    inoutUV.y * size_pixels.y
                 );
 
-                lookup.y *= texSize.y;
+                lookup.x -= 1; // VERY spooky
+                lookup = clamp(lookup, ivec2(0.0, 0.0), ivec2(texSize));
 
                 float textResult = 0.0;
                 if(textFontSize == 1) 
-                    textResult = texture(atlasSmallTexture, lookup / texSize, 0).r;
+                    textResult = texelFetch(atlasSmallTexture, lookup, 0).r;
                 else if(textFontSize == 2) 
-                    textResult = texture(atlasMediumTexture, lookup / texSize, 0).r;
+                    textResult = texelFetch(atlasMediumTexture, lookup, 0).r;
                 else if(textFontSize == 3) 
-                    textResult = texture(atlasLargeTexture, lookup / texSize, 0).r;
+                    textResult = texelFetch(atlasLargeTexture, lookup, 0).r;
+
+                // textResult = smoothstep(0.0, 0.5, textResult);
 
                 c = vec4(text_color.rgb, text_color.a * textResult);
 

@@ -131,21 +131,46 @@ impl Game {
                     .with_position(DVec2::new(0.0, 0.0))
                     .with_size(DVec2::new(0.1, 0.1)),
             );
+            ecs.lock().unwrap().add(box_top_left);
 
-            let mut box_bottom_right = Entity::new(None);
-            box_bottom_right.components.ui_text = Some(UITextComponent::new(
+            let mut text_entity = Entity::new(None);
+            text_entity.components.ui_text = Some(UITextComponent::new(
                 "This is a - test!! |Q~",
-                DVec4::new(0.0, 1.0, 0.0, 1.0),
+                DVec4::new(1.0, 1.0, 1.0, 1.0),
+                UIFontSize::Large,
+            ));
+            text_entity.components.ui_box = Some(
+                UIBoxComponent::default()
+                    .with_position(DVec2::new(0.5, 0.4))
+                    .with_size(DVec2::new(0.7, 0.07)),
+            );
+            ecs.lock().unwrap().add(text_entity);
+
+            let mut text_entity = Entity::new(None);
+            text_entity.components.ui_text = Some(UITextComponent::new(
+                "This is a - test!! |Q~",
+                DVec4::new(1.0, 1.0, 1.0, 1.0),
+                UIFontSize::Medium,
+            ));
+            text_entity.components.ui_box = Some(
+                UIBoxComponent::default()
+                    .with_position(DVec2::new(0.5, 0.5))
+                    .with_size(DVec2::new(0.7, 0.05)),
+            );
+            ecs.lock().unwrap().add(text_entity);
+
+            let mut text_entity = Entity::new(None);
+            text_entity.components.ui_text = Some(UITextComponent::new(
+                "This is a - test!! |Q~",
+                DVec4::new(1.0, 1.0, 1.0, 1.0),
                 UIFontSize::Small,
             ));
-            box_bottom_right.components.ui_box = Some(
+            text_entity.components.ui_box = Some(
                 UIBoxComponent::default()
                     .with_position(DVec2::new(0.5, 0.9))
-                    .with_size(DVec2::new(0.7, 0.03)),
+                    .with_size(DVec2::new(0.7, 0.05)),
             );
-
-            ecs.lock().unwrap().add(box_top_left);
-            ecs.lock().unwrap().add(box_bottom_right);
+            ecs.lock().unwrap().add(text_entity);
         }
 
         Self {

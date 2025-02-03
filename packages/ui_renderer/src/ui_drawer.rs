@@ -34,6 +34,7 @@ pub struct UIDrawer {
 
     pub out_color: VEImage,
     sampler: VESampler,
+    config: ResolutionConfig,
 }
 
 pub const UI_ITEM_DRAWER_VERTEX_ATTRIBUTES: [VertexAttribFormat; 2] = [
@@ -115,7 +116,7 @@ impl UIDrawer {
             VEDescriptorSetLayoutField {
                 // data buffer
                 binding: 0,
-                typ: VEDescriptorSetFieldType::UniformBuffer,
+                typ: VEDescriptorSetFieldType::StorageBuffer,
                 stage: VEDescriptorSetFieldStage::AllGraphics,
             },
             VEDescriptorSetLayoutField {
@@ -167,29 +168,29 @@ impl UIDrawer {
 
         let mut font_atlas_small = FontAtlas::new(
             toolkit,
-            "media/inter_font.ttf",
-            32,
+            "media/Anta-Regular.ttf",
+            16,
             " !\\\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~",
         );
 
         let mut font_atlas_medium = FontAtlas::new(
             toolkit,
-            "media/inter_font.ttf",
-            48,
+            "media/Anta-Regular.ttf",
+            24,
             " !\\\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~",
         );
 
         let mut font_atlas_large = FontAtlas::new(
             toolkit,
-            "media/inter_font.ttf",
-            72,
+            "media/Anta-Regular.ttf",
+            32,
             " !\\\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~",
         );
 
         let sampler = toolkit.create_sampler(
             VESamplerAddressMode::Repeat,
-            VEFiltering::Linear,
-            VEFiltering::Linear,
+            VEFiltering::Nearest,
+            VEFiltering::Nearest,
             false,
         )?;
 
@@ -220,11 +221,13 @@ impl UIDrawer {
             font_atlas_large,
             out_color,
             sampler,
+            config: config.clone(),
         })
     }
 
     pub fn update_buffer(&mut self) -> Result<(), RenderingError> {
         self.common_buffer.update(
+            &self.config,
             &self.font_atlas_small,
             &self.font_atlas_medium,
             &self.font_atlas_large,
