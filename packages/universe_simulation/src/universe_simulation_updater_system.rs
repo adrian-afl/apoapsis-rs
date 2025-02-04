@@ -1,34 +1,42 @@
 use crate::simulation::Simulation;
+use ecs::component_trait::Components;
 use ecs::ecs_world::ECSWorld;
-use ecs::game_state::GameState;
-use ecs::system_trait::SystemTrait;
-use math::sin_cos::f64_to_dbig;
-use std::sync::{Arc, Mutex, RwLock};
 
-pub struct UniverseSimulationUpdaterSystem {
-    universe: Arc<RwLock<Simulation>>,
-}
+pub struct UniverseSimulationUpdaterSystem {}
 
 impl UniverseSimulationUpdaterSystem {
-    pub fn new(universe: Arc<RwLock<Simulation>>) -> Self {
-        Self { universe }
+    pub fn new() -> Self {
+        Self {}
     }
-}
 
-impl SystemTrait for UniverseSimulationUpdaterSystem {
-    fn update(&mut self, game_state: Arc<Mutex<GameState>>, ecs: Arc<Mutex<ECSWorld>>) {
+    pub fn update(&mut self, simulation: &mut Simulation, ecs: &mut ECSWorld, delta_time: f64) {
         println!("UniverseSimulationUpdaterSystem / update");
 
-        let game_state = game_state.lock().unwrap();
-        let game_time = &f64_to_dbig(1230.0); //&game_state.lock().unwrap().current_game_time;
+        let camera_entity =
+            ecs.find_first_by_components(&[&Components::CameraFocus, &Components::Transform]);
+        if camera_entity.is_none() {
+            println!(
+                "CameraFocus + Transform entity not found in ECS World, cannot update the universe"
+            );
+            return;
+        }
 
-        println!(
-            "game_time camera position {}",
-            &game_state.current_camera.position
-        );
-        self.universe
-            .try_write()
-            .unwrap()
-            .update(&game_state.current_camera.position, game_time);
+        let camera_entity = camera_entity.unwrap();
+        let camera_transform = camera_entity.components.transform.as_ref().unwrap();
+        let camera_position = &camera_transform.position.clone();
+
+        let clock_entity = ecs.find_first_by_components_mut(&[&Components::UniverseClock]);
+        if clock_entity.is_none() {
+            println!("Universe Clock not found in ECS World, cannot update the universe");
+            return;
+        }
+
+        let clock_entity = clock_entity.unwrap();
+
+        let clock = clock_entity.components.universe_clock.as_mut().unwrap();
+
+        simulation.update(&camera_position, &clock.time);
+
+        clock.advance(delta_time);
     }
 }

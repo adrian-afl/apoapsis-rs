@@ -8,10 +8,8 @@ use ecs::components::rendering::mesh_component::{
     ColorOrTextureDescription, MeshDescription, ValueOrTextureDescription,
 };
 use ecs::ecs_world::ECSWorld;
-use ecs::game_state::GameState;
-use ecs::system_trait::SystemTrait;
-use rayon::iter::IntoParallelRefIterator;
 use rayon::iter::ParallelIterator;
+use renderer_common::camera::Camera;
 use renderer_common::errors::RenderingError;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, RwLock};
@@ -21,27 +19,18 @@ use vengine_rs::image::image::VEImageUsage;
 
 pub struct RenderingSystem {
     toolkit: Arc<VEToolkit>,
-    renderer: Arc<Mutex<Renderer>>,
-    universe_simulation: Arc<RwLock<Simulation>>,
+    renderer: Mutex<Renderer>,
     celestial_hierarchy: CelestialHierarchy,
     currently_rendered_meshes: RwLock<HashMap<u64, Mesh>>,
     rendering_cutoff: f64,
 }
 
 impl RenderingSystem {
-    pub fn new(
-        toolkit: Arc<VEToolkit>,
-        renderer: Arc<Mutex<Renderer>>,
-        universe_simulation: Arc<RwLock<Simulation>>,
-    ) -> Self {
+    pub fn new(toolkit: Arc<VEToolkit>, renderer: Renderer) -> Self {
         Self {
             toolkit: toolkit.clone(),
-            renderer,
-            universe_simulation: universe_simulation.clone(),
-            celestial_hierarchy: CelestialHierarchy::new(
-                toolkit.clone(),
-                universe_simulation.clone(),
-            ),
+            renderer: Mutex::new(renderer),
+            celestial_hierarchy: CelestialHierarchy::new(toolkit.clone()),
             currently_rendered_meshes: RwLock::new(HashMap::new()),
             rendering_cutoff: 100.0,
         }
@@ -129,21 +118,21 @@ impl RenderingSystem {
             .unwrap()
             .create_mesh(geometry, material)
     }
-}
 
-impl SystemTrait for RenderingSystem {
-    fn update(&mut self, game_state: Arc<Mutex<GameState>>, ecs: Arc<Mutex<ECSWorld>>) {
+    pub fn update(
+        &mut self,
+        ecs: &mut ECSWorld,
+        universe_simulation: &Simulation,
+        camera: &Camera,
+        total_time: f64,
+        delta_time: f64,
+    ) {
         println!("RenderingSystem / update");
-
-        let ecs = ecs.lock().unwrap();
-
-        let locked_state = &game_state.lock().unwrap();
-        let current_camera_position = &locked_state.current_camera.position;
-
-        println!("RenderingSystem / Just before parallel");
 
         // this list here is so that if entity disappears, the mesh is cleaned up
         let detected_mesh_component_ids = Mutex::new(vec![]);
+
+        let renderer_mutex = Mutex::from(&self.renderer);
 
         ecs.parallel_process_all_by_components(
             &[&Components::Mesh, &Components::Transform],
@@ -158,7 +147,7 @@ impl SystemTrait for RenderingSystem {
                         .unwrap()
                         .push(mesh_component.id);
                     println!("RenderingSystem / For mesh component {}", mesh_component.id);
-                    let relative_position = &transform_component.position - current_camera_position;
+                    let relative_position = &transform_component.position - &camera.position;
                     let relative_position = relative_position.to_dvec3();
 
                     let should_render = relative_position.length() < self.rendering_cutoff;
@@ -198,7 +187,7 @@ impl SystemTrait for RenderingSystem {
                         mesh.scale = transform_component.scale.clone();
                         mesh.orientation = transform_component.orientation.clone();
 
-                        mesh.update(current_camera_position).unwrap();
+                        mesh.update(&camera.position).unwrap();
                     }
                 }
             },
@@ -222,10 +211,11 @@ impl SystemTrait for RenderingSystem {
                 .unwrap()
                 .values()
                 .collect::<Vec<_>>(),
+            universe_simulation,
             &mut self.celestial_hierarchy,
-            &locked_state.current_camera,
-            locked_state.elapsed,
-            locked_state.delta_time,
+            &camera,
+            total_time,
+            delta_time,
         );
 
         println!("RenderingSystem / End");

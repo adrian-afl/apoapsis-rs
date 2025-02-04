@@ -149,9 +149,10 @@ impl Renderer {
     pub fn draw(
         &mut self,
         meshes: &[&Mesh],
+        universe_simulation: &Simulation,
         celestial_hierarchy: &mut CelestialHierarchy,
         camera: &Camera,
-        elapsed: f64,
+        total_time: f64,
         delta_time: f64,
     ) -> Result<(), RenderingError> {
         event!(Level::INFO, "Renderer draw START");
@@ -162,11 +163,12 @@ impl Renderer {
 
         event!(Level::INFO, "common_buffer/update");
         self.common_buffer
-            .update(camera, elapsed)
+            .update(camera, total_time)
             .expect("Failed to update common_buffer");
 
         event!(Level::INFO, "celestial_hierarchy/update");
         celestial_hierarchy.update(
+            universe_simulation,
             &camera.position,
             &mut self.terrain_icosphere_drawer,
             &mut self.water_icosphere_drawer,
@@ -229,7 +231,7 @@ impl Renderer {
                                         atmosphere.seed,
                                         atmosphere.seed,
                                     ),
-                                    elapsed,
+                                    total_time,
                                     1.0,
                                 )
                                 .expect("Failed to update cloud_generator_high_freq");
@@ -242,7 +244,7 @@ impl Renderer {
                                         atmosphere.seed,
                                         atmosphere.seed,
                                     ),
-                                    elapsed,
+                                    total_time,
                                     1.0,
                                 )
                                 .expect("Failed to update cloud_generator_low_freq");

@@ -21,29 +21,27 @@ pub struct RenderedBody {
 
 pub struct CelestialHierarchy {
     toolkit: Arc<VEToolkit>,
-    universe_simulation: Arc<RwLock<Simulation>>,
     rendered_bodies: HashMap<String, RenderedBody>,
 }
 
 impl CelestialHierarchy {
-    pub fn new(toolkit: Arc<VEToolkit>, universe_simulation: Arc<RwLock<Simulation>>) -> Self {
+    pub fn new(toolkit: Arc<VEToolkit>) -> Self {
         Self {
             toolkit,
-            universe_simulation,
             rendered_bodies: HashMap::new(),
         }
     }
 
     pub fn update(
         &mut self,
+        universe_simulation: &Simulation,
         camera_position: &DecimalVector3d,
         terrain_icosphere_drawer: &mut TerrainIcosphereDrawer,
         water_icosphere_drawer: &mut WaterIcosphereDrawer,
     ) -> Result<(), RenderingError> {
-        let sim = self.universe_simulation.try_read().unwrap();
-        let closest_hierarchy = sim.find_closest_hierarchy(&camera_position);
+        let closest_hierarchy = universe_simulation.find_closest_hierarchy(&camera_position);
 
-        let closest_star = sim.find_closest_static(&camera_position);
+        let closest_star = universe_simulation.find_closest_static(&camera_position);
 
         let mut found_names = vec![];
         for closest_hierarchy_body in closest_hierarchy {

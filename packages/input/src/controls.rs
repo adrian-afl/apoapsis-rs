@@ -1,125 +1,67 @@
-use crate::control_event_system::GameEvent::{ControlActivate, ControlRelease};
-use crate::control_event_system::GameEventSystem;
-use common_util::strip_json_line_comments::strip_json_line_comments;
-use serde::Deserialize;
+use crate::controls_mapping::{ControlMapItem, ControlsMapping};
+use crate::mouse_input::MouseInput;
 use std::collections::HashMap;
-use std::fs;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use winit::event::MouseButton;
-use winit::keyboard::{KeyCode, PhysicalKey};
+use winit::keyboard::PhysicalKey;
+use winit::window::Window;
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Deserialize)]
-pub enum ControlMapItem {
-    Pause,
-    MenuClickPrimary,
-    MenuClickSecondary,
-
-    WalkLeft,
-    WalkRight,
-    WalkForwards,
-    WalkBackwards,
-    Use,
-    OnFootShoot,
-    OnFootCrouch,
-    OnFootZoom,
-
-    FlightPitchAxis,
-    FlightPitchUp,
-    FlightPitchDown,
-
-    FlightYawAxis,
-    FlightYawLeft,
-    FlightYawRight,
-
-    FlightRollAxis,
-    FlightRollLeft,
-    FlightRollRight,
-
-    FlightCameraModeSwitch,
-    FlightCameraFrameSwitch,
-    FlightZoom,
-
-    FlightTranslateXAxis,
-    FlightTranslateLeft,
-    FlightTranslateRight,
-
-    FlightTranslateYAxis,
-    FlightTranslateUp,
-    FlightTranslateDown,
-
-    FlightTranslateZAxis,
-    FlightTranslateForwards,
-    FlightTranslateBackwards,
-
-    FlightExit,
-    FlightShoot,
-}
-
-#[derive(Debug, Clone, Deserialize)]
-// #[serde(rename_all = "camelCase")] // probably not a good idea
-struct ControlMap {
-    pub keys: HashMap<ControlMapItem, KeyCode>,
-    pub mouse_buttons: HashMap<ControlMapItem, MouseButton>,
-}
-
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug)]
 pub enum ControlEvent {
-    Pause,
+    ControlActivate(ControlMapItem),
+    ControlRelease(ControlMapItem),
 }
 
 pub struct Controls {
-    control_map: ControlMap,
-    game_event_system: Arc<GameEventSystem>,
+    mapping: ControlsMapping,
+    new_events: Vec<ControlEvent>,
+    pub mouse: MouseInput,
+    controls_state: HashMap<ControlMapItem, bool>,
 }
 
 impl Controls {
-    pub fn new(game_event_system: Arc<GameEventSystem>) -> Self {
-        let input_json =
-            fs::read_to_string("controls.json").expect("Failed to to read the controls.json file");
-        let control_map: ControlMap =
-            serde_json::from_str(&strip_json_line_comments(&input_json)).unwrap();
+    pub fn new(window: Arc<Mutex<Window>>) -> Self {
         Self {
-            control_map,
-            game_event_system,
+            new_events: Vec::new(),
+            mouse: MouseInput::new(window.clone()),
+            mapping: ControlsMapping::new(),
+            controls_state: HashMap::new(),
         }
     }
 
-    pub fn on_mouse_button(&self, button: MouseButton, state: bool) {
-        for entry in self.control_map.mouse_buttons.iter() {
-            let control_map_item = entry.0;
-            let mouse_button = entry.1;
-            if button == *mouse_button {
-                match state {
-                    true => self
-                        .game_event_system
-                        .push(ControlActivate(control_map_item.clone())),
-                    false => self
-                        .game_event_system
-                        .push(ControlRelease(control_map_item.clone())),
-                }
-            }
+    pub fn get_control_state(&self, control: ControlMapItem) -> bool {
+        *self.controls_state.get(&control).unwrap_or(&false)
+    }
+
+    pub fn on_mouse_button(&mut self, button: MouseButton, state: bool) {
+        let mapped = self.mapping.map_mouse_button_event(button, state);
+        for event in mapped {
+            self.handle_control_event(event);
         }
     }
 
-    pub fn on_key(&self, key: PhysicalKey, state: bool) {
-        match key {
-            PhysicalKey::Code(key) => {
-                for entry in self.control_map.keys.iter() {
-                    let control_map_item = entry.0;
-                    let key_code = entry.1;
-                    if key == *key_code {
-                        match state {
-                            true => self
-                                .game_event_system
-                                .push(ControlActivate(control_map_item.clone())),
-                            false => self
-                                .game_event_system
-                                .push(ControlRelease(control_map_item.clone())),
-                        }
-                    }
-                }
-            }
-            PhysicalKey::Unidentified(_) => (),
+    pub fn on_key(&mut self, key: PhysicalKey, state: bool) {
+        let mapped = self.mapping.map_keyboard_event(key, state);
+        for event in mapped {
+            self.handle_control_event(event);
         }
+    }
+
+    fn handle_control_event(&mut self, event: ControlEvent) {
+        let (item, state) = match &event {
+            ControlEvent::ControlActivate(item) => (item, true),
+            ControlEvent::ControlRelease(item) => (item, false),
+        };
+        match self.controls_state.get_mut(&item) {
+            None => {
+                self.controls_state.insert(item.clone(), state);
+            }
+            Some(current) => *current = state,
+        }
+        self.new_events.push(event);
+    }
+
+    pub fn consume_new_events(&mut self) -> Vec<ControlEvent> {
+        std::mem::take(&mut self.new_events)
     }
 }

@@ -3,8 +3,6 @@ use crate::ui_rendered_item::UIRenderedItem;
 use ecs::component_trait::Components;
 use ecs::components::ui::cursor_type::UICursorType;
 use ecs::ecs_world::ECSWorld;
-use ecs::game_state::GameState;
-use ecs::system_trait::SystemTrait;
 use glam::DVec2;
 use rayon::iter::IntoParallelRefIterator;
 use rayon::iter::ParallelIterator;
@@ -42,16 +40,13 @@ impl UISystem {
             currently_rendered_items: RwLock::new(HashMap::new()),
         }
     }
-}
 
-impl SystemTrait for UISystem {
-    fn update(&mut self, game_state: Arc<Mutex<GameState>>, ecs: Arc<Mutex<ECSWorld>>) {
+    pub fn update(&mut self, ecs: &mut ECSWorld) {
         println!("UIRenderer / update");
 
         let cursor_pos = DVec2::new(0.0, 0.0); // TODO
         let mut cursor_type = Mutex::from(UICursorType::Arrow);
 
-        let ecs = ecs.lock().unwrap();
         let detected_entity_ids = Mutex::new(vec![]);
         ecs.parallel_process_all_by_components(&[&Components::UIBox], |entity| {
             detected_entity_ids.lock().unwrap().push(entity.id);

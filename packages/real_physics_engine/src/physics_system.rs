@@ -6,8 +6,6 @@ use ecs::components::common::transform_component::TransformComponent;
 use ecs::components::physics::real_physics_component::RealPhysicsComponent;
 use ecs::components::physics::simple_physics_component::SimplePhysicsComponent;
 use ecs::ecs_world::ECSWorld;
-use ecs::game_state::GameState;
-use ecs::system_trait::SystemTrait;
 use glam::{DQuat, DVec3};
 use math::decimal_vector_3d::DecimalVector3d;
 use math::sin_cos::f64_to_dbig;
@@ -15,7 +13,7 @@ use rapier3d_f64::prelude::{RigidBodyBuilder, RigidBodyHandle};
 use rayon::iter::IntoParallelRefIterator;
 use rayon::iter::ParallelIterator;
 use std::collections::HashMap;
-use std::sync::{Arc, Mutex, RwLock};
+use std::sync::{Mutex, RwLock};
 use universe_simulation::simulation::Simulation;
 
 struct SimulatedBody {
@@ -30,7 +28,6 @@ struct PlayerTemporaryData {
 }
 
 pub struct PhysicsSystem {
-    universe_simulation: Arc<RwLock<Simulation>>,
     currently_simulated_bodies: RwLock<HashMap<u64, SimulatedBody>>,
     real_physics_system: RwLock<RealPhysicsSystem>,
     real_simulation_cutoff: f64,
@@ -38,9 +35,8 @@ pub struct PhysicsSystem {
 }
 
 impl PhysicsSystem {
-    pub fn new(universe_simulation: Arc<RwLock<Simulation>>) -> Self {
+    pub fn new() -> Self {
         Self {
-            universe_simulation,
             real_physics_system: RwLock::new(RealPhysicsSystem::new()),
             currently_simulated_bodies: RwLock::new(HashMap::new()),
             real_simulation_cutoff: 100.0,
@@ -51,10 +47,9 @@ impl PhysicsSystem {
         }
     }
 
-    fn phase0(&mut self, ecs: Arc<Mutex<ECSWorld>>) {
+    fn phase0(&mut self, ecs: &ECSWorld) {
         println!("PhysicsSystem / phase0");
 
-        let ecs = ecs.lock().unwrap();
         let player = ecs.find_first_by_components(&[
             &Components::IsPlayer,
             &Components::SimplePhysics,
@@ -76,13 +71,11 @@ impl PhysicsSystem {
         }
     }
 
-    fn phase1(&mut self, ecs: Arc<Mutex<ECSWorld>>, delta_time: f64) {
+    fn phase1(&mut self, ecs: &mut ECSWorld, universe_simulation: &Simulation, delta_time: f64) {
         println!("PhysicsSystem / phase1");
 
         let decimal_delta_time = f64_to_dbig(delta_time);
         let decimal_half_delta_time = f64_to_dbig(delta_time * 0.5);
-
-        let mut ecs = ecs.lock().unwrap();
 
         ecs.parallel_process_all_by_components_mut(
             &[&Components::SimplePhysics, &Components::Transform],
@@ -102,6 +95,7 @@ impl PhysicsSystem {
 
                     match handle_or_none {
                         None => self.update_simple_physics(
+                            universe_simulation,
                             simple_physics,
                             transform,
                             delta_time,
@@ -128,8 +122,6 @@ impl PhysicsSystem {
                                 let mut current_linear_velocity =
                                     DecimalVector3d::from_dvec3(relative_position);
 
-                                let universe_simulation =
-                                    self.universe_simulation.try_read().unwrap();
                                 let gravity_impulse = universe_simulation
                                     .calculate_gravity_flux(&transform.position)
                                     * &decimal_delta_time;
@@ -164,6 +156,7 @@ impl PhysicsSystem {
                     }
                 } else {
                     self.update_simple_physics(
+                        universe_simulation,
                         simple_physics,
                         transform,
                         delta_time,
@@ -175,10 +168,8 @@ impl PhysicsSystem {
         );
     }
 
-    fn phase2(&mut self, ecs: Arc<Mutex<ECSWorld>>) {
+    fn phase2(&mut self, ecs: &mut ECSWorld) {
         println!("PhysicsSystem / phase2");
-
-        let mut ecs = ecs.lock().unwrap();
 
         // this list here is so that if entity disappears, the element is cleaned up
         let detected_element_real_physics_ids = Mutex::new(vec![]);
@@ -249,13 +240,13 @@ impl PhysicsSystem {
 
     fn update_simple_physics(
         &self,
+        universe_simulation: &Simulation,
         simple_physics: &mut SimplePhysicsComponent,
         transform: &mut TransformComponent,
         delta_time: f64,
         decimal_delta_time: &DBig,
         decimal_half_delta_time: &DBig,
     ) {
-        let universe_simulation = self.universe_simulation.try_read().unwrap();
         transform.position =
             &transform.position + &simple_physics.linear_velocity * decimal_half_delta_time;
 
@@ -384,22 +375,23 @@ impl PhysicsSystem {
 
         currently_simulated_bodies.remove(&real_physics_component_id);
     }
-}
 
-impl SystemTrait for PhysicsSystem {
-    fn update(&mut self, game_state: Arc<Mutex<GameState>>, ecs: Arc<Mutex<ECSWorld>>) {
+    pub fn update(
+        &mut self,
+        ecs: &mut ECSWorld,
+        universe_simulation: &Simulation,
+        delta_time: f64,
+    ) {
         println!("PhysicsSystem / update");
 
-        let delta_time = game_state.lock().unwrap().delta_time;
-
-        self.phase0(ecs.clone());
-        self.phase1(ecs.clone(), delta_time);
+        self.phase0(ecs);
+        self.phase1(ecs, universe_simulation, delta_time);
 
         self.real_physics_system
             .try_write()
             .unwrap()
             .step(delta_time);
 
-        self.phase2(ecs.clone());
+        self.phase2(ecs);
     }
 }

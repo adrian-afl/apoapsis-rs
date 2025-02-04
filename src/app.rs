@@ -35,7 +35,7 @@ impl App for GameWindowApp {
                     ..
                 } => {
                     if !repeat {
-                        self.game.keyboard_input.on_key(
+                        self.game.controls.on_key(
                             physical_key,
                             match state {
                                 ElementState::Pressed => true,
@@ -47,18 +47,19 @@ impl App for GameWindowApp {
             },
             WindowEvent::CursorMoved { position, .. } => self
                 .game
-                .mouse_input
+                .controls
+                .mouse
                 .on_mouse_move_on_surface(DVec2::new(position.x, position.y)),
             WindowEvent::CursorEntered { .. } => {}
             WindowEvent::CursorLeft { .. } => {}
             WindowEvent::MouseWheel { delta, .. } => match delta {
                 MouseScrollDelta::LineDelta(_, _) => (),
                 MouseScrollDelta::PixelDelta(delta) => {
-                    self.game.mouse_input.on_mouse_scroll(delta.y)
+                    self.game.controls.mouse.on_mouse_scroll(delta.y)
                 }
             },
             WindowEvent::MouseInput { state, button, .. } => {
-                self.game.mouse_input.on_mouse_button(
+                self.game.controls.on_mouse_button(
                     button,
                     match state {
                         ElementState::Pressed => true,
@@ -74,7 +75,8 @@ impl App for GameWindowApp {
         match event {
             DeviceEvent::MouseMotion { delta } => self
                 .game
-                .mouse_input
+                .controls
+                .mouse
                 .on_mouse_move_anywhere(DVec2::new(delta.0, delta.1)),
             DeviceEvent::MouseWheel { .. } => {}
             DeviceEvent::Motion { .. } => {}

@@ -72,7 +72,7 @@ void main() {
                 else if(textFontSize == 3) 
                     textResult = texelFetch(atlasLargeTexture, lookup, 0).r;
 
-                // textResult = smoothstep(0.0, 0.5, textResult);
+                //textResult = smoothstep(0.4, 1.0, textResult);
 
                 c = vec4(text_color.rgb, text_color.a * textResult);
 

@@ -1,8 +1,6 @@
 use ecs::component_trait::Components;
 use ecs::ecs_world::ECSWorld;
-use ecs::game_state::GameState;
-use ecs::system_trait::SystemTrait;
-use std::sync::{Arc, Mutex};
+use renderer_common::camera::Camera;
 
 pub struct CameraSystem {}
 
@@ -10,13 +8,10 @@ impl CameraSystem {
     pub fn new() -> Self {
         Self {}
     }
-}
 
-impl SystemTrait for CameraSystem {
-    fn update(&mut self, game_state: Arc<Mutex<GameState>>, ecs: Arc<Mutex<ECSWorld>>) {
+    pub fn update(&mut self, camera: &mut Camera, ecs: &mut ECSWorld) {
         println!("CameraSystem / update");
 
-        let ecs = ecs.lock().unwrap();
         let entity =
             ecs.find_first_by_components(&[&Components::CameraFocus, &Components::Transform]);
         match entity {
@@ -24,16 +19,12 @@ impl SystemTrait for CameraSystem {
                 let transform = entity.components.transform.as_ref().unwrap();
 
                 if entity.components.has(&Components::FirstPersonCameraControl) {
-                    let mut locked_state = game_state.lock().unwrap();
-                    locked_state
-                        .current_camera
-                        .position
-                        .assign(&transform.position);
-                    locked_state.current_camera.orientation = transform.orientation.clone();
+                    camera.position.assign(&transform.position);
+                    camera.orientation = transform.orientation.clone();
 
-                    locked_state.current_camera.update();
+                    camera.update();
 
-                    println!("Cam pos is now {}", locked_state.current_camera.position);
+                    println!("Cam pos is now {}", camera.position);
                 }
             }
             None => {

@@ -4,6 +4,7 @@ use crate::components::camera::third_person_orbit_camera_control_component::Thir
 use crate::components::camera::third_person_static_camera_control_component::ThirdPersonStaticCameraControlComponent;
 use crate::components::common::control_focus_component::ControlFocusComponent;
 use crate::components::common::transform_component::TransformComponent;
+use crate::components::common::universe_clock_component::UniverseClockComponent;
 use crate::components::physics::is_ground_collider_component::IsGroundColliderComponent;
 use crate::components::physics::real_physics_component::RealPhysicsComponent;
 use crate::components::physics::set_physics_kinematics_component::SetPhysicsKinematicsComponent;
@@ -141,6 +142,7 @@ macro_rules! create_component_types_enum {
 }
 
 create_component_types_enum!(
+    (universe_clock, UniverseClock, UniverseClockComponent, false),
     (camera_focus, CameraFocus, CameraFocusComponent, false),
     (
         first_person_camera_control,

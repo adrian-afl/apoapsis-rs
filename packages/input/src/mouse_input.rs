@@ -1,15 +1,10 @@
-use crate::controls::Controls;
 use glam::DVec2;
-use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use winit::dpi::PhysicalPosition;
-use winit::event::MouseButton;
 use winit::window::{CursorGrabMode, Window};
 
 pub struct MouseInput {
     window: Arc<Mutex<Window>>,
-    controls: Arc<Controls>,
-    button_state: HashMap<MouseButton, bool>,
     cursor_locked: bool,
     absolute_cursor_pos: DVec2,
     integrated_cursor_pos: DVec2,
@@ -17,12 +12,10 @@ pub struct MouseInput {
 }
 
 impl MouseInput {
-    pub fn new(window: Arc<Mutex<Window>>, controls: Arc<Controls>) -> Self {
+    pub fn new(window: Arc<Mutex<Window>>) -> Self {
         Self {
             window,
-            controls,
             cursor_locked: false,
-            button_state: HashMap::new(),
             absolute_cursor_pos: DVec2::new(0.0, 0.0),
             integrated_cursor_pos: DVec2::new(0.0, 0.0),
             integrated_scroll: 0.0,
@@ -55,6 +48,18 @@ impl MouseInput {
         self.cursor_locked
     }
 
+    pub fn get_cursor_absolute(&self) -> DVec2 {
+        self.absolute_cursor_pos
+    }
+
+    pub fn get_cursor_integraged(&self) -> DVec2 {
+        self.integrated_cursor_pos
+    }
+
+    pub fn get_scroll_integrated(&self) -> f64 {
+        self.integrated_scroll
+    }
+
     pub fn on_mouse_move_on_surface(&mut self, absolute_position: DVec2) {
         if !self.cursor_locked {
             self.absolute_cursor_pos = absolute_position;
@@ -74,15 +79,5 @@ impl MouseInput {
 
     pub fn on_mouse_scroll(&mut self, delta: f64) {
         self.integrated_scroll += delta;
-    }
-
-    pub fn on_mouse_button(&mut self, button: MouseButton, state: bool) {
-        match self.button_state.get_mut(&button) {
-            None => {
-                self.button_state.insert(button, state);
-            }
-            Some(current) => *current = state,
-        }
-        self.controls.on_mouse_button(button, state);
     }
 }
