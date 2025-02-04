@@ -218,9 +218,10 @@ impl PhysicsSystem {
 
         // TODO this should clear up elements that are removed from the ECS completely
         // does it work? maybe
-        let locked_map = self.currently_simulated_bodies.try_read().unwrap();
+        let locked_map = self.currently_simulated_bodies.try_write().unwrap();
         let detected_mesh_component_ids = detected_element_real_physics_ids.lock().unwrap();
-        let keys: Vec<&u64> = locked_map.keys().collect();
+        let keys: Vec<u64> = locked_map.keys().map(|x| *x).collect();
+        drop(locked_map);
 
         keys.par_iter().for_each(|key| {
             if !detected_mesh_component_ids.contains(key) {
@@ -232,7 +233,7 @@ impl PhysicsSystem {
                 Self::stop_real_physics_sim(
                     &mut real_physics_system,
                     &mut currently_simulated_bodies,
-                    **key,
+                    *key,
                 );
             }
         });

@@ -37,7 +37,10 @@ impl GameStage for SplashScreenStage {
     fn update(&mut self, total_time: f64, delta_time: f64) -> StageTransition {
         let label = self.ecs.find_by_name_mut("label").unwrap();
         let uibox = label.components.ui_box.as_mut().unwrap();
-        uibox.position.y = total_time.sin() * 0.5 + 0.5;
+        uibox.position.y = (uibox.position.y + delta_time).sin() * 0.5 + 0.5;
+
+        println!("total_time: {}", total_time);
+        println!("uibox.position.y: {}", uibox.position.y);
 
         StageTransition::DoNothing
     }

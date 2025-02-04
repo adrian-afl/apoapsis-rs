@@ -48,6 +48,7 @@ impl UISystem {
         let mut cursor_type = Mutex::from(UICursorType::Arrow);
 
         let detected_entity_ids = Mutex::new(vec![]);
+        println!("UIRenderer / update A");
         ecs.parallel_process_all_by_components(&[&Components::UIBox], |entity| {
             detected_entity_ids.lock().unwrap().push(entity.id);
             //
@@ -133,30 +134,18 @@ impl UISystem {
             )
             .unwrap();
         });
+        println!("UIRenderer / update B");
 
-        let locked_map = self.currently_rendered_items.try_read().unwrap();
+        let mut locked_map = self.currently_rendered_items.write().unwrap();
+
         let detected_entity_ids = detected_entity_ids.lock().unwrap();
-        let keys: Vec<&u64> = locked_map.keys().collect();
+        locked_map.retain(|k, _| detected_entity_ids.contains(k));
 
-        keys.par_iter().for_each(|key| {
-            if !detected_entity_ids.contains(key) {
-                let mut locked_map = self.currently_rendered_items.try_write().unwrap();
-                locked_map.remove(key);
-            }
-        });
-
-        println!("UI ELEMS {:?}", self.currently_rendered_items);
+        println!("UIRenderer / update C");
 
         let mut ui_drawer = self.ui_drawer.lock().unwrap();
         ui_drawer
-            .record(
-                &self
-                    .currently_rendered_items
-                    .try_read()
-                    .unwrap()
-                    .values()
-                    .collect::<Vec<_>>(),
-            )
+            .record(&locked_map.values().collect::<Vec<_>>())
             .unwrap();
     }
 }

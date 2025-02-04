@@ -86,7 +86,6 @@ impl UIItemBuffer {
                 None => 0,
                 Some(index) => *index,
             };
-            println!("FOR {char} INDEX IS {index}");
             offset += write_uint(ptr, offset, index as u32);
         }
 

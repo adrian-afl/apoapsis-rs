@@ -32,5 +32,6 @@ impl TimeCounter {
         let delta_time = now - self.last_time;
         self.last_time = now;
         self.delta_time = delta_time;
+        self.total_time += delta_time;
     }
 }
