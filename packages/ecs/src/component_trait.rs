@@ -29,29 +29,38 @@ pub trait ComponentTrait {
 }
 
 macro_rules! vector_or_option_type {
-    ($component_type:ident, true) => {
+    ($component_type:ident, Vector) => {
         Vec< $component_type >
     };
-    ($component_type:ident, false) => {
+    ($component_type:ident, Option) => {
         Option< $component_type >
+    };
+    ($component_type:ident, Marker) => {
+        bool
     };
 }
 
 macro_rules! vector_or_option_initializer {
-    ($component_type:ident, true) => {
+    ($component_type:ident, Vector) => {
         Vec::new()
     };
-    ($component_type:ident, false) => {
+    ($component_type:ident, Option) => {
         None
+    };
+    ($component_type:ident, Marker) => {
+        false
     };
 }
 
 macro_rules! has_component {
-    ($self:ident, $component_snake:ident, $component:ident, true) => {
+    ($self:ident, $component_snake:ident, $component:ident, Vector) => {
         $self.$component_snake.len() > 0
     };
-    ($self:ident, $component_snake:ident, $component:ident, false) => {
+    ($self:ident, $component_snake:ident, $component:ident, Option) => {
         $self.$component_snake.is_some()
+    };
+    ($self:ident, $component_snake:ident, $component:ident, Marker) => {
+        $self.$component_snake
     };
 }
 
@@ -142,54 +151,64 @@ macro_rules! create_component_types_enum {
 }
 
 create_component_types_enum!(
-    (universe_clock, UniverseClock, UniverseClockComponent, false),
-    (camera_focus, CameraFocus, CameraFocusComponent, false),
+    (
+        universe_clock,
+        UniverseClock,
+        UniverseClockComponent,
+        Option
+    ),
+    (camera_focus, CameraFocus, CameraFocusComponent, Marker),
     (
         first_person_camera_control,
         FirstPersonCameraControl,
         FirstPersonCameraControlComponent,
-        false
+        Option
     ),
     (
         third_person_orbit_camera_control,
         ThirdPersonOrbitCameraControl,
         ThirdPersonOrbitCameraControlComponent,
-        false
+        Option
     ),
     (
         third_person_static_camera_control,
         ThirdPersonStaticCameraControl,
         ThirdPersonStaticCameraControlComponent,
-        false
+        Option
     ),
-    (transform, Transform, TransformComponent, false),
+    (transform, Transform, TransformComponent, Option),
     (
         is_ground_collider,
         IsGroundCollider,
         IsGroundColliderComponent,
-        false
+        Marker
     ),
-    (real_physics, RealPhysics, RealPhysicsComponent, false),
-    (simple_physics, SimplePhysics, SimplePhysicsComponent, false),
+    (real_physics, RealPhysics, RealPhysicsComponent, Option),
+    (
+        simple_physics,
+        SimplePhysics,
+        SimplePhysicsComponent,
+        Option
+    ),
     (
         set_physics_kinematics,
         SetPhysicsKinematics,
         SetPhysicsKinematicsComponent,
-        true
+        Vector
     ),
-    (is_player, IsPlayer, IsPlayerComponent, false),
-    (mesh, Mesh, MeshComponent, true),
-    (control_focus, ControlFocus, ControlFocusComponent, false),
-    (ship_control, ShipControl, ShipControlComponent, false),
-    (ui_color, UIColor, UIColorComponent, false),
-    (ui_hover_color, UIHoverColor, UIHoverColorComponent, false),
-    (ui_box, UIBox, UIBoxComponent, false),
+    (is_player, IsPlayer, IsPlayerComponent, Marker),
+    (mesh, Mesh, MeshComponent, Vector),
+    (control_focus, ControlFocus, ControlFocusComponent, Marker),
+    (ship_control, ShipControl, ShipControlComponent, Option),
+    (ui_color, UIColor, UIColorComponent, Option),
+    (ui_hover_color, UIHoverColor, UIHoverColorComponent, Option),
+    (ui_box, UIBox, UIBoxComponent, Option),
     (
         ui_hover_cursor,
         UIHoverCursor,
         UIHoverCursorComponent,
-        false
+        Option
     ),
-    (ui_texture, UITexture, UITextureComponent, false),
-    (ui_text, UIText, UITextComponent, false)
+    (ui_texture, UITexture, UITextureComponent, Option),
+    (ui_text, UIText, UITextComponent, Option)
 );

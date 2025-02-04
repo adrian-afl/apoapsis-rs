@@ -47,7 +47,7 @@ impl PhysicsSystem {
         }
     }
 
-    fn phase0(&mut self, ecs: &ECSWorld) {
+    fn phase0(&mut self, ecs: &ECSWorld) -> bool {
         println!("PhysicsSystem / phase0");
 
         let player = ecs.find_first_by_components(&[
@@ -66,8 +66,10 @@ impl PhysicsSystem {
             self.player_temporary_data
                 .linear_velocity
                 .assign(&simple_physics.linear_velocity);
+            true
         } else {
-            println!("Player entity not found, Relativity can behave weird");
+            // println!("Player entity not found, Relativity can behave weird");
+            false
         }
     }
 
@@ -385,14 +387,16 @@ impl PhysicsSystem {
     ) {
         println!("PhysicsSystem / update");
 
-        self.phase0(ecs);
-        self.phase1(ecs, universe_simulation, delta_time);
+        let should_continue = self.phase0(ecs);
+        if should_continue {
+            self.phase1(ecs, universe_simulation, delta_time);
 
-        self.real_physics_system
-            .try_write()
-            .unwrap()
-            .step(delta_time);
+            self.real_physics_system
+                .try_write()
+                .unwrap()
+                .step(delta_time);
 
-        self.phase2(ecs);
+            self.phase2(ecs);
+        }
     }
 }

@@ -21,6 +21,14 @@ impl Entity {
             components: AttachedComponents::new(),
         }
     }
+
+    pub fn named(name: &str) -> Entity {
+        Entity::new(Some(name))
+    }
+
+    pub fn noname() -> Entity {
+        Entity::new(None)
+    }
 }
 
 // Some tests because this code is very sketchy

@@ -19,8 +19,19 @@ impl CameraSystem {
                 let transform = entity.components.transform.as_ref().unwrap();
 
                 if entity.components.has(&Components::FirstPersonCameraControl) {
+                    let first_person_component = entity
+                        .components
+                        .first_person_camera_control
+                        .as_ref()
+                        .unwrap();
                     camera.position.assign(&transform.position);
                     camera.orientation = transform.orientation.clone();
+                    camera.set_perspective(
+                        first_person_component.fov,
+                        4.0 / 3.0,
+                        0.1,
+                        9999999999.0,
+                    );
 
                     camera.update();
 

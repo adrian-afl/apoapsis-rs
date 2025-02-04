@@ -1,6 +1,17 @@
-use crate::component_trait::Components;
-use crate::component_trait::{acquire_next_id, ComponentTrait};
-use crate::impl_marker_component;
+use crate::component_trait::acquire_next_id;
 use serde::{Deserialize, Serialize};
 
-impl_marker_component!(FirstPersonCameraControlComponent);
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct FirstPersonCameraControlComponent {
+    pub id: u64,
+    pub fov: f64,
+}
+
+impl FirstPersonCameraControlComponent {
+    pub fn new(fov: f64) -> Self {
+        Self {
+            id: acquire_next_id(),
+            fov,
+        }
+    }
+}

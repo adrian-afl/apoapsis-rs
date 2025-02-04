@@ -52,8 +52,8 @@ vec2 cloudsDensity3D(vec3 pos, bool lowRes){
     return vec2(density * mlt, pow(scattering * 1.5, 4.0));
 }
 
-#define COVERAGE_START 0.199
-#define COVERAGE_END 0.2
+#define COVERAGE_START 0.1
+#define COVERAGE_END 0.3
 
 float lowResCloudsAtPoint(vec3 pos) {
     vec2 density = cloudsDensity3D(pos, true);

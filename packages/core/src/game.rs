@@ -1,5 +1,5 @@
 use crate::camera_system::CameraSystem;
-use crate::game_stage::{GameStage, StageTransition};
+use crate::game_stage::{GameStage, GameUpdateData, StageTransition};
 use crate::stages::splash_screen_stage::SplashScreenStage;
 use crate::stages::stages_stack::StageStack;
 use crate::time_counter::TimeCounter;
@@ -100,13 +100,15 @@ impl Game {
         self.time_counter.update_time();
 
         let mut transition_from_update = StageTransition::DoNothing;
-        let mut transition_from_controls = StageTransition::DoNothing;
 
         if let Some(stage) = &self.stage_stack.head() {
             let mut stage = stage.lock().unwrap();
-            transition_from_update =
-                stage.update(self.time_counter.total_time, self.time_counter.delta_time);
-            transition_from_controls = stage.handle_controls(&mut self.controls);
+            transition_from_update = stage.update(GameUpdateData {
+                total_time: self.time_counter.total_time,
+                delta_time: self.time_counter.delta_time,
+                universe: &self.universe_simulation,
+                controls: &mut self.controls,
+            });
 
             let stage_ecs = stage.get_ecs_world();
 
@@ -137,14 +139,6 @@ impl Game {
         }
 
         match transition_from_update {
-            StageTransition::PushStage(stage) => self.stage_stack.push(stage),
-            StageTransition::PopSelf => {
-                self.stage_stack.pop();
-            }
-            StageTransition::DoNothing => (),
-        }
-
-        match transition_from_controls {
             StageTransition::PushStage(stage) => self.stage_stack.push(stage),
             StageTransition::PopSelf => {
                 self.stage_stack.pop();

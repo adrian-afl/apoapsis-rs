@@ -1,5 +1,6 @@
 use ecs::ecs_world::ECSWorld;
 use input::controls::Controls;
+use universe_simulation::simulation::Simulation;
 
 pub enum StageTransition {
     PushStage(Box<dyn GameStage>),
@@ -7,8 +8,14 @@ pub enum StageTransition {
     DoNothing,
 }
 
+pub struct GameUpdateData<'a> {
+    pub total_time: f64,
+    pub delta_time: f64,
+    pub controls: &'a mut Controls,
+    pub universe: &'a Simulation,
+}
+
 pub trait GameStage {
-    fn update(&mut self, total_time: f64, delta_time: f64) -> StageTransition;
-    fn handle_controls(&mut self, controls: &mut Controls) -> StageTransition;
+    fn update(&mut self, update_data: GameUpdateData) -> StageTransition;
     fn get_ecs_world(&mut self) -> &mut ECSWorld;
 }
