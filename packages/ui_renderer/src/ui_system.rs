@@ -3,7 +3,7 @@ use crate::ui_rendered_item::UIRenderedItem;
 use ecs::component_trait::Components;
 use ecs::components::ui::cursor_type::UICursorType;
 use ecs::ecs_world::ECSWorld;
-use glam::DVec2;
+use glam::{DVec2, DVec4};
 use rayon::iter::IntoParallelRefIterator;
 use rayon::iter::ParallelIterator;
 use renderer_common::errors::RenderingError;
@@ -41,11 +41,8 @@ impl UISystem {
         }
     }
 
-    pub fn update(&mut self, ecs: &mut ECSWorld) {
+    pub fn update(&mut self, ecs: &mut ECSWorld, cursor_pos: DVec2) {
         println!("UIRenderer / update");
-
-        let cursor_pos = DVec2::new(0.0, 0.0); // TODO
-        let mut cursor_type = Mutex::from(UICursorType::Arrow);
 
         let detected_entity_ids = Mutex::new(vec![]);
         println!("UIRenderer / update A");
@@ -98,6 +95,8 @@ impl UISystem {
 
             if let Some(color) = &entity.components.ui_color {
                 item.color = color.color;
+            } else {
+                item.color = DVec4::new(0.0, 0.0, 0.0, 0.0);
             }
 
             if let Some(color) = &entity.components.ui_hover_color {
@@ -107,16 +106,6 @@ impl UISystem {
                     && cursor_pos.y <= uibox.position.y + uibox.size.y
                 {
                     item.color = color.color;
-                }
-            }
-
-            if let Some(cursor) = &entity.components.ui_hover_cursor {
-                if cursor_pos.x >= uibox.position.x
-                    && cursor_pos.y >= uibox.position.y
-                    && cursor_pos.x <= uibox.position.x + uibox.size.x
-                    && cursor_pos.y <= uibox.position.y + uibox.size.y
-                {
-                    *cursor_type.lock().unwrap() = cursor.typ.clone();
                 }
             }
 

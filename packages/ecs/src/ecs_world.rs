@@ -91,6 +91,14 @@ impl ECSWorld {
         None
     }
 
+    pub fn find_by_id(&self, id: u64) -> Option<&Entity> {
+        self.entities.get(&id)
+    }
+
+    pub fn find_by_id_mut(&mut self, id: u64) -> Option<&mut Entity> {
+        self.entities.get_mut(&id)
+    }
+
     fn find_first_id_by_components(&self, component_types: &[&Components]) -> Option<u64> {
         let mut found_id = None;
         for entity in self.entities.values() {

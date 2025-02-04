@@ -5,7 +5,10 @@ use ecs::components::camera::camera_focus_component::CameraFocusComponent;
 use ecs::components::camera::first_person_camera_control_component::FirstPersonCameraControlComponent;
 use ecs::components::common::transform_component::TransformComponent;
 use ecs::components::common::universe_clock_component::UniverseClockComponent;
+use ecs::components::ui::cursor_type::UICursorType;
 use ecs::components::ui::ui_box_component::UIBoxComponent;
+use ecs::components::ui::ui_hover_color_component::UIHoverColorComponent;
+use ecs::components::ui::ui_hover_cursor_component::UIHoverCursorComponent;
 use ecs::components::ui::ui_text_component::{UIFontSize, UITextComponent};
 use ecs::ecs_world::ECSWorld;
 use ecs::entity::Entity;
@@ -34,6 +37,11 @@ impl SplashScreenStage {
                 .with_position(DVec2::new(0.5, 0.4))
                 .with_size(DVec2::new(0.7, 0.07)),
         );
+        label.components.ui_require_free_cursor = true;
+        label.components.ui_is_raycastable = true;
+        label.components.ui_hover_cursor = Some(UIHoverCursorComponent::new(UICursorType::Grab));
+        label.components.ui_hover_color =
+            Some(UIHoverColorComponent::new(DVec4::new(1.0, 0.7, 0.7, 1.0)));
 
         ecs.add(label);
 
@@ -57,7 +65,7 @@ impl GameStage for SplashScreenStage {
     fn update(&mut self, update_data: GameUpdateData) -> StageTransition {
         let label = self.ecs.find_by_name_mut("label").unwrap();
         let uibox = label.components.ui_box.as_mut().unwrap();
-        uibox.position.y = (uibox.position.y + update_data.delta_time).sin() * 0.5 + 0.5;
+        //uibox.position.y = (uibox.position.y + update_data.delta_time).sin() * 0.5 + 0.5;
 
         let camera = self.ecs.find_by_name_mut("camera").unwrap();
         let camera_transform = camera.components.transform.as_mut().unwrap();

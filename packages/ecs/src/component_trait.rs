@@ -16,6 +16,8 @@ use crate::components::ui::ui_box_component::UIBoxComponent;
 use crate::components::ui::ui_color_component::UIColorComponent;
 use crate::components::ui::ui_hover_color_component::UIHoverColorComponent;
 use crate::components::ui::ui_hover_cursor_component::UIHoverCursorComponent;
+use crate::components::ui::ui_is_raycastable_component::UIIsRaycastableComponent;
+use crate::components::ui::ui_require_free_cursor_component::UIRequireFreeCursorComponent;
 use crate::components::ui::ui_text_component::UITextComponent;
 use crate::components::ui::ui_texture_component::UITextureComponent;
 use serde::{Deserialize, Serialize};
@@ -210,5 +212,17 @@ create_component_types_enum!(
         Option
     ),
     (ui_texture, UITexture, UITextureComponent, Option),
-    (ui_text, UIText, UITextComponent, Option)
+    (ui_text, UIText, UITextComponent, Option),
+    (
+        ui_is_raycastable,
+        UIIsRaycastable,
+        UIIsRaycastableComponent,
+        Marker
+    ),
+    (
+        ui_require_free_cursor,
+        UIRequireFreeCursor,
+        UIRequireFreeCursorComponent,
+        Marker
+    )
 );

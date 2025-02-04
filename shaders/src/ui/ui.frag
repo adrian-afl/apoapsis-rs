@@ -74,7 +74,7 @@ void main() {
 
                 //textResult = smoothstep(0.4, 1.0, textResult);
 
-                c = vec4(text_color.rgb, text_color.a * textResult);
+                c = mix(c, vec4(text_color.rgb, 1.0), textResult * text_color.a);
 
                 break;
             }

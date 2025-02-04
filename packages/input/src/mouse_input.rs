@@ -1,7 +1,7 @@
 use glam::DVec2;
 use std::sync::{Arc, Mutex};
 use winit::dpi::PhysicalPosition;
-use winit::window::{CursorGrabMode, Window};
+use winit::window::{CursorGrabMode, CursorIcon, Window};
 
 pub struct MouseInput {
     window: Arc<Mutex<Window>>,
@@ -9,6 +9,7 @@ pub struct MouseInput {
     absolute_cursor_pos: DVec2,
     integrated_cursor_pos: DVec2,
     integrated_scroll: f64,
+    cursor_icon: CursorIcon,
 }
 
 impl MouseInput {
@@ -19,6 +20,7 @@ impl MouseInput {
             absolute_cursor_pos: DVec2::new(0.0, 0.0),
             integrated_cursor_pos: DVec2::new(0.0, 0.0),
             integrated_scroll: 0.0,
+            cursor_icon: CursorIcon::Default,
         }
     }
 
@@ -42,6 +44,16 @@ impl MouseInput {
         window.set_cursor_grab(CursorGrabMode::None).unwrap();
         window.set_cursor_visible(true);
         self.cursor_locked = false;
+    }
+
+    pub fn set_cursor_type(&mut self, cursor_icon: CursorIcon) {
+        let window = self.window.lock().unwrap();
+        window.set_cursor(cursor_icon);
+        self.cursor_icon = cursor_icon;
+    }
+
+    pub fn get_cursor_type(&self) -> CursorIcon {
+        self.cursor_icon
     }
 
     pub fn is_cursor_locked(&self) -> bool {
