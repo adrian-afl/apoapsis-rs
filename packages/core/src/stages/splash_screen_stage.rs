@@ -7,6 +7,7 @@ use ecs::components::common::transform_component::TransformComponent;
 use ecs::components::common::universe_clock_component::UniverseClockComponent;
 use ecs::components::ui::cursor_type::UICursorType;
 use ecs::components::ui::ui_box_component::UIBoxComponent;
+use ecs::components::ui::ui_color_component::UIColorComponent;
 use ecs::components::ui::ui_hover_color_component::UIHoverColorComponent;
 use ecs::components::ui::ui_hover_cursor_component::UIHoverCursorComponent;
 use ecs::components::ui::ui_text_component::{UIFontSize, UITextComponent};
@@ -30,7 +31,7 @@ impl SplashScreenStage {
         label.components.ui_text = Some(UITextComponent::new(
             "Codename T.S. Project",
             DVec4::new(1.0, 1.0, 1.0, 1.0),
-            UIFontSize::Small,
+            UIFontSize::Large,
         ));
         label.components.ui_box = Some(
             UIBoxComponent::default()
@@ -40,6 +41,7 @@ impl SplashScreenStage {
         label.components.ui_require_free_cursor = true;
         label.components.ui_is_raycastable = true;
         label.components.ui_hover_cursor = Some(UIHoverCursorComponent::new(UICursorType::Grab));
+        label.components.ui_color = Some(UIColorComponent::new(DVec4::new(1.0, 1.0, 1.0, 0.0)));
         label.components.ui_hover_color =
             Some(UIHoverColorComponent::new(DVec4::new(1.0, 0.7, 0.7, 1.0)));
 
