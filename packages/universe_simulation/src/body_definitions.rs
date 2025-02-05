@@ -151,11 +151,6 @@ pub struct BodyDynamics {
 pub struct BodyPlanetGenConfig {
     pub out_dir: String,
 
-    pub subdivide_initial: u8,
-    pub subdivide_level1: u8,
-    pub subdivide_level2: u8,
-    pub subdivide_level3: u8,
-
     pub erosion_iterations: u16,
     pub erosion_droplets_count: u16,
     pub erosion_droplet_velocity_coefficient: f64,
