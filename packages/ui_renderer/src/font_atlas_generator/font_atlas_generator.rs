@@ -140,7 +140,7 @@ impl FontAtlas {
             letters_indices.insert(c.c, letters_array.len());
             letters_array.push(CharPositionArrayItem {
                 c: c.c,
-                w: c.metrics.width,
+                w: c.metrics.width + 1,
                 h: c.metrics.height,
                 x: x_cursor,
                 y: 0,

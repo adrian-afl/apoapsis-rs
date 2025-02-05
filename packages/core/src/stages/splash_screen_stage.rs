@@ -30,7 +30,7 @@ impl SplashScreenStage {
         label.components.ui_text = Some(UITextComponent::new(
             "Codename T.S. Project",
             DVec4::new(1.0, 1.0, 1.0, 1.0),
-            UIFontSize::Large,
+            UIFontSize::Small,
         ));
         label.components.ui_box = Some(
             UIBoxComponent::default()

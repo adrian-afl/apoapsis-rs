@@ -166,23 +166,25 @@ impl UIDrawer {
             VECullMode::None,
         )?;
 
+        let font = "media/Perfect DOS VGA 437.ttf";
+
         let mut font_atlas_small = FontAtlas::new(
             toolkit,
-            "media/Anta-Regular.ttf",
+            font,
             16,
             " !\\\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~",
         );
 
         let mut font_atlas_medium = FontAtlas::new(
             toolkit,
-            "media/Anta-Regular.ttf",
+            font,
             24,
             " !\\\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~",
         );
 
         let mut font_atlas_large = FontAtlas::new(
             toolkit,
-            "media/Anta-Regular.ttf",
+            font,
             32,
             " !\\\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~",
         );
