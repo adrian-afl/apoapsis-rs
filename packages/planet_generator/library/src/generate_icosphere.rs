@@ -52,6 +52,18 @@ fn scale_triangle(tri: &Triangle, input: &CubeMapDataLayer<f64>) -> Triangle {
     ]
 }
 
+fn scale_vector_scalar(v: DVec3, input: f64) -> DVec3 {
+    v * input
+}
+
+fn scale_triangle_scalar(tri: &Triangle, input: f64) -> Triangle {
+    [
+        scale_vector_scalar(tri[0], input),
+        scale_vector_scalar(tri[1], input),
+        scale_vector_scalar(tri[2], input),
+    ]
+}
+
 fn get_triangle_center(tri: &Triangle, scale: f64) -> DVec3 {
     ((tri[0] + tri[1] + tri[2]) / 3.0).normalize() * scale
 }
@@ -255,14 +267,18 @@ pub fn generate_icosphere_segment(
         let vec1dir = t[1].normalize();
         let vec2dir = t[2].normalize();
         let directions_triangle: Triangle = [vec0dir, vec1dir, vec2dir];
-        let t = scale_triangle(&t, height_data);
-        let t = translate_triangle(&t, -center);
-        write_triangle_water(&mut water_vertex_buffer, &t, base_segment as u32);
+
+        let t_water = scale_triangle_scalar(&t, sphere_radius);
+        let t_water = translate_triangle(&t_water, -center);
+        write_triangle_water(&mut water_vertex_buffer, &t_water, base_segment as u32);
+
+        let t_terrain = scale_triangle(&t, height_data);
+        let t_terrain = translate_triangle(&t_terrain, -center);
         write_triangle_terrain(
             &height_data,
             &biome_data,
             &mut terrain_vertex_buffer,
-            &t,
+            &t_terrain,
             &directions_triangle,
             base_segment as u32,
         );

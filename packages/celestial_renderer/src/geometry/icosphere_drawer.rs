@@ -1,16 +1,9 @@
 use crate::buffers::common_buffer::CommonBuffer;
-use crate::buffers::icosphere_data_buffer::IcosphereDataBuffer;
 use crate::geometry::g_buffer::GBuffer;
 use crate::geometry::icosphere::{DrawMode, Icosphere};
-use crate::geometry::water_icosphere::WaterIcosphere;
-use glam::DQuat;
-use math::decimal_vector_3d::DecimalVector3d;
-use planet_generator_library::generate_icosphere::Triangle;
 use renderer_common::errors::RenderingError;
 use renderer_common::resolution_config::ResolutionConfig;
 use std::fmt::{Debug, Formatter};
-use std::sync::Arc;
-use universe_simulation::simulation::SimulatedBody;
 use vengine_rs::core::descriptor_set::VEDescriptorSet;
 use vengine_rs::core::descriptor_set_layout::{
     VEDescriptorSetFieldStage, VEDescriptorSetFieldType, VEDescriptorSetLayout,
@@ -203,7 +196,7 @@ impl IcosphereDrawer {
         self.water_render_stage.set_descriptor_set(0, &ico.data_set);
         self.water_render_stage
             .set_descriptor_set(1, &self.common_set);
-        ico.draw(&self.water_render_stage, DrawMode::Terrain)?;
+        ico.draw(&self.water_render_stage, DrawMode::Water)?;
 
         self.water_render_stage.end_recording()?;
 

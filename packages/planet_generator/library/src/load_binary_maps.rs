@@ -35,6 +35,7 @@ pub fn load_binary_terrain_map(
 
         while reader.read_exact(&mut buf).is_ok() {
             data.push((f32::from_le_bytes(buf)) as f64 + sphere_radius);
+            // data.push(0.0);
         }
         if data.len() != (resolution as usize) * (resolution as usize) {
             panic!("Resolution mismatch")

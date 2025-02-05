@@ -92,7 +92,7 @@
   },
   "atmosphere": {
     "seed": 12.0,
-    "start": 6398000,
+    "start": 0,
     "rayleighDensity": 1.225,
     "rayleighHeight": 100000,
     "mieDensity": 0.011632,

@@ -70,8 +70,10 @@ impl GameStage for SplashScreenStage {
         let camera = self.ecs.find_by_name_mut("camera").unwrap();
         let camera_transform = camera.components.transform.as_mut().unwrap();
         let earth = update_data.universe.get_body("earth");
+        // camera_transform.position =
+        //     &earth.position + DecimalVector3d::from_f64(-5000000.0, 4000000.0, 4000000.0);
         camera_transform.position =
-            &earth.position + DecimalVector3d::from_f64(-5000000.0, 4000000.0, 4000000.0);
+            &earth.position + DecimalVector3d::from_f64(-15000000.0, 0.0, 0.0);
         camera_transform.orientation = DQuat::from_mat4(&DMat4::look_to_rh(
             DVec3::new(0.0, 0.0, 0.0),
             DVec3::new(1.0, 0.0, 0.0),

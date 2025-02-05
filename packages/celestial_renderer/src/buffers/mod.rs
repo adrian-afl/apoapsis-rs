@@ -5,5 +5,3 @@ pub mod common_buffer;
 pub mod icosphere_data_buffer;
 pub mod mesh_buffer;
 pub mod output_buffer;
-pub mod terrain_icosphere_data_buffer;
-pub mod water_icosphere_data_buffer;

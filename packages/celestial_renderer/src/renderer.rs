@@ -7,8 +7,6 @@ use crate::finalization::output::Output;
 use crate::geometry::g_buffer::GBuffer;
 use crate::geometry::icosphere_drawer::IcosphereDrawer;
 use crate::geometry::mesh_drawer::MeshDrawer;
-use crate::geometry::terrain_icosphere_drawer::TerrainIcosphereDrawer;
-use crate::geometry::water_icosphere_drawer::WaterIcosphereDrawer;
 use crate::scene::celestial_hierarchy::CelestialHierarchy;
 use crate::scene::material::Material;
 use crate::scene::mesh::Mesh;

@@ -1,8 +1,7 @@
 use crate::buffers::icosphere_data_buffer::IcosphereDataBuffer;
-use crate::buffers::water_icosphere_data_buffer::WaterIcosphereDataBuffer;
 use crate::geometry::icosphere_drawer::TERRAIN_ICOSPHERE_VERTEX_ATTRIBUTES;
 use crate::geometry::icosphere_drawer::WATER_ICOSPHERE_VERTEX_ATTRIBUTES;
-use glam::{DMat4, DQuat, DVec3};
+use glam::{DMat4, DVec3};
 use math::decimal_vector_3d::DecimalVector3d;
 use planet_generator_library::cubemap_data::CubeMapDataLayer;
 use planet_generator_library::generate_icosphere::{
@@ -14,12 +13,9 @@ use planet_generator_library::load_binary_maps::{
 };
 use rayon::iter::IndexedParallelIterator;
 use rayon::iter::ParallelIterator;
-use rayon::prelude::{IntoParallelIterator, IntoParallelRefIterator, IntoParallelRefMutIterator};
+use rayon::prelude::IntoParallelRefIterator;
 use renderer_common::errors::RenderingError;
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::fs::read_to_string;
-use std::fs::File;
 use std::io::Read;
 use std::sync::{Arc, Mutex};
 use universe_simulation::simulation::SimulatedBody;
@@ -27,11 +23,10 @@ use vengine_rs::core::descriptor_set::VEDescriptorSet;
 use vengine_rs::core::descriptor_set_layout::VEDescriptorSetLayout;
 use vengine_rs::core::toolkit::VEToolkit;
 use vengine_rs::graphics::render_stage::VERenderStage;
-use vengine_rs::graphics::vertex_attributes::VertexAttribFormat;
 use vengine_rs::graphics::vertex_buffer::VEVertexBuffer;
 // const LOD_LEVELS: u8 = 3; // 1, 2, 3
 
-static LEVEL_SUBDIVISIONS: [u8; 3] = [2, 3, 4];
+static LEVEL_SUBDIVISIONS: [u8; 3] = [4, 5, 6];
 
 struct LoadedGeometry {
     pub terrain_vertex_buffer: VEVertexBuffer,
@@ -203,7 +198,7 @@ impl Icosphere {
         base_segment: u16,
         level: u8,
     ) -> Result<LoadedGeometry, RenderingError> {
-        let subdivisions = LEVEL_SUBDIVISIONS[level as usize];
+        let subdivisions = LEVEL_SUBDIVISIONS[level as usize - 1];
 
         let segment = generate_icosphere_segment(
             &self.base_icosphere,
