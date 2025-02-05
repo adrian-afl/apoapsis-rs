@@ -209,9 +209,9 @@ pub fn generate_base_icosphere(subdivisions: u8) -> Vec<Triangle> {
 }
 
 pub struct IcosphereMetadataItem {
-    base_segment: u16, // the idea is to load the base icosphere, subdivide it 1 or 2 times, and then this
+    pub base_segment: u16, // the idea is to load the base icosphere, subdivide it 1 or 2 times, and then this
     // results in array of triangles, and this base segment points to one of them
-    center: DVec3,
+    pub center: DVec3,
 }
 
 pub fn generate_icosphere_metadata(
@@ -230,14 +230,14 @@ pub fn generate_icosphere_metadata(
 }
 
 pub struct IcosphereSegment {
-    terrain_vertex_buffer: Vec<u8>,
-    water_vertex_buffer: Vec<u8>,
+    pub terrain_vertex_buffer: Vec<u8>,
+    pub water_vertex_buffer: Vec<u8>,
 }
 
 pub fn generate_icosphere_segment(
     icosphere_triangles: &[Triangle],
     height_data: &CubeMapDataLayer<f64>,
-    biome_data: Option<&CubeMapDataLayer<LoadedBiomeData>>,
+    biome_data: &CubeMapDataLayer<LoadedBiomeData>,
     base_segment: u16,
     sphere_radius: f64,
     subdivisions: u8,
@@ -257,17 +257,15 @@ pub fn generate_icosphere_segment(
         let directions_triangle: Triangle = [vec0dir, vec1dir, vec2dir];
         let t = scale_triangle(&t, height_data);
         let t = translate_triangle(&t, -center);
-        match biome_data {
-            None => write_triangle_water(&mut water_vertex_buffer, &t, base_segment as u32),
-            Some(biome_data) => write_triangle_terrain(
-                &height_data,
-                &biome_data,
-                &mut terrain_vertex_buffer,
-                &t,
-                &directions_triangle,
-                base_segment as u32,
-            ),
-        }
+        write_triangle_water(&mut water_vertex_buffer, &t, base_segment as u32);
+        write_triangle_terrain(
+            &height_data,
+            &biome_data,
+            &mut terrain_vertex_buffer,
+            &t,
+            &directions_triangle,
+            base_segment as u32,
+        );
     }
 
     IcosphereSegment {

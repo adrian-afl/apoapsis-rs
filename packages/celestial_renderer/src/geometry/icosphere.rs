@@ -1,5 +1,17 @@
+use crate::buffers::icosphere_data_buffer::IcosphereDataBuffer;
+use crate::buffers::water_icosphere_data_buffer::WaterIcosphereDataBuffer;
+use crate::geometry::icosphere_drawer::TERRAIN_ICOSPHERE_VERTEX_ATTRIBUTES;
+use crate::geometry::icosphere_drawer::WATER_ICOSPHERE_VERTEX_ATTRIBUTES;
 use glam::{DMat4, DQuat, DVec3};
 use math::decimal_vector_3d::DecimalVector3d;
+use planet_generator_library::cubemap_data::CubeMapDataLayer;
+use planet_generator_library::generate_icosphere::{
+    generate_icosphere_metadata, generate_icosphere_segment, IcosphereMetadataItem, Triangle,
+};
+use planet_generator_library::interpolated_biome_data::LoadedBiomeData;
+use planet_generator_library::load_binary_maps::{
+    get_maps_resolution, load_binary_biome_map, load_binary_terrain_map,
+};
 use rayon::iter::IndexedParallelIterator;
 use rayon::iter::ParallelIterator;
 use rayon::prelude::{IntoParallelIterator, IntoParallelRefIterator, IntoParallelRefMutIterator};
@@ -10,115 +22,83 @@ use std::fs::read_to_string;
 use std::fs::File;
 use std::io::Read;
 use std::sync::{Arc, Mutex};
+use universe_simulation::simulation::SimulatedBody;
+use vengine_rs::core::descriptor_set::VEDescriptorSet;
+use vengine_rs::core::descriptor_set_layout::VEDescriptorSetLayout;
 use vengine_rs::core::toolkit::VEToolkit;
 use vengine_rs::graphics::render_stage::VERenderStage;
 use vengine_rs::graphics::vertex_attributes::VertexAttribFormat;
 use vengine_rs::graphics::vertex_buffer::VEVertexBuffer;
-
 // const LOD_LEVELS: u8 = 3; // 1, 2, 3
 
+static LEVEL_SUBDIVISIONS: [u8; 3] = [2, 3, 4];
+
 struct LoadedGeometry {
-    pub vertex_buffer: VEVertexBuffer,
+    pub terrain_vertex_buffer: VEVertexBuffer,
+    pub water_vertex_buffer: VEVertexBuffer,
     pub level: u8,
 }
 
-struct MetadataItem {
-    pub name: String,
-    pub center: DVec3,
-    pub global_index: u32,
-}
-
 pub struct Icosphere {
-    currently_loaded: Mutex<HashMap<String, LoadedGeometry>>,
-    metadata: Vec<MetadataItem>,
+    radius: f64,
+    loaded_height: CubeMapDataLayer<f64>,
+    loaded_biome: CubeMapDataLayer<LoadedBiomeData>,
+    base_icosphere: Arc<Vec<Triangle>>,
+    currently_loaded: Mutex<HashMap<u16, LoadedGeometry>>,
+    metadata: Vec<IcosphereMetadataItem>,
     dir_path: String,
     thresholds: Vec<f64>,
-    vertex_attributes: Vec<VertexAttribFormat>,
     part_matrices: Vec<DMat4>,
+
+    data_buffer: IcosphereDataBuffer,
+    pub data_set: VEDescriptorSet,
+    water_color: DVec3,
+}
+
+pub enum DrawMode {
+    Terrain,
+    Water,
 }
 
 static GLOBAL_LOCK: Mutex<()> = Mutex::new(());
 
 impl Icosphere {
     pub fn new(
+        toolkit: &VEToolkit,
+        radius: f64,
         dir_path: String,
         thresholds: Vec<f64>,
-        vertex_attributes: Vec<VertexAttribFormat>,
+        base_icosphere: Arc<Vec<Triangle>>,
+        water_color: Option<DVec3>,
+        data_set_layout: &mut VEDescriptorSetLayout,
     ) -> Result<Icosphere, RenderingError> {
-        let path = format!("{}/metadata.ini", dir_path);
+        let metadata = generate_icosphere_metadata(&base_icosphere, radius);
 
-        let mut ico = Icosphere {
+        let maps_resolutions = get_maps_resolution(&dir_path);
+
+        let part_matrices = vec![DMat4::IDENTITY.clone(); metadata.len()];
+
+        let data_buffer = IcosphereDataBuffer::new(&toolkit)?;
+        let data_set = data_set_layout.create_descriptor_set()?;
+        data_set.bind_buffer(0, &data_buffer.buffer)?;
+
+        Ok(Icosphere {
+            radius,
+            base_icosphere,
+            loaded_height: load_binary_terrain_map(radius, &dir_path, maps_resolutions),
+            loaded_biome: load_binary_biome_map(&dir_path, maps_resolutions),
             currently_loaded: Mutex::new(HashMap::new()),
-            metadata: vec![],
+            metadata,
             dir_path,
             thresholds,
-            vertex_attributes,
-            part_matrices: vec![],
-        };
-
-        for line in read_to_string(path)?.lines() {
-            let split: Vec<&str> = line.split("=").collect();
-            if split.len() != 2 {
-                println!("weird line encountered in metadata, whole line is weird: {line}");
-                continue;
-            }
-            let name = split[0];
-            let index_parts: Vec<u32> = name
-                .split("-")
-                .map(|x| x.parse::<u32>().unwrap_or_default())
-                .collect();
-            let global_index = index_parts[0] * 16 + index_parts[1]; // ????
-            let vector_str_parts: Vec<&str> = split[1].split(",").collect();
-            if vector_str_parts.len() != 3 {
-                println!("weird line encountered in metadata, split 1 is weird: {line}");
-                continue;
-            }
-            let vector = DVec3::new(
-                vector_str_parts[0].parse::<f64>().unwrap_or_default(),
-                vector_str_parts[1].parse::<f64>().unwrap_or_default(),
-                vector_str_parts[2].parse::<f64>().unwrap_or_default(),
-            );
-
-            ico.metadata.push(MetadataItem {
-                name: name.to_owned(),
-                center: vector,
-                global_index,
-            });
-            ico.part_matrices.push(DMat4::IDENTITY.clone());
-        }
-
-        ico.metadata
-            .sort_by(|a, b| a.global_index.partial_cmp(&b.global_index).unwrap());
-
-        Ok(ico)
+            part_matrices,
+            data_buffer,
+            data_set,
+            water_color: water_color.unwrap_or_else(|| DVec3::new(0.0, 0.0, 0.0)),
+        })
     }
 
-    pub fn update_and_get_part_matrices<'a>(
-        &'a mut self,
-        camera_position: &DecimalVector3d,
-        sphere_position: &DecimalVector3d,
-        sphere_orientation: DQuat,
-    ) -> &'a [DMat4] {
-        let relative_camera_position = sphere_position - camera_position;
-
-        let rotation_matrix = DMat4::from_quat(sphere_orientation).inverse();
-        let world_translation_matrix = DMat4::from_translation(relative_camera_position.to_dvec3());
-        let pre_final_matrix = world_translation_matrix * rotation_matrix;
-
-        for i in 0..self.metadata.len() {
-            let metadata = &self.metadata[i];
-            let model_offset_matrix = DMat4::from_translation(metadata.center);
-            self.part_matrices[i] = pre_final_matrix * model_offset_matrix;
-        }
-
-        self.part_matrices.as_slice()
-    }
-
-    pub fn draw(
-        &mut self,
-        toolkit: &VEToolkit,
-        stage: &VERenderStage,
-    ) -> Result<(), RenderingError> {
+    pub fn preload(&mut self, toolkit: &VEToolkit) -> Result<(), RenderingError> {
         self.metadata.par_iter().enumerate().for_each(|(i, m)| {
             // println!("ico draw {}", i);
             let m = &self.metadata[i];
@@ -137,34 +117,79 @@ impl Icosphere {
                 level = 3;
             }
 
-            let exists = self.currently_loaded.lock().unwrap().contains_key(&m.name);
+            let exists = self
+                .currently_loaded
+                .lock()
+                .unwrap()
+                .contains_key(&m.base_segment);
             if exists {
                 let mapped_level = self
                     .currently_loaded
                     .lock()
                     .unwrap()
-                    .get(&m.name)
+                    .get(&m.base_segment)
                     .unwrap()
                     .level;
                 if (mapped_level != level) {
-                    let geometry = self.load_geometry(&toolkit, &m.name, level).unwrap();
+                    let geometry = self.load_geometry(&toolkit, m.base_segment, level).unwrap();
                     let mut locked = self.currently_loaded.lock().unwrap();
-                    let mut mapped_mut = locked.get_mut(&m.name).unwrap();
+                    let mut mapped_mut = locked.get_mut(&m.base_segment).unwrap();
                     mapped_mut.level = level;
-                    mapped_mut.vertex_buffer = geometry;
-                } else {
-                    let locked = self.currently_loaded.lock().unwrap();
-                    let mapped = locked.get(&m.name).unwrap();
-                    stage.draw_instanced(&mapped.vertex_buffer, 1);
+                    mapped_mut.terrain_vertex_buffer = geometry.terrain_vertex_buffer;
+                    mapped_mut.water_vertex_buffer = geometry.water_vertex_buffer;
                 }
             } else {
-                let geometry = self.load_geometry(&toolkit, &m.name, level).unwrap();
-                self.currently_loaded.lock().unwrap().insert(
-                    m.name.clone(),
-                    LoadedGeometry {
-                        vertex_buffer: geometry,
-                        level,
+                let geometry = self.load_geometry(&toolkit, m.base_segment, level).unwrap();
+                self.currently_loaded
+                    .lock()
+                    .unwrap()
+                    .insert(m.base_segment, geometry);
+            }
+        });
+
+        Ok(())
+    }
+
+    pub fn update_buffer(
+        &mut self,
+        camera_position: &DecimalVector3d,
+        simulated_body: &SimulatedBody,
+    ) -> Result<(), RenderingError> {
+        let relative_camera_position = &simulated_body.position - camera_position;
+
+        let rotation_matrix = simulated_body.orientation.as_dmat4().inverse();
+        let world_translation_matrix = DMat4::from_translation(relative_camera_position.to_dvec3());
+        let pre_final_matrix = world_translation_matrix * rotation_matrix;
+
+        for i in 0..self.metadata.len() {
+            let metadata = &self.metadata[i];
+            let model_offset_matrix = DMat4::from_translation(metadata.center);
+            self.part_matrices[i] = pre_final_matrix * model_offset_matrix;
+        }
+
+        let body_center_camera_space = &simulated_body.position - camera_position;
+
+        self.data_buffer.update(
+            self.water_color,
+            body_center_camera_space.to_dvec3(),
+            &self.part_matrices,
+        )?;
+
+        Ok(())
+    }
+
+    pub fn draw(&mut self, stage: &VERenderStage, mode: DrawMode) -> Result<(), RenderingError> {
+        self.metadata.par_iter().enumerate().for_each(|(i, m)| {
+            let m = &self.metadata[i];
+
+            let locked = self.currently_loaded.lock().unwrap();
+            if let Some(mapped) = locked.get(&m.base_segment) {
+                stage.draw_instanced(
+                    match mode {
+                        DrawMode::Terrain => &mapped.terrain_vertex_buffer,
+                        DrawMode::Water => &mapped.water_vertex_buffer,
                     },
+                    1,
                 );
             }
         });
@@ -175,19 +200,37 @@ impl Icosphere {
     fn load_geometry(
         &self,
         toolkit: &VEToolkit,
-        name: &str,
+        base_segment: u16,
         level: u8,
-    ) -> Result<VEVertexBuffer, RenderingError> {
-        let path = format!("{}/{name}.l{level}.raw", self.dir_path);
-        let file = File::open(path)?;
-        let mut brotli_stream = brotli::Decompressor::new(file, 40960);
-        let mut decompressed = vec![];
-        brotli_stream.read_to_end(&mut decompressed)?;
+    ) -> Result<LoadedGeometry, RenderingError> {
+        let subdivisions = LEVEL_SUBDIVISIONS[level as usize];
+
+        let segment = generate_icosphere_segment(
+            &self.base_icosphere,
+            &self.loaded_height,
+            &self.loaded_biome,
+            base_segment,
+            self.radius,
+            subdivisions,
+        );
 
         let _exclusivity_lock = GLOBAL_LOCK.lock().unwrap(); // this probably could be done better if i did it in vengine
-        let result =
-            toolkit.create_vertex_buffer_from_data(decompressed, &self.vertex_attributes)?;
+
+        let terrain_buffer = toolkit.create_vertex_buffer_from_data(
+            segment.terrain_vertex_buffer,
+            &TERRAIN_ICOSPHERE_VERTEX_ATTRIBUTES,
+        )?;
+        let water_buffer = toolkit.create_vertex_buffer_from_data(
+            segment.water_vertex_buffer,
+            &WATER_ICOSPHERE_VERTEX_ATTRIBUTES,
+        )?;
+
         drop(_exclusivity_lock);
-        Ok(result)
+
+        Ok(LoadedGeometry {
+            terrain_vertex_buffer: terrain_buffer,
+            water_vertex_buffer: water_buffer,
+            level,
+        })
     }
 }

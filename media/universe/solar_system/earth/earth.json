@@ -1,7 +1,7 @@
 {
   "name": "earth",
   "terrain": {
-    "icospherePath": "media/universe/solar_system/earth/terrain/icosphere",
+    "icospherePath": "media/universe/solar_system/earth/terrain",
     "radius": 6378000,
     "minHeight": -127000,
     "maxHeight": 127000,

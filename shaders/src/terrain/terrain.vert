@@ -2,7 +2,7 @@
 #extension GL_ARB_separate_shader_objects : enable
 
 layout(set = 0, binding = 0) buffer readonly ubo {
-    mat4 partMatrix[320];
+    mat4 partMatrix[];
 } data;
 
 #define COMMON_BUFFER_SET 1

@@ -5,6 +5,7 @@ use crate::buffers::common_buffer::CommonBuffer;
 use crate::finalization::multi_merger::MultiMerger;
 use crate::finalization::output::Output;
 use crate::geometry::g_buffer::GBuffer;
+use crate::geometry::icosphere_drawer::IcosphereDrawer;
 use crate::geometry::mesh_drawer::MeshDrawer;
 use crate::geometry::terrain_icosphere_drawer::TerrainIcosphereDrawer;
 use crate::geometry::water_icosphere_drawer::WaterIcosphereDrawer;
@@ -37,8 +38,7 @@ pub struct Renderer {
 
     ui_drawer: Arc<Mutex<UIDrawer>>,
     mesh_drawer: MeshDrawer,
-    terrain_icosphere_drawer: TerrainIcosphereDrawer,
-    water_icosphere_drawer: WaterIcosphereDrawer,
+    icosphere_drawer: IcosphereDrawer,
     cloud_generator_high_freq: CloudGeneratorHighFreq,
     cloud_generator_low_freq: CloudGeneratorLowFreq,
     atmosphere_drawer: AtmosphereDrawer,
@@ -70,13 +70,9 @@ impl Renderer {
         let mesh_drawer = MeshDrawer::new(&config, &toolkit, &mut g_buffer, &common_buffer)
             .expect("Failed to create MeshDrawer");
 
-        let terrain_icosphere_drawer =
-            TerrainIcosphereDrawer::new(&config, &toolkit, &mut g_buffer, &common_buffer)
+        let icosphere_drawer =
+            IcosphereDrawer::new(&toolkit, &config, &mut g_buffer, &common_buffer)
                 .expect("Failed to create TerrainIcosphereDrawer");
-
-        let water_icosphere_drawer =
-            WaterIcosphereDrawer::new(&config, &toolkit, &mut g_buffer, &common_buffer)
-                .expect("Failed to create WaterIcosphereDrawer");
 
         let mut multi_merger =
             MultiMerger::new(&config, &toolkit).expect("Failed to create MultiMerger");
@@ -123,8 +119,7 @@ impl Renderer {
             cloud_generator_high_freq,
             cloud_generator_low_freq,
             mesh_drawer,
-            terrain_icosphere_drawer,
-            water_icosphere_drawer,
+            icosphere_drawer,
             g_buffer,
             common_buffer,
 
@@ -170,8 +165,7 @@ impl Renderer {
         celestial_hierarchy.update(
             universe_simulation,
             &camera.position,
-            &mut self.terrain_icosphere_drawer,
-            &mut self.water_icosphere_drawer,
+            &mut self.icosphere_drawer,
         )?;
 
         event!(Level::INFO, "celestial_hierarchy/get_rendered_bodies");
@@ -280,54 +274,43 @@ impl Renderer {
                 }
             }
 
-            match &mut body.terrain {
+            match &mut body.icosphere {
                 None => (),
-                Some(ref mut terrain) => {
-                    event!(Level::INFO, "terrain_icosphere_drawer/record");
-                    self.terrain_icosphere_drawer
-                        .record(&self.toolkit, terrain)?;
+                Some(ref mut icosphere) => {
+                    event!(Level::INFO, "icosphere_drawer/preload");
+                    icosphere.preload(&self.toolkit)?;
+
+                    event!(Level::INFO, "icosphere_drawer/record");
+                    self.icosphere_drawer.record(icosphere)?;
                     let queue = &self
                         .toolkit
                         .queue
                         .lock()
                         .map_err(|_| RenderingError::QueueLockingFailed)?;
 
-                    event!(Level::INFO, "terrain_icosphere_drawer/submit");
-                    self.terrain_icosphere_drawer
-                        .render_stage
+                    event!(Level::INFO, "terrain_icosphere_drawer/terrain submit");
+                    self.icosphere_drawer
+                        .terrain_render_stage
                         .command_buffer
                         .submit(
                             queue,
                             wait_for_semaphores.clone(),
                             vec![self.terrain_drawing_semaphore.clone()],
                         )
-                        .expect("Failed to draw terrain_drawer");
-                    wait_for_semaphores = vec![self.terrain_drawing_semaphore.clone()]
-                }
-            }
+                        .expect("Failed to draw terain");
+                    wait_for_semaphores = vec![self.terrain_drawing_semaphore.clone()];
 
-            match &mut body.water {
-                None => (),
-                Some(ref mut water) => {
-                    event!(Level::INFO, "water_icosphere_drawer/record");
-                    self.water_icosphere_drawer.record(&self.toolkit, water)?;
-                    let queue = &self
-                        .toolkit
-                        .queue
-                        .lock()
-                        .map_err(|_| RenderingError::QueueLockingFailed)?;
-
-                    event!(Level::INFO, "water_icosphere_drawer/submit");
-                    self.water_icosphere_drawer
-                        .render_stage
+                    event!(Level::INFO, "terrain_icosphere_drawer/water submit");
+                    self.icosphere_drawer
+                        .water_render_stage
                         .command_buffer
                         .submit(
                             queue,
                             wait_for_semaphores.clone(),
                             vec![self.water_drawing_semaphore.clone()],
                         )
-                        .expect("Failed to draw water_drawer");
-                    wait_for_semaphores = vec![self.water_drawing_semaphore.clone()]
+                        .expect("Failed to draw water");
+                    wait_for_semaphores = vec![self.water_drawing_semaphore.clone()];
                 }
             }
 

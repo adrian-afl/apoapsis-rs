@@ -16,12 +16,6 @@ use vengine_rs::graphics::render_stage::{VECullMode, VEPrimitiveTopology, VERend
 use vengine_rs::graphics::vertex_attributes::VertexAttribFormat;
 use vengine_rs::image::image::VEImageViewCreateInfo;
 
-pub static WATER_ICOSPHERE_VERTEX_ATTRIBUTES: [VertexAttribFormat; 3] = [
-    VertexAttribFormat::RGB32f,
-    VertexAttribFormat::R16u,
-    VertexAttribFormat::Padding16,
-];
-
 pub struct WaterIcosphereDrawer {
     pub render_stage: VERenderStage,
 

@@ -339,7 +339,7 @@ pub fn generate_terrain(out_dir: &str, input: &BodyCelestialBodyDefinition) {
 
     save_terrain_maps(
         out_dir.to_str().unwrap(),
-        terrain.radius + terrain.min_height,
+        terrain.radius,
         &cube_map_height,
         &cube_map_biome,
     );

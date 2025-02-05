@@ -4,7 +4,7 @@
 layout(set = 0, binding = 0) buffer readonly ubo {
     vec4 waterColor_zero;
     vec4 bodyCenter_zero;
-    mat4 partMatrix[320];
+    mat4 partMatrix[];
 } data;
 
 #define COMMON_BUFFER_SET 1

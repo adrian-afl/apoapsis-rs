@@ -7,7 +7,7 @@ use std::io::Write;
 
 pub fn save_terrain_maps(
     output_dir: &str,
-    terrain_min_height: f64,
+    sphere_radius: f64,
     cube_map_height: &CubeMapDataLayer<f64>,
     cube_map_biome: &CubeMapDataLayer<InterpolatedBiomeData>,
 ) {
@@ -63,7 +63,7 @@ pub fn save_terrain_maps(
         let res_usize = cube_map_height.res as usize;
 
         for i in 0..res_usize * res_usize {
-            let height = face_data[i] - terrain_min_height;
+            let height = face_data[i] - sphere_radius;
             let height_f32 = height as f32;
 
             file.write_all(&height_f32.to_le_bytes())

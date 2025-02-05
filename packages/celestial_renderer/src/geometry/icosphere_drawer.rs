@@ -1,9 +1,16 @@
 use crate::buffers::common_buffer::CommonBuffer;
+use crate::buffers::icosphere_data_buffer::IcosphereDataBuffer;
 use crate::geometry::g_buffer::GBuffer;
-use crate::geometry::terrain_icosphere::TerrainIcosphere;
+use crate::geometry::icosphere::{DrawMode, Icosphere};
+use crate::geometry::water_icosphere::WaterIcosphere;
+use glam::DQuat;
+use math::decimal_vector_3d::DecimalVector3d;
+use planet_generator_library::generate_icosphere::Triangle;
 use renderer_common::errors::RenderingError;
 use renderer_common::resolution_config::ResolutionConfig;
 use std::fmt::{Debug, Formatter};
+use std::sync::Arc;
+use universe_simulation::simulation::SimulatedBody;
 use vengine_rs::core::descriptor_set::VEDescriptorSet;
 use vengine_rs::core::descriptor_set_layout::{
     VEDescriptorSetFieldStage, VEDescriptorSetFieldType, VEDescriptorSetLayout,
@@ -16,8 +23,24 @@ use vengine_rs::graphics::render_stage::{VECullMode, VEPrimitiveTopology, VERend
 use vengine_rs::graphics::vertex_attributes::VertexAttribFormat;
 use vengine_rs::image::image::VEImageViewCreateInfo;
 
-pub struct TerrainIcosphereDrawer {
-    pub render_stage: VERenderStage,
+pub static TERRAIN_ICOSPHERE_VERTEX_ATTRIBUTES: [VertexAttribFormat; 6] = [
+    VertexAttribFormat::RGB32f,    // pos
+    VertexAttribFormat::RGB8inorm, // normal
+    VertexAttribFormat::Padding8,
+    VertexAttribFormat::RGBA8unorm, // color roughness
+    VertexAttribFormat::R16u,       // part number
+    VertexAttribFormat::Padding16,
+];
+
+pub static WATER_ICOSPHERE_VERTEX_ATTRIBUTES: [VertexAttribFormat; 3] = [
+    VertexAttribFormat::RGB32f,
+    VertexAttribFormat::R16u,
+    VertexAttribFormat::Padding16,
+];
+
+pub struct IcosphereDrawer {
+    pub terrain_render_stage: VERenderStage,
+    pub water_render_stage: VERenderStage,
 
     pub data_set_layout: VEDescriptorSetLayout,
 
@@ -25,19 +48,19 @@ pub struct TerrainIcosphereDrawer {
     common_set: VEDescriptorSet,
 }
 
-impl Debug for TerrainIcosphereDrawer {
+impl Debug for IcosphereDrawer {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        f.write_str("TerrainIcosphereDrawer")
+        f.write_str("IcosphereDrawer")
     }
 }
 
-impl TerrainIcosphereDrawer {
+impl IcosphereDrawer {
     pub fn new(
-        config: &ResolutionConfig,
         toolkit: &VEToolkit,
+        config: &ResolutionConfig,
         g_buffer: &mut GBuffer,
         common_buffer: &CommonBuffer,
-    ) -> Result<TerrainIcosphereDrawer, RenderingError> {
+    ) -> Result<Self, RenderingError> {
         let color_rgb_roughness_a_view = g_buffer
             .color_rgb_roughness_a
             .get_view(VEImageViewCreateInfo::simple_2d())?;
@@ -101,17 +124,17 @@ impl TerrainIcosphereDrawer {
         let common_set = common_set_layout.create_descriptor_set()?;
         common_set.bind_buffer(0, &common_buffer.buffer)?;
 
-        let vertex_shader = toolkit.create_shader_module(
+        let terrain_vertex_shader = toolkit.create_shader_module(
             "shaders/compiled/terrain/terrain.vert.spv",
             VEShaderModuleType::Vertex,
         )?;
 
-        let fragment_shader = toolkit.create_shader_module(
+        let terrain_fragment_shader = toolkit.create_shader_module(
             "shaders/compiled/terrain/terrain.frag.spv",
             VEShaderModuleType::Fragment,
         )?;
 
-        let render_stage = toolkit.create_render_stage(
+        let terrain_render_stage = toolkit.create_render_stage(
             config.width,
             config.height,
             &[
@@ -121,33 +144,69 @@ impl TerrainIcosphereDrawer {
                 &shared_depth_buffer_attachment,
             ],
             &[&data_set_layout, &common_set_layout],
-            &vertex_shader,
-            &fragment_shader,
+            &terrain_vertex_shader,
+            &terrain_fragment_shader,
             &TERRAIN_ICOSPHERE_VERTEX_ATTRIBUTES,
             VEPrimitiveTopology::TriangleList,
             VECullMode::Back,
         )?;
 
-        Ok(TerrainIcosphereDrawer {
-            render_stage,
+        let water_vertex_shader = toolkit.create_shader_module(
+            "shaders/compiled/water/water.vert.spv",
+            VEShaderModuleType::Vertex,
+        )?;
+
+        let water_fragment_shader = toolkit.create_shader_module(
+            "shaders/compiled/water/water.frag.spv",
+            VEShaderModuleType::Fragment,
+        )?;
+
+        let water_render_stage = toolkit.create_render_stage(
+            config.width,
+            config.height,
+            &[
+                &color_rgb_roughness_a_attachment,
+                &normal_rgb_distance_a_attachment,
+                &emission_rgb_metalness_a_attachment,
+                &shared_depth_buffer_attachment,
+            ],
+            &[&data_set_layout, &common_set_layout],
+            &water_vertex_shader,
+            &water_fragment_shader,
+            &WATER_ICOSPHERE_VERTEX_ATTRIBUTES,
+            VEPrimitiveTopology::TriangleList,
+            VECullMode::Back,
+        )?;
+
+        Ok(Self {
             data_set_layout,
             common_set_layout,
+            terrain_render_stage,
+            water_render_stage,
             common_set,
         })
     }
 
-    pub fn record(
-        &mut self,
-        toolkit: &VEToolkit,
-        ico: &mut TerrainIcosphere,
-    ) -> Result<(), RenderingError> {
-        self.render_stage.begin_recording()?;
+    pub fn record(&mut self, ico: &mut Icosphere) -> Result<(), RenderingError> {
+        self.terrain_render_stage.begin_recording()?;
 
-        self.render_stage.set_descriptor_set(0, &ico.data_set);
-        self.render_stage.set_descriptor_set(1, &self.common_set);
-        ico.icosphere.draw(toolkit, &self.render_stage)?;
+        self.terrain_render_stage
+            .set_descriptor_set(0, &ico.data_set);
+        self.terrain_render_stage
+            .set_descriptor_set(1, &self.common_set);
+        ico.draw(&self.terrain_render_stage, DrawMode::Terrain)?;
 
-        self.render_stage.end_recording()?;
+        self.terrain_render_stage.end_recording()?;
+
+        self.water_render_stage.begin_recording()?;
+
+        self.water_render_stage.set_descriptor_set(0, &ico.data_set);
+        self.water_render_stage
+            .set_descriptor_set(1, &self.common_set);
+        ico.draw(&self.water_render_stage, DrawMode::Terrain)?;
+
+        self.water_render_stage.end_recording()?;
+
         Ok(())
     }
 }
