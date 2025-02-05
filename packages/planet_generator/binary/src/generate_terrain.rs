@@ -1,11 +1,11 @@
 use crate::craters::add_craters;
 use crate::erosion::erosion_run;
 use crate::math_util::{map, mix, usat};
-use crate::noise::fbm;
 use crate::save_binary_maps::save_terrain_maps;
 use glam::Vec3;
 use planet_generator_library::cubemap_data::{CubeMapDataLayer, CubeMapFace};
 use planet_generator_library::interpolated_biome_data::InterpolatedBiomeData;
+use planet_generator_library::noise::fbm;
 use rayon::iter::IntoParallelIterator;
 use rayon::iter::ParallelIterator;
 use std::fs;

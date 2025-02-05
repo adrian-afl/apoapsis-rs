@@ -1,8 +1,8 @@
 use crate::math_util::map;
-use crate::random::{random_1d_to_1d, random_1d_to_3d};
 use glam::{DQuat, DVec3};
 use planet_generator_library::cubemap_data::CubeMapDataLayer;
 use planet_generator_library::interpolated_biome_data::InterpolatedBiomeData;
+use planet_generator_library::random::{random_1d_to_1d, random_1d_to_3d};
 use rayon::iter::ParallelIterator;
 use rayon::prelude::IntoParallelIterator;
 use std::f64::consts::PI;

@@ -3,8 +3,6 @@ mod craters;
 mod erosion;
 mod generate_terrain;
 mod math_util;
-mod noise;
-mod random;
 mod save_binary_maps;
 
 use crate::cli_args::CLIArgs;

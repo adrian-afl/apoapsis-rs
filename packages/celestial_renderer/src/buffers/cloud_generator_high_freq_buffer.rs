@@ -1,4 +1,5 @@
-use glam::DVec4;
+use glam::{DVec3, DVec4};
+use planet_generator_library::noise::fbm;
 use renderer_common::buffer_writers::{write_float, write_vec4};
 use renderer_common::errors::RenderingError;
 use vengine_rs::buffer::buffer::{VEBuffer, VEBufferUsage};
@@ -36,7 +37,11 @@ impl CloudGeneratorHighFreqBuffer {
         let mut offset = 0;
 
         offset += write_vec4(ptr, offset, seed);
-        offset += write_float(ptr, offset, elapsed);
+        offset += write_float(
+            ptr,
+            offset,
+            (fbm(DVec3::new(elapsed, seed.x, seed.y), 6, 2.0, 0.5) * 2.0 - 1.0) * 100.0,
+        );
         offset += write_float(ptr, offset, frequency);
 
         self.buffer.unmap()?;

@@ -3,6 +3,8 @@ use crate::cubemap_data::CubeMapDataLayer;
 use crate::interpolated_biome_data::LoadedBiomeData;
 use glam::DVec3;
 use rayon::iter::IndexedParallelIterator;
+use rayon::iter::ParallelIterator;
+use rayon::prelude::IntoParallelRefIterator;
 use std::io::{Cursor, Write};
 
 pub type Triangle = [DVec3; 3];
@@ -210,14 +212,11 @@ fn write_triangle_water(stream: &mut dyn Write, tri: &Triangle, global_index: u3
 }
 
 pub fn generate_base_icosphere(subdivisions: u8) -> Vec<Triangle> {
-    let mut result = vec![];
-    for triangle in get_base_icosphere() {
-        let subdivided = subdivide_triangle_multiple(triangle, subdivisions);
-        for t in subdivided {
-            result.push(t);
-        }
-    }
-    result
+    get_base_icosphere()
+        .par_iter()
+        .map(|triangle| subdivide_triangle_multiple(*triangle, subdivisions))
+        .flatten()
+        .collect()
 }
 
 pub struct IcosphereMetadataItem {

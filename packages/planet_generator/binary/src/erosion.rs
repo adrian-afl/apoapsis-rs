@@ -1,20 +1,7 @@
-/*
-EROSION IDEA to make it parallel
-
-Create an ErosionDropletRun struct
-it will hold a vector list of struct of shape ErosionDropletModification {
-    vec3 dir (maybe pixels im not sure) pixels will be easier to apply
-    float delta
-}
-
-then in paraller per iteration i can spawn a droplet on random X pixels - maybe on all of them?
-iterate all teh droplers in parallel until all end their journeys
-resulting changes are then applied on the main data and the iteration restarts
- */
-use crate::random::{random_2d_to_3d, random_3d_to_3d};
 use glam::{DVec2, DVec3};
 use planet_generator_library::cubemap_data::CubeMapDataLayer;
 use planet_generator_library::interpolated_biome_data::InterpolatedBiomeData;
+use planet_generator_library::random::{random_2d_to_3d, random_3d_to_3d};
 use rayon::iter::ParallelIterator;
 use rayon::prelude::IntoParallelIterator;
 use std::sync::{Arc, Mutex};
