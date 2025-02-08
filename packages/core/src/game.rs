@@ -116,6 +116,7 @@ impl Game {
     pub fn update(&mut self) {
         let window_size = self.window.lock().unwrap().inner_size();
         self.time_counter.update_time();
+        self.controls.update_gamepad_helper();
 
         let mut transition_from_update = StageTransition::DoNothing;
 

@@ -20,7 +20,7 @@ impl UICursorSystem {
         ecs: &mut ECSWorld,
         raycast_result: &Vec<UIRaycastResultItem>,
     ) -> UICursorSystemResult {
-        println!("UICursorSystem / update");
+        // println!("UICursorSystem / update");
 
         let free_cursor_entity = ecs.find_first_by_components(&[&Components::UIRequireFreeCursor]);
         let cursor_locked = free_cursor_entity.is_none();

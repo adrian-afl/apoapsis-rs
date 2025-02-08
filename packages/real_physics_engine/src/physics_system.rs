@@ -48,7 +48,7 @@ impl PhysicsSystem {
     }
 
     fn phase0(&mut self, ecs: &ECSWorld) -> bool {
-        println!("PhysicsSystem / phase0");
+        // println!("PhysicsSystem / phase0");
 
         let player = ecs.find_first_by_components(&[
             &Components::IsPlayer,
@@ -74,7 +74,7 @@ impl PhysicsSystem {
     }
 
     fn phase1(&mut self, ecs: &mut ECSWorld, universe_simulation: &Simulation, delta_time: f64) {
-        println!("PhysicsSystem / phase1");
+        // println!("PhysicsSystem / phase1");
 
         let decimal_delta_time = f64_to_dbig(delta_time);
         let decimal_half_delta_time = f64_to_dbig(delta_time * 0.5);
@@ -171,7 +171,7 @@ impl PhysicsSystem {
     }
 
     fn phase2(&mut self, ecs: &mut ECSWorld) {
-        println!("PhysicsSystem / phase2");
+        // println!("PhysicsSystem / phase2");
 
         // this list here is so that if entity disappears, the element is cleaned up
         let detected_element_real_physics_ids = Mutex::new(vec![]);
@@ -385,7 +385,7 @@ impl PhysicsSystem {
         universe_simulation: &Simulation,
         delta_time: f64,
     ) {
-        println!("PhysicsSystem / update");
+        // println!("PhysicsSystem / update");
 
         let should_continue = self.phase0(ecs);
         if should_continue {

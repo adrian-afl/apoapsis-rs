@@ -10,7 +10,7 @@ impl CameraSystem {
     }
 
     pub fn update(&mut self, camera: &mut Camera, ecs: &mut ECSWorld) {
-        println!("CameraSystem / update");
+        // println!("CameraSystem / update");
 
         let entity =
             ecs.find_first_by_components(&[&Components::CameraFocus, &Components::Transform]);
@@ -35,13 +35,13 @@ impl CameraSystem {
 
                     camera.update();
 
-                    println!("Cam pos is now {}", camera.position);
+                    // println!("Cam pos is now {}", camera.position);
                 }
             }
             None => {
-                println!(
-                    "Cannot update camera as there is no entity with CameraFocus and Transform"
-                );
+                // println!(
+                //     "Cannot update camera as there is no entity with CameraFocus and Transform"
+                // );
             }
         }
     }

@@ -10,14 +10,14 @@ impl UniverseSimulationUpdaterSystem {
     }
 
     pub fn update(&mut self, simulation: &mut Simulation, ecs: &mut ECSWorld, delta_time: f64) {
-        println!("UniverseSimulationUpdaterSystem / update");
+        //println!("UniverseSimulationUpdaterSystem / update");
 
         let camera_entity =
             ecs.find_first_by_components(&[&Components::CameraFocus, &Components::Transform]);
         if camera_entity.is_none() {
-            println!(
-                "CameraFocus + Transform entity not found in ECS World, cannot update the universe"
-            );
+            // println!(
+            //     "CameraFocus + Transform entity not found in ECS World, cannot update the universe"
+            // );
             return;
         }
 
@@ -27,7 +27,7 @@ impl UniverseSimulationUpdaterSystem {
 
         let clock_entity = ecs.find_first_by_components_mut(&[&Components::UniverseClock]);
         if clock_entity.is_none() {
-            println!("Universe Clock not found in ECS World, cannot update the universe");
+            // println!("Universe Clock not found in ECS World, cannot update the universe");
             return;
         }
 

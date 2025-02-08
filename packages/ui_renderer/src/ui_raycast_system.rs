@@ -21,7 +21,7 @@ impl UIRaycastSystem {
         ecs: &mut ECSWorld,
         cursor_pos: DVec2,
     ) {
-        println!("UIRaycastSystem / update");
+        // println!("UIRaycastSystem / update");
 
         raycast_result.clear();
 
@@ -44,6 +44,6 @@ impl UIRaycastSystem {
 
         raycast_result.sort_by(|a, b| a.z_index.partial_cmp(&b.z_index).unwrap());
 
-        println!("{:?}", *raycast_result);
+        // println!("{:?}", *raycast_result);
     }
 }

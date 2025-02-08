@@ -2,5 +2,6 @@
   "keys": {
     "Pause": "Escape"
   },
-  "mouse_buttons": {}
+  "mouse_buttons": {},
+  "gamepad_buttons": {}
 }

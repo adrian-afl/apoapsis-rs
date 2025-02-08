@@ -42,10 +42,10 @@ impl UISystem {
     }
 
     pub fn update(&mut self, ecs: &mut ECSWorld, cursor_pos: DVec2) {
-        println!("UIRenderer / update");
+        // println!("UIRenderer / update");
 
         let detected_entity_ids = Mutex::new(vec![]);
-        println!("UIRenderer / update A");
+        // println!("UIRenderer / update A");
         ecs.parallel_process_all_by_components(&[&Components::UIBox], |entity| {
             detected_entity_ids.lock().unwrap().push(entity.id);
             //
@@ -123,14 +123,14 @@ impl UISystem {
             )
             .unwrap();
         });
-        println!("UIRenderer / update B");
+        // println!("UIRenderer / update B");
 
         let mut locked_map = self.currently_rendered_items.write().unwrap();
 
         let detected_entity_ids = detected_entity_ids.lock().unwrap();
         locked_map.retain(|k, _| detected_entity_ids.contains(k));
 
-        println!("UIRenderer / update C");
+        // println!("UIRenderer / update C");
 
         let mut ui_drawer = self.ui_drawer.lock().unwrap();
         ui_drawer

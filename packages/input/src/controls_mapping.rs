@@ -1,6 +1,7 @@
 use crate::controls::ControlEvent;
 use crate::controls::Controls;
 use common_util::strip_json_line_comments::strip_json_line_comments;
+use gilrs::Button;
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::fs;
@@ -61,6 +62,7 @@ pub enum ControlMapItem {
 struct ControlMap {
     pub keys: HashMap<ControlMapItem, KeyCode>,
     pub mouse_buttons: HashMap<ControlMapItem, MouseButton>,
+    pub gamepad_buttons: HashMap<ControlMapItem, Button>,
 }
 
 pub struct ControlsMapping {
@@ -111,6 +113,21 @@ impl ControlsMapping {
                 }
             }
             PhysicalKey::Unidentified(_) => (),
+        }
+        result
+    }
+
+    pub fn map_gamepad_event(&self, button: Button, state: bool) -> Vec<ControlEvent> {
+        let mut result = vec![];
+        for entry in self.control_map.gamepad_buttons.iter() {
+            let control_map_item = entry.0;
+            let gamepad_button = entry.1;
+            if button == *gamepad_button {
+                result.push(match state {
+                    true => ControlEvent::ControlActivate(control_map_item.clone()),
+                    false => ControlEvent::ControlRelease(control_map_item.clone()),
+                });
+            }
         }
         result
     }

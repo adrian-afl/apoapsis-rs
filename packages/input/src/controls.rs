@@ -1,5 +1,6 @@
 use crate::controls_mapping::{ControlMapItem, ControlsMapping};
 use crate::mouse_input::MouseInput;
+use gilrs::{Event, EventType, Gamepad, GamepadId, Gilrs};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use winit::event::MouseButton;
@@ -17,6 +18,8 @@ pub struct Controls {
     new_events: Vec<ControlEvent>,
     pub mouse: MouseInput,
     controls_state: HashMap<ControlMapItem, bool>,
+    gamepad_helper: Gilrs,
+    active_gamepad: Option<GamepadId>,
 }
 
 impl Controls {
@@ -26,6 +29,8 @@ impl Controls {
             mouse: MouseInput::new(window.clone()),
             mapping: ControlsMapping::new(),
             controls_state: HashMap::new(),
+            gamepad_helper: Gilrs::new().unwrap(),
+            active_gamepad: None,
         }
     }
 
@@ -45,6 +50,43 @@ impl Controls {
         for event in mapped {
             self.handle_control_event(event);
         }
+    }
+
+    pub fn update_gamepad_helper(&mut self) {
+        while let Some(Event {
+            id, event, time, ..
+        }) = self.gamepad_helper.next_event()
+        {
+            println!("{:?} New event from {}: {:?}", time, id, event);
+            self.active_gamepad = Some(id);
+            match event {
+                EventType::ButtonPressed(b, _) => {
+                    let mapped = self.mapping.map_gamepad_event(b, true);
+                    for event in mapped {
+                        self.handle_control_event(event);
+                    }
+                }
+                EventType::ButtonReleased(b, _) => {
+                    let mapped = self.mapping.map_gamepad_event(b, false);
+                    for event in mapped {
+                        self.handle_control_event(event);
+                    }
+                }
+                EventType::ButtonRepeated(_, _) => {}
+                EventType::ButtonChanged(_, _, _) => {}
+                EventType::AxisChanged(_, _, _) => {}
+                EventType::Connected => {}
+                EventType::Disconnected => {}
+                EventType::Dropped => {}
+                EventType::ForceFeedbackEffectCompleted => {}
+                _ => {}
+            }
+        }
+    }
+
+    pub fn get_active_gamepad(&self) -> Option<Gamepad> {
+        self.active_gamepad
+            .map(|id| self.gamepad_helper.gamepad(id))
     }
 
     fn handle_control_event(&mut self, event: ControlEvent) {

@@ -127,7 +127,7 @@ impl RenderingSystem {
         total_time: f64,
         delta_time: f64,
     ) {
-        println!("RenderingSystem / update");
+        // println!("RenderingSystem / update");
 
         // this list here is so that if entity disappears, the mesh is cleaned up
         let detected_mesh_component_ids = Mutex::new(vec![]);
@@ -137,7 +137,7 @@ impl RenderingSystem {
         ecs.parallel_process_all_by_components(
             &[&Components::Mesh, &Components::Transform],
             |entity| {
-                println!("RenderingSystem / Parallel {}", entity.id);
+                // println!("RenderingSystem / Parallel {}", entity.id);
                 let transform_component = entity.components.transform.as_ref().unwrap();
                 let mesh_components = &entity.components.mesh;
 
@@ -146,7 +146,7 @@ impl RenderingSystem {
                         .lock()
                         .unwrap()
                         .push(mesh_component.id);
-                    println!("RenderingSystem / For mesh component {}", mesh_component.id);
+                    // println!("RenderingSystem / For mesh component {}", mesh_component.id);
                     let relative_position = &transform_component.position - &camera.position;
                     let relative_position = relative_position.to_dvec3();
 
@@ -159,14 +159,14 @@ impl RenderingSystem {
                         .contains_key(&mesh_component.id);
 
                     if !should_render && exists {
-                        println!("RenderingSystem / REMOVE {}", mesh_component.id);
+                        // println!("RenderingSystem / REMOVE {}", mesh_component.id);
                         self.currently_rendered_meshes
                             .try_write()
                             .unwrap()
                             .remove(&mesh_component.id);
                         exists = false;
                     } else if should_render && !exists {
-                        println!("RenderingSystem / ADD {}", mesh_component.id);
+                        // println!("RenderingSystem / ADD {}", mesh_component.id);
                         match self.create_mesh_from_description(&mesh_component.description) {
                             Err(err) => println!("Failed to create a mesh! Reason: {}", err),
                             Ok(mesh) => {
@@ -180,7 +180,7 @@ impl RenderingSystem {
                     }
 
                     if should_render && exists {
-                        println!("RenderingSystem / UPDATE {}", mesh_component.id);
+                        // println!("RenderingSystem / UPDATE {}", mesh_component.id);
                         let mut locked_map = self.currently_rendered_meshes.try_write().unwrap();
                         let mesh = locked_map.get_mut(&mesh_component.id).unwrap();
                         mesh.position.assign(&transform_component.position);
@@ -200,9 +200,9 @@ impl RenderingSystem {
         locked_map.retain(|k, _| detected_mesh_component_ids.contains(k));
         drop(locked_map);
 
-        println!("RenderingSystem / After render");
+        // println!("RenderingSystem / After render");
 
-        println!("RenderingSystem / Draw");
+        // println!("RenderingSystem / Draw");
 
         let render_result = self.renderer.lock().unwrap().draw(
             &self
@@ -218,7 +218,7 @@ impl RenderingSystem {
             delta_time,
         );
 
-        println!("RenderingSystem / End");
+        // println!("RenderingSystem / End");
         match render_result {
             Ok(_) => (),
             Err(err) => println!("Render failed! Reason: {}", err),
