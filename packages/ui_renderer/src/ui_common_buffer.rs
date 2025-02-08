@@ -73,7 +73,6 @@ impl UICommonBuffer {
             }
         }
 
-        self.buffer.unmap()?;
         Ok(())
     }
 }

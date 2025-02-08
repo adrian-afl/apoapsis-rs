@@ -43,7 +43,6 @@ impl IcosphereDataBuffer {
             offset += write_mat4(ptr, offset, *matrix);
         }
 
-        self.buffer.unmap()?;
         Ok(())
     }
 }

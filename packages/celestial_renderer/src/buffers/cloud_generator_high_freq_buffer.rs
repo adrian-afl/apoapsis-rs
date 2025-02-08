@@ -44,7 +44,6 @@ impl CloudGeneratorHighFreqBuffer {
         );
         offset += write_float(ptr, offset, frequency);
 
-        self.buffer.unmap()?;
         Ok(())
     }
 }

@@ -89,7 +89,6 @@ impl UIItemBuffer {
             offset += write_uint(ptr, offset, index as u32);
         }
 
-        self.buffer.unmap()?;
         Ok(())
     }
 }

@@ -49,7 +49,6 @@ impl CommonBuffer {
 
         offset += write_float(ptr, offset, elapsed);
 
-        self.buffer.unmap()?;
         Ok(())
     }
 }

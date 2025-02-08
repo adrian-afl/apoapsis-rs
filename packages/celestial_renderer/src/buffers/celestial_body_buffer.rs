@@ -191,7 +191,6 @@ impl CelestialBodyBuffer {
         offset += write_vec3_zero(ptr, offset, star_direction.to_dvec3());
         offset += write_vec3_zero(ptr, offset, star_radiance);
 
-        self.buffer.unmap()?;
         Ok(())
     }
 }

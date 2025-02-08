@@ -209,7 +209,7 @@ impl Icosphere {
             subdivisions,
         );
 
-        let _exclusivity_lock = GLOBAL_LOCK.lock().unwrap(); // this probably could be done better if i did it in vengine
+        //let _exclusivity_lock = GLOBAL_LOCK.lock().unwrap(); // this probably could be done better if i did it in vengine
 
         let terrain_buffer = toolkit.create_vertex_buffer_from_data(
             segment.terrain_vertex_buffer,
@@ -220,7 +220,7 @@ impl Icosphere {
             &WATER_ICOSPHERE_VERTEX_ATTRIBUTES,
         )?;
 
-        drop(_exclusivity_lock);
+        //drop(_exclusivity_lock);
 
         Ok(LoadedGeometry {
             terrain_vertex_buffer: terrain_buffer,

@@ -31,7 +31,6 @@ impl OutputBuffer {
 
         offset += write_float(ptr, offset, exposure);
 
-        self.buffer.unmap()?;
         Ok(())
     }
 }

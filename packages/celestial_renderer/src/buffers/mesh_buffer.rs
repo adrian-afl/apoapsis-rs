@@ -221,7 +221,6 @@ impl MeshBuffer {
             },
         );
 
-        self.buffer.unmap()?;
         Ok(())
     }
 }
