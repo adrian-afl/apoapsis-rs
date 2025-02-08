@@ -1,0 +1,12 @@
+[package]
+name = "main_menu_stage"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+math = { path = "../../math" }
+ecs = { path = "../../ecs" }
+input = { path = "../../input" }
+core = { path = "../../core" }
+glam = { version = "0.29.2" }
+dashu-float = { version = "0.4.3" }

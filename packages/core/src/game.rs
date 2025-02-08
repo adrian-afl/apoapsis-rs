@@ -1,6 +1,5 @@
 use crate::camera_system::CameraSystem;
 use crate::game_stage::{GameStage, GameUpdateData, StageTransition};
-use crate::stages::splash_screen_stage::SplashScreenStage;
 use crate::stages::stages_stack::StageStack;
 use crate::time_counter::TimeCounter;
 use celestial_renderer::renderer::Renderer;
@@ -49,7 +48,11 @@ pub struct Game {
 }
 
 impl Game {
-    pub fn new(toolkit: Arc<VEToolkit>, window: Arc<Mutex<Window>>) -> Self {
+    pub fn new(
+        toolkit: Arc<VEToolkit>,
+        window: Arc<Mutex<Window>>,
+        initial_stage: Box<dyn GameStage>,
+    ) -> Self {
         let config = ResolutionConfig {
             width: 640,
             height: 480,
@@ -80,7 +83,7 @@ impl Game {
 
         let mut stage_stack = StageStack::new();
         // entrypoint to the game is here, this kicks off the whole thing:
-        stage_stack.push(Box::new(SplashScreenStage::new()));
+        stage_stack.push(initial_stage);
 
         Self {
             toolkit: toolkit.clone(),

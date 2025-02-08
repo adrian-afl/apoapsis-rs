@@ -15,4 +15,18 @@ impl UIColorComponent {
             color,
         }
     }
+
+    pub fn rgb(r: f64, g: f64, b: f64) -> Self {
+        Self {
+            id: acquire_next_id(),
+            color: DVec4::new(r, g, b, 1.0),
+        }
+    }
+
+    pub fn rgba(r: f64, g: f64, b: f64, a: f64) -> Self {
+        Self {
+            id: acquire_next_id(),
+            color: DVec4::new(r, g, b, a),
+        }
+    }
 }

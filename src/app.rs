@@ -1,5 +1,6 @@
 use core::game::Game;
 use glam::DVec2;
+use splash_screen_stage::splash_screen_stage::SplashScreenStage;
 use std::sync::{Arc, Mutex};
 use vengine_rs::core::toolkit::{App, VEToolkit};
 use winit::event::{DeviceEvent, DeviceId, ElementState, KeyEvent, MouseScrollDelta, WindowEvent};
@@ -12,7 +13,7 @@ pub struct GameWindowApp {
 impl GameWindowApp {
     pub fn new(toolkit: Arc<VEToolkit>, window: Arc<Mutex<Window>>) -> GameWindowApp {
         GameWindowApp {
-            game: Game::new(toolkit, window),
+            game: Game::new(toolkit, window, Box::new(SplashScreenStage::new())),
         }
     }
 }

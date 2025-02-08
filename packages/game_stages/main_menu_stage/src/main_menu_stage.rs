@@ -1,7 +1,5 @@
-use crate::game_stage::{GameStage, GameUpdateData, StageTransition};
+use core::game_stage::{GameStage, GameUpdateData, StageTransition};
 use dashu_float::DBig;
-use ecs::component_trait::Components::FirstPersonCameraControl;
-use ecs::components::camera::camera_focus_component::CameraFocusComponent;
 use ecs::components::camera::first_person_camera_control_component::FirstPersonCameraControlComponent;
 use ecs::components::common::transform_component::TransformComponent;
 use ecs::components::common::universe_clock_component::UniverseClockComponent;
@@ -13,11 +11,10 @@ use ecs::components::ui::ui_hover_cursor_component::UIHoverCursorComponent;
 use ecs::components::ui::ui_text_component::{UIFontSize, UITextComponent};
 use ecs::ecs_world::ECSWorld;
 use ecs::entity::Entity;
-use glam::{DMat3, DMat4, DQuat, DVec2, DVec3, DVec4};
-use input::controls::{ControlEvent, Controls};
+use glam::{DMat4, DQuat, DVec2, DVec3, DVec4};
+use input::controls::ControlEvent;
 use input::controls_mapping::ControlMapItem;
 use math::decimal_vector_3d::DecimalVector3d;
-use winit::keyboard::NamedKey::CameraFocus;
 
 pub struct SplashScreenStage {
     ecs: ECSWorld,

@@ -25,7 +25,7 @@ float linearstep(float edge0, float edge1, float x) {
 void main() {
     vec4 c = color;
     if(useTexture) {
-        c = texture(colorTexture, inoutUV); // TODO influence
+        c = c * texture(colorTexture, inoutUV); // TODO influence
     }
     // outColor = color;
 

@@ -96,7 +96,7 @@ impl UISystem {
             if let Some(color) = &entity.components.ui_color {
                 item.color = color.color;
             } else {
-                item.color = DVec4::new(0.0, 0.0, 0.0, 0.0);
+                item.color = DVec4::new(1.0, 1.0, 1.0, 1.0);
             }
 
             if let Some(color) = &entity.components.ui_hover_color {
