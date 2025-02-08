@@ -1,6 +1,7 @@
 use crate::camera_system::CameraSystem;
 use crate::game_stage::{GameStage, GameUpdateData, StageTransition};
 use crate::stages::stages_stack::StageStack;
+use crate::stages::warmup_stage::WarmupStage;
 use crate::time_counter::TimeCounter;
 use celestial_renderer::renderer::Renderer;
 use celestial_renderer::rendering_system::RenderingSystem;
@@ -84,6 +85,7 @@ impl Game {
         let mut stage_stack = StageStack::new();
         // entrypoint to the game is here, this kicks off the whole thing:
         stage_stack.push(initial_stage);
+        stage_stack.push(Box::new(WarmupStage::new()));
 
         Self {
             toolkit: toolkit.clone(),

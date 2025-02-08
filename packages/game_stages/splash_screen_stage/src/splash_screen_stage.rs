@@ -105,39 +105,20 @@ impl SplashScreenStage {
             part_progress: 0.0,
         }
     }
+
+    fn set_opacity(&mut self, entity_id: u64, opacity: f64) {
+        self.ecs[entity_id]
+            .components
+            .ui_color
+            .as_mut()
+            .unwrap()
+            .color
+            .w = opacity;
+    }
 }
 
 impl GameStage for SplashScreenStage {
     fn update(&mut self, update_data: GameUpdateData) -> StageTransition {
-        self.ecs
-            .find_by_id_mut(self.retro_prop_image_id)
-            .unwrap()
-            .components
-            .ui_color
-            .as_mut()
-            .unwrap()
-            .color
-            .w = 0.0;
-
-        self.ecs
-            .find_by_id_mut(self.afl_image_id)
-            .unwrap()
-            .components
-            .ui_color
-            .as_mut()
-            .unwrap()
-            .color
-            .w = 0.0;
-        self.ecs
-            .find_by_id_mut(self.logo_image_id)
-            .unwrap()
-            .components
-            .ui_color
-            .as_mut()
-            .unwrap()
-            .color
-            .w = 0.0;
-
         if self.part != SplashScreenPart::MainGameLogo {
             let opacity = (self.part_progress * PI).sin();
 
@@ -147,19 +128,7 @@ impl GameStage for SplashScreenStage {
                 SplashScreenPart::MainGameLogo => self.logo_image_id,
             };
 
-            self.ecs
-                .find_by_id_mut(entity_id)
-                .unwrap()
-                .components
-                .ui_color
-                .as_mut()
-                .unwrap()
-                .color
-                .w = opacity;
-
-            println!("opacity {opacity}, step {:?}", self.part);
-
-            self.part_progress += update_data.delta_time * 0.1;
+            self.set_opacity(entity_id, opacity);
 
             if self.part_progress > 1.0 {
                 self.part_progress = 0.0;
@@ -172,20 +141,10 @@ impl GameStage for SplashScreenStage {
         } else {
             let opacity = (self.part_progress.min(1.0) * PI / 2.0).sin();
 
-            println!("opacity {opacity}, step {:?}", self.part);
-
-            self.ecs
-                .find_by_id_mut(self.logo_image_id)
-                .unwrap()
-                .components
-                .ui_color
-                .as_mut()
-                .unwrap()
-                .color
-                .w = opacity;
-
-            self.part_progress += update_data.delta_time * 0.1;
+            self.set_opacity(self.logo_image_id, opacity);
         }
+
+        self.part_progress += update_data.delta_time * 0.5;
 
         StageTransition::DoNothing
     }

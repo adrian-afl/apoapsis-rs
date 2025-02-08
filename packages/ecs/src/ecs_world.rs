@@ -3,10 +3,39 @@ use crate::entity::{Entity, ENTITY_SEQ};
 use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::ops::{Index, IndexMut};
 use std::sync::atomic::Ordering;
 
 pub struct ECSWorld {
     entities: HashMap<u64, Entity>,
+}
+
+impl Index<u64> for ECSWorld {
+    type Output = Entity;
+
+    fn index(&self, index: u64) -> &Self::Output {
+        self.find_by_id(index).unwrap()
+    }
+}
+
+impl IndexMut<u64> for ECSWorld {
+    fn index_mut(&mut self, index: u64) -> &mut Self::Output {
+        self.find_by_id_mut(index).unwrap()
+    }
+}
+
+impl Index<&str> for ECSWorld {
+    type Output = Entity;
+
+    fn index(&self, index: &str) -> &Self::Output {
+        self.find_by_name(index).unwrap()
+    }
+}
+
+impl IndexMut<&str> for ECSWorld {
+    fn index_mut(&mut self, index: &str) -> &mut Self::Output {
+        self.find_by_name_mut(index).unwrap()
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
