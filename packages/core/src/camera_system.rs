@@ -1,6 +1,7 @@
 use ecs::component_trait::Components;
 use ecs::ecs_world::ECSWorld;
 use renderer_common::camera::Camera;
+use std::f64::consts::PI;
 
 pub struct CameraSystem {}
 
@@ -27,7 +28,7 @@ impl CameraSystem {
                     camera.position.assign(&transform.position);
                     camera.orientation = transform.orientation.clone();
                     camera.set_perspective(
-                        first_person_component.fov,
+                        first_person_component.fov * (PI / 180.0),
                         4.0 / 3.0,
                         0.1,
                         9999999999.0,
