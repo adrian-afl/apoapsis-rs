@@ -1,31 +1,24 @@
 use crate::time_counter::TimeCounter;
 use ecs::components::ui::ui_text_component::UIFontSize;
-use ecs::ecs_world::ECSWorld;
 use glam::DVec2;
 use input::controls::Controls;
 use ui_renderer::ui_system::UISystem;
 use universe_simulation::simulation::Simulation;
 
-pub enum StageTransition {
-    PushStage(Box<dyn GameStage>),
-    PopSelf,
-    DoNothing,
-}
-
-pub struct GameUpdateData<'a> {
+pub struct GameContext<'a> {
     ui_system: &'a UISystem,
     pub total_time: f64,
     pub delta_time: f64,
-    pub controls: &'a mut Controls,
+    pub controls: &'a Controls,
     pub universe: &'a Simulation,
 }
 
-impl<'a> GameUpdateData<'a> {
+impl<'a> GameContext<'a> {
     pub fn new(
         ui_system: &'a UISystem,
         time_counter: &TimeCounter,
         universe: &'a Simulation,
-        controls: &'a mut Controls,
+        controls: &'a Controls,
     ) -> Self {
         Self {
             ui_system,
@@ -43,9 +36,4 @@ impl<'a> GameUpdateData<'a> {
             .unwrap()
             .measure_text_pixels(text, font_size)
     }
-}
-
-pub trait GameStage {
-    fn update(&mut self, update_data: GameUpdateData) -> StageTransition;
-    fn get_ecs_world(&mut self) -> &mut ECSWorld;
 }

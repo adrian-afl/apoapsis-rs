@@ -1,3 +1,4 @@
+use crate::sin_cos::f64_to_dbig;
 use dashu_float::ops::SquareRoot;
 use dashu_float::DBig;
 use glam::DVec3;
@@ -441,6 +442,19 @@ impl std::ops::Mul<&DBig> for &DecimalVector3d {
             x: &self.x * rhs,
             y: &self.y * rhs,
             z: &self.z * rhs,
+        }
+    }
+}
+
+impl std::ops::Mul<f64> for &DecimalVector3d {
+    type Output = DecimalVector3d;
+
+    fn mul(self, rhs: f64) -> DecimalVector3d {
+        let dbig = f64_to_dbig(rhs);
+        DecimalVector3d {
+            x: &self.x * &dbig,
+            y: &self.y * &dbig,
+            z: &self.z * &dbig,
         }
     }
 }

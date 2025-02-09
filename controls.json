@@ -1,7 +1,12 @@
 {
   "keys": {
-    "Pause": "Escape"
+    "Pause": "Escape",
+    "Start": "Enter"
   },
   "mouse_buttons": {},
-  "gamepad_buttons": {}
+  "gamepad_buttons": {
+    "Start": "Start",
+    "Confirm": "South",
+    "Cancel": "East"
+  }
 }

@@ -1,6 +1,8 @@
+use crate::main_menu_stage::MainMenuStage;
+use crate::stage_factory::StageFactory;
 use common_util::easing::ease_cubic_in_out;
-use core::game::Game;
-use core::game_stage::{GameStage, GameUpdateData, StageTransition};
+use core::game_context::GameContext;
+use core::game_stage_trait::{GameStage, StageTransition};
 use dashu_float::DBig;
 use ecs::components::camera::first_person_camera_control_component::FirstPersonCameraControlComponent;
 use ecs::components::common::transform_component::TransformComponent;
@@ -11,12 +13,11 @@ use ecs::components::ui::ui_text_component::{UIFontSize, UITextComponent};
 use ecs::components::ui::ui_texture_component::UITextureComponent;
 use ecs::ecs_world::ECSWorld;
 use ecs::entity::Entity;
-use glam::{dvec2, DMat4, DQuat, DVec2, DVec3, DVec4};
+use glam::{DMat4, DQuat, DVec2, DVec3, DVec4};
 use input::controls::ControlEvent;
 use input::controls_mapping::ControlMapItem;
 use math::decimal_vector_3d::DecimalVector3d;
 use std::f64::consts::PI;
-use std::sync::RwLock;
 use universe_simulation::simulation::Simulation;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -81,7 +82,7 @@ fn create_text(content: &str, x: f64, y: f64, width: f64, height: f64) -> Entity
 }
 
 impl SplashScreenStage {
-    pub fn new(_: &Game) -> Self {
+    pub fn new() -> Self {
         let mut ecs = ECSWorld::new();
 
         let retro_prop_image = create_image(
@@ -180,13 +181,24 @@ impl SplashScreenStage {
 }
 
 impl GameStage for SplashScreenStage {
-    fn update(&mut self, update_data: GameUpdateData) -> StageTransition {
+    fn update(&mut self, context: &GameContext) -> StageTransition {
         match self.state {
             SplashScreenState::RetroPropulsionLogo => {
-                self.set_camera_offset(update_data.universe, 0.0);
+                self.set_camera_offset(context.universe, 0.0);
 
                 let opacity = (self.part_progress * PI).sin();
                 self.set_opacity(self.retro_prop_image_id, opacity);
+
+                for event in context.controls.get_new_events() {
+                    if let ControlEvent::ControlActivate(button) = event {
+                        if button == &ControlMapItem::Start || button == &ControlMapItem::Confirm {
+                            self.set_opacity(self.retro_prop_image_id, opacity);
+                            self.part_progress = 0.0;
+                            self.state = SplashScreenState::AFLGamingLogo;
+                        }
+                    }
+                }
+
                 if self.part_progress > 1.0 {
                     self.part_progress = 0.0;
                     self.state = SplashScreenState::AFLGamingLogo;
@@ -195,6 +207,17 @@ impl GameStage for SplashScreenStage {
             SplashScreenState::AFLGamingLogo => {
                 let opacity = (self.part_progress * PI).sin();
                 self.set_opacity(self.afl_image_id, opacity);
+
+                for event in context.controls.get_new_events() {
+                    if let ControlEvent::ControlActivate(button) = event {
+                        if button == &ControlMapItem::Start || button == &ControlMapItem::Confirm {
+                            self.set_opacity(self.afl_image_id, opacity);
+                            self.part_progress = 0.0;
+                            self.state = SplashScreenState::MainGameLogo;
+                        }
+                    }
+                }
+
                 if self.part_progress > 1.0 {
                     self.part_progress = 0.0;
                     self.state = SplashScreenState::MainGameLogo;
@@ -203,6 +226,17 @@ impl GameStage for SplashScreenStage {
             SplashScreenState::MainGameLogo => {
                 let opacity = (self.part_progress.min(1.0) * PI / 2.0).sin();
                 self.set_opacity(self.logo_image_id, opacity);
+
+                for event in context.controls.get_new_events() {
+                    if let ControlEvent::ControlActivate(button) = event {
+                        if button == &ControlMapItem::Start || button == &ControlMapItem::Confirm {
+                            self.set_opacity(self.logo_image_id, opacity);
+                            self.part_progress = 0.0;
+                            self.state = SplashScreenState::LogoWithPressStart;
+                        }
+                    }
+                }
+
                 if self.part_progress > 1.0 {
                     self.part_progress = 0.0;
                     self.state = SplashScreenState::LogoWithPressStart;
@@ -213,12 +247,12 @@ impl GameStage for SplashScreenStage {
                 self.set_text_opacity(self.click_start_id, opacity);
 
                 let earth_flyin = ((self.part_progress * 0.2).min(1.0) * PI / 2.0).sin();
-                self.set_camera_offset(update_data.universe, earth_flyin);
+                self.set_camera_offset(context.universe, earth_flyin);
 
                 // here waiting for event
-                for event in update_data.controls.consume_new_events() {
+                for event in context.controls.get_new_events() {
                     if let ControlEvent::ControlActivate(button) = event {
-                        if button == ControlMapItem::Pause {
+                        if button == &ControlMapItem::Start || button == &ControlMapItem::Confirm {
                             self.part_progress = 0.0;
                             self.state = SplashScreenState::FadeOut;
                         }
@@ -232,10 +266,11 @@ impl GameStage for SplashScreenStage {
 
                 if self.part_progress > 1.0 {
                     // return here a state transition
+                    return StageTransition::PushStage(Box::new(MainMenuStage::new(context)));
                 }
             }
         }
-        self.part_progress += update_data.delta_time * 0.5;
+        self.part_progress += context.delta_time * 0.5;
         StageTransition::DoNothing
     }
 

@@ -1,4 +1,4 @@
-use crate::game_stage::GameStage;
+use crate::game_stage_trait::GameStage;
 use std::sync::{Arc, Mutex};
 
 pub struct StageStack {

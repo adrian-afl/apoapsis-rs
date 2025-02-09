@@ -103,7 +103,11 @@ impl Controls {
         self.new_events.push(event);
     }
 
-    pub fn consume_new_events(&mut self) -> Vec<ControlEvent> {
-        std::mem::take(&mut self.new_events)
+    pub fn get_new_events(&self) -> &Vec<ControlEvent> {
+        &self.new_events
+    }
+
+    pub fn clear_events(&mut self) {
+        self.new_events = Vec::new();
     }
 }

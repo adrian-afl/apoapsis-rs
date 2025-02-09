@@ -1,4 +1,5 @@
-use crate::game_stage::{GameStage, GameUpdateData, StageTransition};
+use crate::game_context::GameContext;
+use crate::game_stage_trait::{GameStage, StageTransition};
 use ecs::ecs_world::ECSWorld;
 use ecs::entity::Entity;
 
@@ -20,7 +21,7 @@ impl WarmupStage {
 }
 
 impl GameStage for WarmupStage {
-    fn update(&mut self, _: GameUpdateData) -> StageTransition {
+    fn update(&mut self, _: &GameContext) -> StageTransition {
         self.countdown -= 1;
         if self.countdown == 0 {
             StageTransition::PopSelf

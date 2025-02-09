@@ -1,5 +1,6 @@
 use crate::camera_system::CameraSystem;
-use crate::game_stage::{GameStage, GameUpdateData, StageTransition};
+use crate::game_context::GameContext;
+use crate::game_stage_trait::{GameStage, StageTransition};
 use crate::stages::stages_stack::StageStack;
 use crate::time_counter::TimeCounter;
 use celestial_renderer::renderer::Renderer;
@@ -54,7 +55,7 @@ impl Game {
             height: 480,
         };
 
-        let controls = Controls::new(window.clone());
+        let mut controls = Controls::new(window.clone());
 
         let mut universe_simulation = Simulation::new();
         let ui_system = UISystem::new(toolkit.clone(), &config);
@@ -117,6 +118,15 @@ impl Game {
             .measure_text_pixels(text, font_size)
     }
 
+    pub fn get_context(&self) -> GameContext {
+        GameContext::new(
+            &self.ui_system,
+            &self.time_counter,
+            &self.universe_simulation,
+            &self.controls,
+        )
+    }
+
     pub fn update(&mut self) {
         let window_size = self.window.lock().unwrap().inner_size();
         self.time_counter.update_time();
@@ -126,14 +136,15 @@ impl Game {
 
         if let Some(stage) = &self.stage_stack.head() {
             let mut stage = stage.lock().unwrap();
-            let update_data = GameUpdateData::new(
+            let context = GameContext::new(
                 &self.ui_system,
                 &self.time_counter,
                 &self.universe_simulation,
                 &mut self.controls,
             );
 
-            transition_from_update = stage.update(update_data);
+            transition_from_update = stage.update(&context);
+            self.controls.clear_events();
 
             let stage_ecs = stage.get_ecs_world();
 

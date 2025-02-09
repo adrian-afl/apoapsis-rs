@@ -883,6 +883,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "aa9a19cbb55df58761df49b23516a86d432839add4af60fc256da840f66ed35b"
 
 [[package]]
+name = "game_stages"
+version = "0.1.0"
+dependencies = [
+ "common_util",
+ "core",
+ "dashu-float",
+ "ecs",
+ "glam",
+ "input",
+ "math",
+ "universe_simulation",
+]
+
+[[package]]
 name = "gethostname"
 version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1278,18 +1292,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "19b955cdeb2a02b9117f121ce63aa52d08ade45de53e48fe6a38b39c10f6f709"
 dependencies = [
  "libc",
-]
-
-[[package]]
-name = "main_menu_stage"
-version = "0.1.0"
-dependencies = [
- "core",
- "dashu-float",
- "ecs",
- "glam",
- "input",
- "math",
 ]
 
 [[package]]

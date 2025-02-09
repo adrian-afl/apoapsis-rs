@@ -15,6 +15,10 @@ pub enum ControlMapItem {
     MenuClickPrimary,
     MenuClickSecondary,
 
+    Start,
+    Confirm,
+    Cancel,
+
     WalkLeft,
     WalkRight,
     WalkForwards,

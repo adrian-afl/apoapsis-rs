@@ -1,11 +1,12 @@
 use core::game::Game;
 use core::stages::warmup_stage::WarmupStage;
+use game_stages::splash_screen_stage::SplashScreenStage;
 use glam::DVec2;
-use splash_screen_stage::splash_screen_stage::SplashScreenStage;
 use std::sync::{Arc, Mutex};
 use vengine_rs::core::toolkit::{App, VEToolkit};
 use winit::event::{DeviceEvent, DeviceId, ElementState, KeyEvent, MouseScrollDelta, WindowEvent};
 use winit::window::Window;
+use game_stages::stage_factory::StageFactory;
 
 pub struct GameWindowApp {
     game: Game,
@@ -13,7 +14,10 @@ pub struct GameWindowApp {
 
 impl GameWindowApp {
     pub fn new(toolkit: Arc<VEToolkit>, window: Arc<Mutex<Window>>) -> GameWindowApp {
-        let mut game = Game::new(toolkit, window);
+        let mut game = Arc::new(Game::new(toolkit, window));
+        
+        let stage_factory = StageFactory::
+        
         let initial_stage = Box::new(SplashScreenStage::new(&game));
         game.push_game_stage(initial_stage);
         game.push_game_stage(Box::new(WarmupStage::new()));
