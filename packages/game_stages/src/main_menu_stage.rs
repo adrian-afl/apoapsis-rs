@@ -139,9 +139,9 @@ impl MainMenuStage {
         let camera = &mut self.ecs[self.camera_id];
         let mut cam_transform = camera.components.transform.as_mut().unwrap();
 
-        let campos_start = &earth.position + DecimalVector3d::from_f64(-15000000.0, 6000000.0, 0.0);
+        let campos_start = &earth.position + DecimalVector3d::from_f64(-15000000.0, 8000000.0, 0.0);
         let campos_end =
-            &earth.position + DecimalVector3d::from_f64(-15000000.0, 6000000.0, 6000000.0);
+            &earth.position + DecimalVector3d::from_f64(-15000000.0, 4000000.0, -6000000.0);
 
         let eased = ease_expo_out(offset_progress);
 

@@ -171,7 +171,7 @@ impl SplashScreenStage {
         let camera = &mut self.ecs[self.camera_id];
         let mut cam_transform = camera.components.transform.as_mut().unwrap();
         cam_transform.position = &earth.position
-            + DecimalVector3d::from_f64(-15000000.0, (1.0 - eased) * 5000000.0 + 6000000.0, 0.0);
+            + DecimalVector3d::from_f64(-15000000.0, (1.0 - eased) * 2000000.0 + 8000000.0, 0.0);
         cam_transform.orientation = DQuat::from_mat4(&DMat4::look_to_rh(
             DVec3::new(0.0, 0.0, 0.0),
             DVec3::new(1.0, 0.0, 0.0),
@@ -192,7 +192,7 @@ impl GameStage for SplashScreenStage {
                 for event in context.controls.get_new_events() {
                     if let ControlEvent::ControlActivate(button) = event {
                         if button == &ControlMapItem::Start || button == &ControlMapItem::Confirm {
-                            self.set_opacity(self.retro_prop_image_id, opacity);
+                            self.set_opacity(self.retro_prop_image_id, 0.0);
                             self.part_progress = 0.0;
                             self.state = SplashScreenState::AFLGamingLogo;
                         }
@@ -211,7 +211,7 @@ impl GameStage for SplashScreenStage {
                 for event in context.controls.get_new_events() {
                     if let ControlEvent::ControlActivate(button) = event {
                         if button == &ControlMapItem::Start || button == &ControlMapItem::Confirm {
-                            self.set_opacity(self.afl_image_id, opacity);
+                            self.set_opacity(self.afl_image_id, 0.0);
                             self.part_progress = 0.0;
                             self.state = SplashScreenState::MainGameLogo;
                         }
@@ -230,7 +230,7 @@ impl GameStage for SplashScreenStage {
                 for event in context.controls.get_new_events() {
                     if let ControlEvent::ControlActivate(button) = event {
                         if button == &ControlMapItem::Start || button == &ControlMapItem::Confirm {
-                            self.set_opacity(self.logo_image_id, opacity);
+                            self.set_opacity(self.logo_image_id, 1.0);
                             self.part_progress = 0.0;
                             self.state = SplashScreenState::LogoWithPressStart;
                         }
@@ -246,13 +246,15 @@ impl GameStage for SplashScreenStage {
                 let opacity = (self.part_progress.min(1.0) * PI / 2.0).sin();
                 self.set_text_opacity(self.click_start_id, opacity);
 
-                let earth_flyin = ((self.part_progress * 0.2).min(1.0) * PI / 2.0).sin();
+                let earth_flyin = ((self.part_progress * 0.5).min(1.0) * PI / 2.0).sin();
                 self.set_camera_offset(context.universe, earth_flyin);
 
                 // here waiting for event
                 for event in context.controls.get_new_events() {
                     if let ControlEvent::ControlActivate(button) = event {
                         if button == &ControlMapItem::Start || button == &ControlMapItem::Confirm {
+                            self.set_camera_offset(context.universe, 1.0);
+
                             self.part_progress = 0.0;
                             self.state = SplashScreenState::FadeOut;
                         }
@@ -260,11 +262,11 @@ impl GameStage for SplashScreenStage {
                 }
             }
             SplashScreenState::FadeOut => {
-                let opacity = 1.0 - (self.part_progress.min(1.0) * PI / 2.0).sin();
+                let opacity = 1.0 - ((self.part_progress * 2.0).min(1.0) * PI / 2.0).sin();
                 self.set_opacity(self.logo_image_id, opacity);
                 self.set_text_opacity(self.click_start_id, opacity);
 
-                if self.part_progress > 1.0 {
+                if self.part_progress > 0.5 {
                     // return here a state transition
                     return StageTransition::PushStage(Box::new(MainMenuStage::new(context)));
                 }
