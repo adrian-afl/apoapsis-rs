@@ -4,12 +4,12 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-renderer_common = { path = "../renderer_common" }
-ui_renderer = { path = "../ui_renderer" }
-universe_simulation = { path = "../universe_simulation" }
-math = { path = "../math" }
-ecs = { path = "../ecs" }
-planet_generator_library = { path = "../planet_generator/library" }
+renderer_common = { workspace = true }
+ui_renderer = { workspace = true }
+universe_simulation = { workspace = true }
+math = { workspace = true }
+ecs = { workspace = true }
+planet_generator_library = { workspace = true }
 
 vengine-rs = { workspace = true }
 dashu-float = { workspace = true }

@@ -4,13 +4,13 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-celestial_renderer = { path = "../celestial_renderer" }
-ui_renderer = { path = "../ui_renderer" }
-real_physics_engine = { path = "../real_physics_engine" }
-renderer_common = { path = "../renderer_common" }
-ecs = { path = "../ecs" }
-input = { path = "../input" }
-universe_simulation = { path = "../universe_simulation" }
+celestial_renderer = { workspace = true }
+ui_renderer = { workspace = true }
+real_physics_engine = { workspace = true }
+renderer_common = { workspace = true }
+ecs = { workspace = true }
+input = { workspace = true }
+universe_simulation = { workspace = true }
 
 vengine-rs = { workspace = true }
 winit = { workspace = true, features = ["rwh_06", "serde"] }

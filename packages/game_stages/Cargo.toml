@@ -4,12 +4,12 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-math = { path = "../math" }
-ecs = { path = "../ecs" }
-input = { path = "../input" }
-core = { path = "../core" }
-universe_simulation = { path = "../universe_simulation" }
-common_util = { path = "../common_util" }
+math = { workspace = true }
+ecs = { workspace = true }
+input = { workspace = true }
+core = { workspace = true }
+universe_simulation = { workspace = true }
+common_util = { workspace = true }
 
 glam = { workspace = true }
 dashu-float = { workspace = true }

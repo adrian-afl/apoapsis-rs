@@ -41,12 +41,25 @@ thiserror = "2.0.11"
 rapier3d-f64 = { version = "0.23.0", features = ["simd-stable"] }
 fontdue = "0.9.2"
 
-[dependencies]
-game_stages = { path = "packages/game_stages" }
+celestial_renderer = { path = "packages/celestial_renderer" }
+common_util = { path = "packages/common_util" }
 core = { path = "packages/core" }
+ecs = { path = "packages/ecs" }
+game_stages = { path = "packages/game_stages" }
+input = { path = "packages/input" }
+math = { path = "packages/math" }
+planet_generator_library = { path = "packages/planet_generator/library" }
+real_physics_engine = { path = "packages/real_physics_engine" }
+renderer_common = { path = "packages/renderer_common" }
+ui_renderer = { path = "packages/ui_renderer" }
+universe_simulation = { path = "packages/universe_simulation" }
+
+[dependencies]
 
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 glam = { workspace = true, features = ["serde"] }
 vengine-rs = { workspace = true }
 winit = { workspace = true, features = ["rwh_06", "serde"] }
+game_stages = { path = "packages/game_stages" }
+core = { path = "packages/core" }

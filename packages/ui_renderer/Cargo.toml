@@ -4,8 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-renderer_common = { path = "../renderer_common" }
-ecs = { path = "../ecs" }
+renderer_common = { workspace = true }
+ecs = { workspace = true }
 
 vengine-rs = { workspace = true }
 fontdue = { workspace = true }

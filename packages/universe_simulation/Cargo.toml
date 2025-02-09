@@ -4,10 +4,10 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-renderer_common = { path = "../renderer_common" }
-common_util = { path = "../common_util" }
-math = { path = "../math" }
-ecs = { path = "../ecs" }
+renderer_common = { workspace = true }
+common_util = { workspace = true }
+math = { workspace = true }
+ecs = { workspace = true }
 
 dashu-float = { workspace = true }
 glam = { workspace = true, features = ["serde"] }

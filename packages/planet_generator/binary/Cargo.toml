@@ -4,8 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-planet_generator_library = { path = "../library" }
-universe_simulation = { path = "../../universe_simulation" }
+planet_generator_library = { workspace = true }
+universe_simulation = { workspace = true }
 
 brotli = { workspace = true }
 clap = { workspace = true, features = ["derive"] }
