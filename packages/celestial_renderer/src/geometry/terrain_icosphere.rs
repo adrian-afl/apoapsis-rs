@@ -35,10 +35,10 @@ struct LoadedGeometry {
     pub level: u8,
 }
 
-pub struct Icosphere {
+pub struct TerrainIcosphere {
     radius: f64,
-    loaded_height: Option<CubeMapDataLayer<f64>>,
-    loaded_biome: Option<CubeMapDataLayer<LoadedBiomeData>>,
+    loaded_height: CubeMapDataLayer<f64>,
+    loaded_biome: CubeMapDataLayer<LoadedBiomeData>,
     base_icosphere: Arc<Vec<Triangle>>,
     currently_loaded: Mutex<HashMap<u16, LoadedGeometry>>,
     metadata: Vec<IcosphereMetadataItem>,
@@ -48,9 +48,6 @@ pub struct Icosphere {
 
     data_buffer: IcosphereDataBuffer,
     pub data_set: VEDescriptorSet,
-    water_color: DVec3,
-    has_water: bool,
-    has_terrain: bool,
 }
 
 #[derive(PartialEq, Debug, Eq)]
@@ -71,17 +68,16 @@ struct WaterData {
     water_color: DVec3,
 }
 
-impl Icosphere {
+impl TerrainIcosphere {
     pub fn new(
         toolkit: &VEToolkit,
-        terrain_data: Option<TerrainData>,
-        water_data: Option<WaterData>,
+        radius: f64,
+        dir_path: String,
         thresholds: Vec<f64>,
         base_icosphere: Arc<Vec<Triangle>>,
         data_set_layout: &mut VEDescriptorSetLayout,
-    ) -> Result<Icosphere, RenderingError> {
-        let metadata_terrain = generate_icosphere_metadata(&base_icosphere, radius);
-        let metadata_water = generate_icosphere_metadata(&base_icosphere, radius);
+    ) -> Result<TerrainIcosphere, RenderingError> {
+        let metadata = generate_icosphere_metadata(&base_icosphere, radius);
 
         let maps_resolutions = get_maps_resolution(&dir_path);
 
@@ -91,10 +87,8 @@ impl Icosphere {
         let data_set = data_set_layout.create_descriptor_set()?;
         data_set.bind_buffer(0, &data_buffer.buffer)?;
 
-        Ok(Icosphere {
+        Ok(TerrainIcosphere {
             radius,
-            has_water,
-            has_terrain,
             base_icosphere,
             loaded_height: if has_terrain {
                 Some(load_binary_terrain_map(radius, &dir_path, maps_resolutions))

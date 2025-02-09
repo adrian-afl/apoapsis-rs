@@ -241,14 +241,16 @@ pub fn generate_icosphere_metadata(
 }
 
 pub struct IcosphereSegment {
-    pub terrain_vertex_buffer: Vec<u8>,
-    pub water_vertex_buffer: Vec<u8>,
+    pub terrain_vertex_buffer: Option<Vec<u8>>,
+    pub water_vertex_buffer: Option<Vec<u8>>,
 }
 
 pub fn generate_icosphere_segment(
+    has_terrain: bool,
+    has_water: bool,
     icosphere_triangles: &[Triangle],
-    height_data: &CubeMapDataLayer<f64>,
-    biome_data: &CubeMapDataLayer<LoadedBiomeData>,
+    height_data: Option<&CubeMapDataLayer<f64>>,
+    biome_data: Option<&CubeMapDataLayer<LoadedBiomeData>>,
     base_segment: u16,
     sphere_radius: f64,
     subdivisions: u8,
@@ -256,8 +258,16 @@ pub fn generate_icosphere_segment(
     let base = icosphere_triangles[base_segment as usize];
     let center = get_triangle_center(&base, sphere_radius);
 
-    let mut terrain_vertex_buffer: Cursor<Vec<u8>> = Cursor::new(Vec::new());
-    let mut water_vertex_buffer: Cursor<Vec<u8>> = Cursor::new(Vec::new());
+    let mut terrain_vertex_buffer: Option<Cursor<Vec<u8>>> = if has_terrain {
+        Some(Cursor::new(Vec::new()))
+    } else {
+        None
+    };
+    let mut water_vertex_buffer: Option<Cursor<Vec<u8>>> = if has_water {
+        Some(Cursor::new(Vec::new()))
+    } else {
+        None
+    };
 
     let subdivided = subdivide_triangle_multiple(base, subdivisions);
     for t in subdivided {
@@ -267,24 +277,40 @@ pub fn generate_icosphere_segment(
         let vec2dir = t[2].normalize();
         let directions_triangle: Triangle = [vec0dir, vec1dir, vec2dir];
 
-        let t_water = scale_triangle_scalar(&t, sphere_radius);
-        let t_water = translate_triangle(&t_water, -center);
-        write_triangle_water(&mut water_vertex_buffer, &t_water, base_segment as u32);
+        if has_water {
+            let t_water = scale_triangle_scalar(&t, sphere_radius);
+            let t_water = translate_triangle(&t_water, -center);
+            write_triangle_water(
+                &mut water_vertex_buffer.as_mut().unwrap(),
+                &t_water,
+                base_segment as u32,
+            );
+        }
 
-        let t_terrain = scale_triangle(&t, height_data);
-        let t_terrain = translate_triangle(&t_terrain, -center);
-        write_triangle_terrain(
-            &height_data,
-            &biome_data,
-            &mut terrain_vertex_buffer,
-            &t_terrain,
-            &directions_triangle,
-            base_segment as u32,
-        );
+        if has_terrain {
+            let t_terrain = scale_triangle(&t, height_data.as_ref().unwrap());
+            let t_terrain = translate_triangle(&t_terrain, -center);
+            write_triangle_terrain(
+                &height_data.as_ref().unwrap(),
+                &biome_data.as_ref().unwrap(),
+                &mut terrain_vertex_buffer.as_mut().unwrap(),
+                &t_terrain,
+                &directions_triangle,
+                base_segment as u32,
+            );
+        }
     }
 
     IcosphereSegment {
-        terrain_vertex_buffer: terrain_vertex_buffer.into_inner(),
-        water_vertex_buffer: water_vertex_buffer.into_inner(),
+        terrain_vertex_buffer: if has_terrain {
+            Some(terrain_vertex_buffer.unwrap().into_inner())
+        } else {
+            None
+        },
+        water_vertex_buffer: if has_water {
+            Some(water_vertex_buffer.unwrap().into_inner())
+        } else {
+            None
+        },
     }
 }
