@@ -88,6 +88,15 @@ impl ECSWorld {
         self.entities.remove(&entity.id);
     }
 
+    pub fn remove_by_id(&mut self, id: u64) {
+        if !self.entities.contains_key(&id) {
+            //return Err(ECSError::EntityNotFound);
+            // actually, why not just do nothing?
+            return;
+        }
+        self.entities.remove(&id);
+    }
+
     fn find_id_by_name(&self, name: &str) -> Option<u64> {
         let mut found_id = None;
         for entity in self.entities.values() {

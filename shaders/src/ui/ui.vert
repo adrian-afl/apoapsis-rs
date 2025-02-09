@@ -17,6 +17,10 @@ layout (location = 1) in vec2 inUV;
 
 layout (location = 0) out vec2 inoutUV;
 
+mat2 rotmat2d(float angle){
+    return mat2(cos(angle), -sin(angle), sin(angle), cos(angle));
+}
+
 void main() {
   inoutUV = inUV;
 
@@ -27,5 +31,7 @@ void main() {
   moved.y = 1.0 - moved.y;
 
 //   gl_Position = vec4(sized, 0.0, 0.0);
-  gl_Position = vec4(moved * 2.0 - 1.0, 0.0, 1.0);
+  mat2 rotation = rotmat2d(orientation);
+
+  gl_Position = vec4(rotation * (moved * 2.0 - 1.0), 0.0, 1.0);
 }

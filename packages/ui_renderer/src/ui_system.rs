@@ -2,6 +2,7 @@ use crate::ui_drawer::UIDrawer;
 use crate::ui_rendered_item::UIRenderedItem;
 use ecs::component_trait::Components;
 use ecs::components::ui::cursor_type::UICursorType;
+use ecs::components::ui::ui_text_component::UIFontSize;
 use ecs::ecs_world::ECSWorld;
 use glam::{DVec2, DVec4};
 use rayon::iter::IntoParallelRefIterator;
@@ -132,9 +133,9 @@ impl UISystem {
 
         // println!("UIRenderer / update C");
 
-        let mut ui_drawer = self.ui_drawer.lock().unwrap();
-        ui_drawer
-            .record(&locked_map.values().collect::<Vec<_>>())
-            .unwrap();
+        let items = locked_map.values().collect::<Vec<_>>();
+
+        let ui_drawer = self.ui_drawer.lock().unwrap();
+        ui_drawer.record(&items).unwrap();
     }
 }

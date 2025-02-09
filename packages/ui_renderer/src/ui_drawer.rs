@@ -1,6 +1,8 @@
 use crate::font_atlas_generator::font_atlas_generator::FontAtlas;
 use crate::ui_common_buffer::UICommonBuffer;
 use crate::ui_rendered_item::UIRenderedItem;
+use ecs::components::ui::ui_text_component::UIFontSize;
+use glam::DVec2;
 use renderer_common::errors::RenderingError;
 use renderer_common::resolution_config::ResolutionConfig;
 use vengine_rs::core::descriptor_set::VEDescriptorSet;
@@ -249,5 +251,22 @@ impl UIDrawer {
 
         self.render_stage.end_recording()?;
         Ok(())
+    }
+
+    pub fn measure_text_pixels(&self, text: &str, font_size: &UIFontSize) -> DVec2 {
+        let atlas = match font_size {
+            UIFontSize::Small => &self.font_atlas_small,
+            UIFontSize::Medium => &self.font_atlas_medium,
+            UIFontSize::Large => &self.font_atlas_large,
+        };
+        let height = atlas.height_max;
+        let mut width = 0;
+        for c in text.chars() {
+            let index = atlas.letters_indices.get(&c).unwrap_or(&0);
+            let data = &atlas.letters_array[*index];
+            width += data.w;
+        }
+
+        DVec2::new(width as f64, height as f64)
     }
 }

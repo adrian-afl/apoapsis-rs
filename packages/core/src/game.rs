@@ -1,17 +1,16 @@
 use crate::camera_system::CameraSystem;
 use crate::game_stage::{GameStage, GameUpdateData, StageTransition};
 use crate::stages::stages_stack::StageStack;
-use crate::stages::warmup_stage::WarmupStage;
 use crate::time_counter::TimeCounter;
 use celestial_renderer::renderer::Renderer;
 use celestial_renderer::rendering_system::RenderingSystem;
 use ecs::components::ui::cursor_type::UICursorType;
+use ecs::components::ui::ui_text_component::UIFontSize;
 use glam::DVec2;
 use input::controls::Controls;
 use real_physics_engine::physics_system::PhysicsSystem;
 use renderer_common::camera::Camera;
 use renderer_common::resolution_config::ResolutionConfig;
-use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
 use ui_renderer::ui_cursor_system::UICursorSystem;
 use ui_renderer::ui_raycast_system::{UIRaycastResultItem, UIRaycastSystem};
@@ -49,11 +48,7 @@ pub struct Game {
 }
 
 impl Game {
-    pub fn new(
-        toolkit: Arc<VEToolkit>,
-        window: Arc<Mutex<Window>>,
-        initial_stage: Box<dyn GameStage>,
-    ) -> Self {
+    pub fn new(toolkit: Arc<VEToolkit>, window: Arc<Mutex<Window>>) -> Self {
         let config = ResolutionConfig {
             width: 640,
             height: 480,
@@ -82,10 +77,7 @@ impl Game {
 
         let time_counter = TimeCounter::new();
 
-        let mut stage_stack = StageStack::new();
-        // entrypoint to the game is here, this kicks off the whole thing:
-        stage_stack.push(initial_stage);
-        stage_stack.push(Box::new(WarmupStage::new()));
+        let stage_stack = StageStack::new();
 
         Self {
             toolkit: toolkit.clone(),
@@ -113,6 +105,18 @@ impl Game {
         }
     }
 
+    pub fn push_game_stage(&mut self, stage: Box<dyn GameStage>) {
+        self.stage_stack.push(stage);
+    }
+
+    pub fn measure_text_pixels(&self, text: &str, font_size: &UIFontSize) -> DVec2 {
+        self.ui_system
+            .ui_drawer
+            .lock()
+            .unwrap()
+            .measure_text_pixels(text, font_size)
+    }
+
     pub fn update(&mut self) {
         let window_size = self.window.lock().unwrap().inner_size();
         self.time_counter.update_time();
@@ -122,12 +126,14 @@ impl Game {
 
         if let Some(stage) = &self.stage_stack.head() {
             let mut stage = stage.lock().unwrap();
-            transition_from_update = stage.update(GameUpdateData {
-                total_time: self.time_counter.total_time,
-                delta_time: self.time_counter.delta_time,
-                universe: &self.universe_simulation,
-                controls: &mut self.controls,
-            });
+            let update_data = GameUpdateData::new(
+                &self.ui_system,
+                &self.time_counter,
+                &self.universe_simulation,
+                &mut self.controls,
+            );
+
+            transition_from_update = stage.update(update_data);
 
             let stage_ecs = stage.get_ecs_world();
 

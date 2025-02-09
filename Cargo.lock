@@ -555,15 +555,12 @@ name = "core"
 version = "0.1.0"
 dependencies = [
  "celestial_renderer",
- "dashu-float",
  "ecs",
  "glam",
  "input",
  "math",
  "real_physics_engine",
  "renderer_common",
- "serde",
- "serde_json",
  "ui_renderer",
  "universe_simulation",
  "vengine-rs",
@@ -2486,12 +2483,14 @@ dependencies = [
 name = "splash_screen_stage"
 version = "0.1.0"
 dependencies = [
+ "common_util",
  "core",
  "dashu-float",
  "ecs",
  "glam",
  "input",
  "math",
+ "universe_simulation",
 ]
 
 [[package]]

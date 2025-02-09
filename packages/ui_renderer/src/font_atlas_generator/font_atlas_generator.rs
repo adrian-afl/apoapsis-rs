@@ -1,18 +1,9 @@
-use fontdue::layout::GlyphRasterConfig;
 use fontdue::{Font, Metrics};
 use std::collections::HashMap;
 use std::fs;
 use vengine_rs::core::toolkit::VEToolkit;
 use vengine_rs::image::image::{VEImage, VEImageUsage};
 use vengine_rs::image::image_format::VEImageFormat;
-
-#[derive(Debug, Clone)]
-pub struct CharPosition {
-    pub x: usize,
-    pub y: usize,
-    pub w: usize,
-    pub h: usize,
-}
 
 #[derive(Debug, Clone)]
 pub struct CharPositionArrayItem {
@@ -51,8 +42,8 @@ fn xy_to_index(rect_size: &Size, offset: Offset) -> usize {
 }
 
 fn blit_box(
-    src: &Vec<u8>,
-    dst: &mut Vec<u8>,
+    src: &[u8],
+    dst: &mut [u8],
     src_size: Size,
     dst_size: Size,
     src_offset: Offset,
@@ -76,11 +67,9 @@ fn blit_box(
 }
 
 pub struct FontAtlas {
-    pub font_size: u8,
     pub letters_indices: HashMap<char, usize>,
     pub letters_array: Vec<CharPositionArrayItem>,
-    pub bitmap_width: usize,
-    pub bitmap_height: usize,
+    pub height_max: usize,
     pub bitmap: Vec<u8>,
     pub texture: VEImage,
 }
@@ -101,7 +90,7 @@ impl FontAtlas {
         let height_max = generated.iter().map(|e| e.metrics.height).max().unwrap();
         let top_min = generated
             .iter()
-            .map(|c| ((height_max as i32 - c.metrics.height as i32) - c.metrics.ymin as i32))
+            .map(|c| (height_max as i32 - c.metrics.height as i32) - c.metrics.ymin)
             .min()
             .unwrap();
 
@@ -127,10 +116,9 @@ impl FontAtlas {
                 Offset { x: 0, y: 0 },
                 Offset {
                     x: x_cursor,
-                    // if metrics height == heightmax then this is 0
-                    y: ((height_max as i32 - c.metrics.height as i32)
-                        - c.metrics.ymin as i32
-                        - top_min) as usize,
+                    // if metrics height == height max then this is 0
+                    y: ((height_max as i32 - c.metrics.height as i32) - c.metrics.ymin - top_min)
+                        as usize,
                 },
                 Size {
                     width: c.metrics.width,
@@ -163,9 +151,7 @@ impl FontAtlas {
             letters_indices,
             letters_array,
             bitmap,
-            bitmap_width: width_sum,
-            bitmap_height: height_max,
-            font_size: 0,
+            height_max,
             texture,
         }
     }
