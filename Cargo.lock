@@ -399,7 +399,6 @@ name = "celestial_renderer"
 version = "0.1.0"
 dependencies = [
  "ash",
- "brotli",
  "dashu-float",
  "ecs",
  "glam",
@@ -407,7 +406,6 @@ dependencies = [
  "planet_generator_library",
  "rayon",
  "renderer_common",
- "serde",
  "tracing",
  "ui_renderer",
  "universe_simulation",
@@ -558,7 +556,6 @@ dependencies = [
  "ecs",
  "glam",
  "input",
- "math",
  "real_physics_engine",
  "renderer_common",
  "ui_renderer",
@@ -770,7 +767,6 @@ dependencies = [
  "glam",
  "math",
  "rayon",
- "renderer_common",
  "serde",
 ]
 
@@ -1882,38 +1878,35 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "953ec861398dccce10c670dfeaf3ec4911ca479e9c02154b3a215178c5f566f2"
 
 [[package]]
-name = "planet_generator_library"
+name = "planet_generator_binary"
 version = "0.1.0"
 dependencies = [
  "brotli",
  "clap",
- "flate2",
  "glam",
  "image",
+ "planet_generator_library",
+ "rayon",
+ "universe_simulation",
+]
+
+[[package]]
+name = "planet_generator_library"
+version = "0.1.0"
+dependencies = [
+ "brotli",
+ "glam",
  "rand_xoshiro",
  "rayon",
- "serde",
- "serde_json",
 ]
 
 [[package]]
 name = "planetdraw-rs"
 version = "0.1.0"
 dependencies = [
- "ash",
- "brotli",
  "core",
- "dashu-float",
- "fontdue",
  "game_stages",
- "gilrs",
  "glam",
- "rapier3d-f64",
- "rayon",
- "regex",
- "serde",
- "serde_json",
- "thiserror 2.0.11",
  "tracing",
  "tracing-subscriber",
  "vengine-rs",

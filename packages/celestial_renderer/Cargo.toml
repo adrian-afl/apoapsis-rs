@@ -4,17 +4,16 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-vengine-rs = { git = "ssh://git@github.com/adrian-afl/vengine-rs.git", rev = "b1af7b477eeba142b4bc2cf8e0fa25229a670721" }
 renderer_common = { path = "../renderer_common" }
 ui_renderer = { path = "../ui_renderer" }
 universe_simulation = { path = "../universe_simulation" }
 math = { path = "../math" }
-dashu-float = { version = "0.4.3" }
-glam = { version = "0.29.2", features = ["serde"] }
-ash = { version = "0.38.0", features = ["linked"] }
-brotli = "7.0.0"
-serde = { version = "1.0.217", features = ["derive"] }
 ecs = { path = "../ecs" }
-rayon = "1.10.0"
-tracing = "0.1.41"
 planet_generator_library = { path = "../planet_generator/library" }
+
+vengine-rs = { workspace = true }
+dashu-float = { workspace = true }
+glam = { workspace = true, features = ["serde"] }
+ash = { workspace = true, features = ["linked"] }
+rayon = { workspace = true }
+tracing = { workspace = true }

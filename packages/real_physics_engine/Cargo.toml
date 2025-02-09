@@ -4,11 +4,12 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-thiserror = "2.0.11"
-glam = { version = "0.29.2" }
-rapier3d-f64 = { version = "0.23.0", features = ["simd-stable"] }
-rayon = "1.10.0"
 ecs = { path = "../ecs" }
 math = { path = "../math" }
 universe_simulation = { path = "../universe_simulation" }
-dashu-float = { version = "0.4.3" }
+
+thiserror = { workspace = true }
+glam = { workspace = true }
+rapier3d-f64 = { workspace = true, features = ["simd-stable"] }
+rayon = { workspace = true }
+dashu-float = { workspace = true }

@@ -4,8 +4,9 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-vengine-rs = { git = "ssh://git@github.com/adrian-afl/vengine-rs.git", rev = "b1af7b477eeba142b4bc2cf8e0fa25229a670721" }
-thiserror = "2.0.11"
-glam = { version = "0.29.2" }
-ash = { version = "0.38.0", features = ["linked"] }
 math = { path = "../math" }
+
+vengine-rs = { workspace = true }
+thiserror = { workspace = true }
+glam = { workspace = true }
+ash = { workspace = true, features = ["linked"] }

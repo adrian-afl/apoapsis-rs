@@ -7,8 +7,9 @@ edition = "2021"
 renderer_common = { path = "../renderer_common" }
 common_util = { path = "../common_util" }
 math = { path = "../math" }
-dashu-float = { version = "0.4.3" }
-glam = { version = "0.29.2", features = ["serde"] }
-serde = { version = "1.0.217", features = ["derive"] }
-serde_json = "1.0.135"
 ecs = { path = "../ecs" }
+
+dashu-float = { workspace = true }
+glam = { workspace = true, features = ["serde"] }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
