@@ -272,14 +272,14 @@ impl Renderer {
                 }
             }
 
-            match &mut body.icosphere {
+            match &mut body.terrain_icosphere {
                 None => (),
                 Some(ref mut icosphere) => {
-                    event!(Level::INFO, "icosphere_drawer/preload");
+                    event!(Level::INFO, "terrain_icosphere_drawer/preload");
                     icosphere.preload(&self.toolkit)?;
 
-                    event!(Level::INFO, "icosphere_drawer/record");
-                    self.icosphere_drawer.record(icosphere)?;
+                    event!(Level::INFO, "terrain_icosphere_drawer/record");
+                    self.icosphere_drawer.record_terrain(icosphere)?;
                     let queue = &self
                         .toolkit
                         .queue
@@ -297,8 +297,24 @@ impl Renderer {
                         )
                         .expect("Failed to draw terain");
                     wait_for_semaphores = vec![self.terrain_drawing_semaphore.clone()];
+                }
+            }
 
-                    event!(Level::INFO, "terrain_icosphere_drawer/water submit");
+            match &mut body.water_icosphere {
+                None => (),
+                Some(ref mut icosphere) => {
+                    event!(Level::INFO, "water_icosphere_drawer/preload");
+                    icosphere.preload(&self.toolkit)?;
+
+                    event!(Level::INFO, "water_icosphere_drawer/record");
+                    self.icosphere_drawer.record_water(icosphere)?;
+                    let queue = &self
+                        .toolkit
+                        .queue
+                        .lock()
+                        .map_err(|_| RenderingError::QueueLockingFailed)?;
+
+                    event!(Level::INFO, "water_icosphere_drawer/water submit");
                     self.icosphere_drawer
                         .water_render_stage
                         .command_buffer

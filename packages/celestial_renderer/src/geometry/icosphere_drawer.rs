@@ -1,6 +1,7 @@
 use crate::buffers::common_buffer::CommonBuffer;
 use crate::geometry::g_buffer::GBuffer;
-use crate::geometry::icosphere::{DrawMode, Icosphere};
+use crate::geometry::terrain_icosphere::TerrainIcosphere;
+use crate::geometry::water_icosphere::WaterIcosphere;
 use renderer_common::errors::RenderingError;
 use renderer_common::resolution_config::ResolutionConfig;
 use std::fmt::{Debug, Formatter};
@@ -180,23 +181,27 @@ impl IcosphereDrawer {
         })
     }
 
-    pub fn record(&mut self, ico: &mut Icosphere) -> Result<(), RenderingError> {
+    pub fn record_terrain(&mut self, ico: &mut TerrainIcosphere) -> Result<(), RenderingError> {
         self.terrain_render_stage.begin_recording()?;
 
         self.terrain_render_stage
             .set_descriptor_set(0, &ico.data_set);
         self.terrain_render_stage
             .set_descriptor_set(1, &self.common_set);
-        ico.draw(&self.terrain_render_stage, DrawMode::Terrain)?;
+        ico.draw(&self.terrain_render_stage)?;
 
         self.terrain_render_stage.end_recording()?;
 
+        Ok(())
+    }
+
+    pub fn record_water(&mut self, ico: &mut WaterIcosphere) -> Result<(), RenderingError> {
         self.water_render_stage.begin_recording()?;
 
         self.water_render_stage.set_descriptor_set(0, &ico.data_set);
         self.water_render_stage
             .set_descriptor_set(1, &self.common_set);
-        ico.draw(&self.water_render_stage, DrawMode::Water)?;
+        ico.draw(&self.water_render_stage)?;
 
         self.water_render_stage.end_recording()?;
 

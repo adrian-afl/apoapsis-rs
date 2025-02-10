@@ -1,7 +1,7 @@
 use crate::craters::add_craters;
 use crate::erosion::erosion_run;
 use crate::math_util::{map, mix, usat};
-use crate::save_binary_maps::save_terrain_maps;
+use crate::save_binary_maps::{save_terrain_maps, save_water_maps};
 use glam::Vec3;
 use planet_generator_library::cubemap_data::{CubeMapDataLayer, CubeMapFace};
 use planet_generator_library::interpolated_biome_data::InterpolatedBiomeData;
@@ -241,6 +241,7 @@ pub fn generate_terrain(out_dir: &str, input: &BodyCelestialBodyDefinition) {
     let generator_config = input.generator_config.as_ref().unwrap();
     let cube_map_res = generator_config.cube_map_resolution;
     let mut cube_map_height: CubeMapDataLayer<f64> = CubeMapDataLayer::new(cube_map_res, 0.0);
+
     let mut cube_map_biome: CubeMapDataLayer<InterpolatedBiomeData> = CubeMapDataLayer::new(
         cube_map_res,
         InterpolatedBiomeData {
@@ -279,63 +280,63 @@ pub fn generate_terrain(out_dir: &str, input: &BodyCelestialBodyDefinition) {
     // remap biomes after erosion for some more realistic effect
     generate_biomes(&input, &terrain, &cube_map_height, &cube_map_biome);
 
-    faces.clone().into_par_iter().for_each(|face| {
-        println!("Saving height face {}, res: {}", face, cube_map_res);
-        let mut imgbuf = image::ImageBuffer::new(cube_map_res as u32, cube_map_res as u32);
-        imgbuf.par_enumerate_pixels_mut().for_each(|(x, y, pixel)| {
-            let dir = cube_map_height.pixel_coords_to_direction(&face, x as usize, y as usize);
-            let value = map(
-                cube_map_height.get_bilinear(dir),
-                terrain.radius + terrain.min_height,
-                terrain.radius + terrain.max_height,
-                0.0,
-                1.0,
-            );
-            // println!("{value}");
-
-            *pixel = image::Luma([(value * 255.0) as u8]);
-        });
-        imgbuf
-            .save(out_dir.clone().join(format!("height_face_{}.png", face)))
-            .unwrap();
-    });
-
-    faces.clone().into_par_iter().for_each(|face| {
-        println!("Saving normal face {}, res: {}", face, cube_map_res);
-        let mut imgbuf = image::ImageBuffer::new(cube_map_res as u32, cube_map_res as u32);
-        imgbuf.par_enumerate_pixels_mut().for_each(|(x, y, pixel)| {
-            let dir = cube_map_height.pixel_coords_to_direction(&face, x as usize, y as usize);
-            let value =
-                cube_map_height.get_normal(dir, cube_map_height.get_pixel_distance_for_dir(dir));
-
-            *pixel = image::Rgb([
-                (value.x * 255.0) as u8,
-                (value.y * 255.0) as u8,
-                (value.z * 255.0) as u8,
-            ]);
-        });
-        imgbuf
-            .save(out_dir.clone().join(format!("normal_face_{}.png", face)))
-            .unwrap();
-    });
-
-    faces.clone().into_par_iter().for_each(|face| {
-        println!("Saving biome color face {}, res: {}", face, cube_map_res);
-        let mut imgbuf = image::ImageBuffer::new(cube_map_res as u32, cube_map_res as u32);
-        imgbuf.par_enumerate_pixels_mut().for_each(|(x, y, pixel)| {
-            let dir = cube_map_biome.pixel_coords_to_direction(&face, x as usize, y as usize);
-            let value = cube_map_biome.get(dir);
-
-            *pixel = image::Rgb([
-                (value.color.x * 255.0) as u8,
-                (value.color.y * 255.0) as u8,
-                (value.color.z * 255.0) as u8,
-            ]);
-        });
-        imgbuf
-            .save(out_dir.clone().join(format!("color_face_{}.png", face)))
-            .unwrap();
-    });
+    // faces.clone().into_par_iter().for_each(|face| {
+    //     println!("Saving height face {}, res: {}", face, cube_map_res);
+    //     let mut imgbuf = image::ImageBuffer::new(cube_map_res as u32, cube_map_res as u32);
+    //     imgbuf.par_enumerate_pixels_mut().for_each(|(x, y, pixel)| {
+    //         let dir = cube_map_height.pixel_coords_to_direction(&face, x as usize, y as usize);
+    //         let value = map(
+    //             cube_map_height.get_bilinear(dir),
+    //             terrain.radius + terrain.min_height,
+    //             terrain.radius + terrain.max_height,
+    //             0.0,
+    //             1.0,
+    //         );
+    //         // println!("{value}");
+    //
+    //         *pixel = image::Luma([(value * 255.0) as u8]);
+    //     });
+    //     imgbuf
+    //         .save(out_dir.clone().join(format!("height_face_{}.png", face)))
+    //         .unwrap();
+    // });
+    //
+    // faces.clone().into_par_iter().for_each(|face| {
+    //     println!("Saving normal face {}, res: {}", face, cube_map_res);
+    //     let mut imgbuf = image::ImageBuffer::new(cube_map_res as u32, cube_map_res as u32);
+    //     imgbuf.par_enumerate_pixels_mut().for_each(|(x, y, pixel)| {
+    //         let dir = cube_map_height.pixel_coords_to_direction(&face, x as usize, y as usize);
+    //         let value =
+    //             cube_map_height.get_normal(dir, cube_map_height.get_pixel_distance_for_dir(dir));
+    //
+    //         *pixel = image::Rgb([
+    //             (value.x * 255.0) as u8,
+    //             (value.y * 255.0) as u8,
+    //             (value.z * 255.0) as u8,
+    //         ]);
+    //     });
+    //     imgbuf
+    //         .save(out_dir.clone().join(format!("normal_face_{}.png", face)))
+    //         .unwrap();
+    // });
+    //
+    // faces.clone().into_par_iter().for_each(|face| {
+    //     println!("Saving biome color face {}, res: {}", face, cube_map_res);
+    //     let mut imgbuf = image::ImageBuffer::new(cube_map_res as u32, cube_map_res as u32);
+    //     imgbuf.par_enumerate_pixels_mut().for_each(|(x, y, pixel)| {
+    //         let dir = cube_map_biome.pixel_coords_to_direction(&face, x as usize, y as usize);
+    //         let value = cube_map_biome.get(dir);
+    //
+    //         *pixel = image::Rgb([
+    //             (value.color.x * 255.0) as u8,
+    //             (value.color.y * 255.0) as u8,
+    //             (value.color.z * 255.0) as u8,
+    //         ]);
+    //     });
+    //     imgbuf
+    //         .save(out_dir.clone().join(format!("color_face_{}.png", face)))
+    //         .unwrap();
+    // });
 
     save_terrain_maps(
         out_dir.to_str().unwrap(),
@@ -343,4 +344,20 @@ pub fn generate_terrain(out_dir: &str, input: &BodyCelestialBodyDefinition) {
         &cube_map_height,
         &cube_map_biome,
     );
+}
+
+pub fn generate_water(out_dir: &str, input: &BodyCelestialBodyDefinition) {
+    let out_dir = Path::new(out_dir);
+
+    let generator_config = input.generator_config.as_ref().unwrap();
+    let cube_map_res = generator_config.cube_map_resolution;
+
+    let water = &input.water;
+    if (water.is_none()) {
+        return;
+    }
+    let water = water.as_ref().unwrap();
+    let cube_map_water: CubeMapDataLayer<f64> = CubeMapDataLayer::new(cube_map_res, water.radius);
+
+    save_water_maps(out_dir.to_str().unwrap(), water.radius, &cube_map_water)
 }

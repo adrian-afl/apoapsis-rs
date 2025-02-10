@@ -1,9 +1,13 @@
 use crate::buffers::celestial_body_buffer::CelestialBodyBuffer;
-use crate::geometry::icosphere::Icosphere;
+use crate::geometry::common_icosphere::ICO_LEVEL_SUBDIVISIONS;
 use crate::geometry::icosphere_drawer::IcosphereDrawer;
+use crate::geometry::terrain_icosphere::{TerrainData, TerrainIcosphere};
+use crate::geometry::water_icosphere::{WaterData, WaterIcosphere};
 use glam::DVec3;
 use math::decimal_vector_3d::DecimalVector3d;
-use planet_generator_library::generate_icosphere::{generate_base_icosphere, Triangle};
+use planet_generator_library::generate_icosphere::{
+    generate_base_icosphere, IcosphereSegmentGenerator, Triangle,
+};
 use renderer_common::errors::RenderingError;
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
@@ -13,22 +17,30 @@ use vengine_rs::core::toolkit::VEToolkit;
 
 pub struct RenderedBody {
     pub body: BodyCelestialBodyDefinition,
-    pub icosphere: Option<Icosphere>,
+    pub terrain_icosphere: Option<TerrainIcosphere>,
+    pub water_icosphere: Option<WaterIcosphere>,
     pub celestial_body_buffer: CelestialBodyBuffer,
 }
 
 pub struct CelestialHierarchy {
     toolkit: Arc<VEToolkit>,
+    generator: Arc<IcosphereSegmentGenerator>,
     rendered_bodies: HashMap<String, RenderedBody>,
     base_icosphere: Arc<Vec<Triangle>>,
 }
 
 impl CelestialHierarchy {
     pub fn new(toolkit: Arc<VEToolkit>) -> Self {
+        let base_icosphere = Arc::new(generate_base_icosphere(2));
+        let generator = Arc::new(IcosphereSegmentGenerator::new(
+            &base_icosphere,
+            &ICO_LEVEL_SUBDIVISIONS,
+        ));
         Self {
             toolkit,
+            generator,
             rendered_bodies: HashMap::new(),
-            base_icosphere: Arc::new(generate_base_icosphere(2)),
+            base_icosphere,
         }
     }
 
@@ -49,18 +61,30 @@ impl CelestialHierarchy {
                 .rendered_bodies
                 .contains_key(&closest_hierarchy_body.body.name);
             if !exists {
-                let icosphere = match &closest_hierarchy_body.body.terrain {
+                let terrain_icosphere = match &closest_hierarchy_body.body.terrain {
                     None => None,
-                    Some(terrain) => Some(Icosphere::new(
+                    Some(terrain) => Some(TerrainIcosphere::new(
                         &self.toolkit,
-                        terrain.radius,
-                        terrain.icosphere_path.to_owned(),
-                        vec![2000000.0, 5000000.0],
-                        self.base_icosphere.clone(),
-                        match &closest_hierarchy_body.body.water {
-                            None => None,
-                            Some(water) => Some(water.color),
+                        self.generator.clone(),
+                        TerrainData {
+                            radius: terrain.radius,
+                            dir_path: terrain.icosphere_path.clone(),
                         },
+                        self.base_icosphere.clone(),
+                        &mut icosphere_drawer.data_set_layout,
+                    )?),
+                };
+                let water_icosphere = match &closest_hierarchy_body.body.water {
+                    None => None,
+                    Some(water) => Some(WaterIcosphere::new(
+                        &self.toolkit,
+                        self.generator.clone(),
+                        WaterData {
+                            radius: water.radius,
+                            water_color: water.color,
+                            dir_path: water.icosphere_path.clone(),
+                        },
+                        self.base_icosphere.clone(),
                         &mut icosphere_drawer.data_set_layout,
                     )?),
                 };
@@ -71,7 +95,8 @@ impl CelestialHierarchy {
                     closest_hierarchy_body.body.name.clone(),
                     RenderedBody {
                         body: closest_hierarchy_body.body.clone(),
-                        icosphere,
+                        terrain_icosphere,
+                        water_icosphere,
                         celestial_body_buffer: buffer,
                     },
                 );
@@ -94,7 +119,11 @@ impl CelestialHierarchy {
                     &closest_hierarchy_body,
                 )?;
 
-                if let Some(ref mut icosphere) = &mut body.icosphere {
+                if let Some(ref mut icosphere) = &mut body.terrain_icosphere {
+                    icosphere.update_buffer(&camera_position, &closest_hierarchy_body)?;
+                }
+
+                if let Some(ref mut icosphere) = &mut body.water_icosphere {
                     icosphere.update_buffer(&camera_position, &closest_hierarchy_body)?;
                 }
             }

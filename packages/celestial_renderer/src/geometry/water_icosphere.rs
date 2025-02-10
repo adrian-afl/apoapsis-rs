@@ -1,18 +1,17 @@
-use crate::buffers::terrain_icosphere_data_buffer::TerrainIcosphereDataBuffer;
+use crate::buffers::water_icosphere_data_buffer::WaterIcosphereDataBuffer;
 use crate::geometry::common_icosphere::{
     update_icosphere_matrices, which_part_to_preload, IcosphereLoadedGeometry,
     PreloadDetectionResultAction, ICO_LEVEL_SUBDIVISIONS,
 };
-use crate::geometry::icosphere_drawer::TERRAIN_ICOSPHERE_VERTEX_ATTRIBUTES;
-use glam::DMat4;
+use crate::geometry::icosphere_drawer::WATER_ICOSPHERE_VERTEX_ATTRIBUTES;
+use glam::{DMat4, DVec3};
 use math::decimal_vector_3d::DecimalVector3d;
 use planet_generator_library::cubemap_data::CubeMapDataLayer;
 use planet_generator_library::generate_icosphere::{
     generate_icosphere_metadata, IcosphereMetadataItem, IcosphereSegmentGenerator, Triangle,
 };
-use planet_generator_library::interpolated_biome_data::LoadedBiomeData;
 use planet_generator_library::load_binary_maps::{
-    get_terrain_maps_resolution, load_binary_biome_map, load_binary_terrain_map,
+    get_water_maps_resolution, load_binary_water_map,
 };
 use rayon::iter::IndexedParallelIterator;
 use rayon::iter::ParallelIterator;
@@ -26,58 +25,59 @@ use vengine_rs::core::descriptor_set_layout::VEDescriptorSetLayout;
 use vengine_rs::core::toolkit::VEToolkit;
 use vengine_rs::graphics::render_stage::VERenderStage;
 
-struct LoadedTerrainData {
+struct LoadedWaterData {
     radius: f64,
     loaded_height: CubeMapDataLayer<f64>,
-    loaded_biome: CubeMapDataLayer<LoadedBiomeData>,
+    water_color: DVec3,
     metadata: Vec<IcosphereMetadataItem>,
     part_matrices: Vec<DMat4>,
 }
 
-pub struct TerrainIcosphere {
+pub struct WaterIcosphere {
     generator: Arc<IcosphereSegmentGenerator>,
     base_icosphere: Arc<Vec<Triangle>>,
     currently_loaded: Mutex<HashMap<u16, IcosphereLoadedGeometry>>,
 
-    loaded_data: LoadedTerrainData,
+    loaded_data: LoadedWaterData,
 
-    data_buffer: TerrainIcosphereDataBuffer,
+    data_buffer: WaterIcosphereDataBuffer,
     pub data_set: VEDescriptorSet,
 }
 
-pub struct TerrainData {
+pub struct WaterData {
     pub radius: f64,
+    pub water_color: DVec3,
     pub dir_path: String,
 }
 
-impl TerrainIcosphere {
+impl WaterIcosphere {
     pub fn new(
         toolkit: &VEToolkit,
         generator: Arc<IcosphereSegmentGenerator>,
-        terrain_data: TerrainData,
+        water_data: WaterData,
         base_icosphere: Arc<Vec<Triangle>>,
         data_set_layout: &mut VEDescriptorSetLayout,
-    ) -> Result<TerrainIcosphere, RenderingError> {
-        let metadata = generate_icosphere_metadata(&base_icosphere, terrain_data.radius);
+    ) -> Result<WaterIcosphere, RenderingError> {
+        let metadata = generate_icosphere_metadata(&base_icosphere, water_data.radius);
         let part_matrices = vec![DMat4::IDENTITY.clone(); metadata.len()];
-        let maps_resolutions = get_terrain_maps_resolution(&terrain_data.dir_path);
-        let loaded_data = LoadedTerrainData {
-            radius: terrain_data.radius,
+        let maps_resolutions = get_water_maps_resolution(&water_data.dir_path);
+        let loaded_data = LoadedWaterData {
+            radius: water_data.radius,
             part_matrices,
             metadata,
-            loaded_height: load_binary_terrain_map(
-                terrain_data.radius,
-                &terrain_data.dir_path,
+            water_color: water_data.water_color,
+            loaded_height: load_binary_water_map(
+                water_data.radius,
+                &water_data.dir_path,
                 maps_resolutions,
             ),
-            loaded_biome: load_binary_biome_map(&terrain_data.dir_path, maps_resolutions),
         };
 
-        let data_buffer = TerrainIcosphereDataBuffer::new(&toolkit)?;
+        let data_buffer = WaterIcosphereDataBuffer::new(&toolkit)?;
         let data_set = data_set_layout.create_descriptor_set()?;
         data_set.bind_buffer(0, &data_buffer.buffer)?;
 
-        Ok(TerrainIcosphere {
+        Ok(WaterIcosphere {
             generator,
             loaded_data,
             base_icosphere,
@@ -131,7 +131,13 @@ impl TerrainIcosphere {
             &mut self.loaded_data.part_matrices,
         );
 
-        self.data_buffer.update(&self.loaded_data.part_matrices)?;
+        let body_center_camera_space = &simulated_body.position - camera_position;
+
+        self.data_buffer.update(
+            self.loaded_data.water_color,
+            body_center_camera_space.to_dvec3(),
+            &self.loaded_data.part_matrices,
+        )?;
 
         Ok(())
     }
@@ -155,16 +161,15 @@ impl TerrainIcosphere {
     ) -> Result<IcosphereLoadedGeometry, RenderingError> {
         let subdivisions = ICO_LEVEL_SUBDIVISIONS[level as usize - 1];
 
-        let segment = self.generator.generate_terrain(
+        let segment = self.generator.generate_water(
             base_segment,
             self.loaded_data.radius,
             subdivisions,
             &self.loaded_data.loaded_height,
-            &self.loaded_data.loaded_biome,
         );
 
-        let vertex_buffer = toolkit
-            .create_vertex_buffer_from_data(segment, &TERRAIN_ICOSPHERE_VERTEX_ATTRIBUTES)?;
+        let vertex_buffer =
+            toolkit.create_vertex_buffer_from_data(segment, &WATER_ICOSPHERE_VERTEX_ATTRIBUTES)?;
 
         Ok(IcosphereLoadedGeometry {
             vertex_buffer,

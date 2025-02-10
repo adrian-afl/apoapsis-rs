@@ -1,7 +1,7 @@
 {
   "name": "earth",
   "terrain": {
-    "icospherePath": "media/universe/solar_system/earth/terrain",
+    "icospherePath": "media/universe/solar_system/earth/data",
     "radius": 6378000,
     "minHeight": -127000,
     "maxHeight": 127000,
@@ -81,7 +81,7 @@
     ]
   },
   "water": {
-    "icospherePath": "media/universe/solar_system/earth/water/icosphere",
+    "icospherePath": "media/universe/solar_system/earth/data",
     "color": [
       0,
       0.3,
@@ -134,11 +134,11 @@
     "satellitePaths": []
   },
   "generatorConfig": {
-    "outDir": "terrain",
+    "outDir": "data",
     "erosionIterations": 2000,
     "erosionDropletsCount": 1000,
     "erosionDropletVelocityCoefficient": 5.0,
     "erosionDropletEvaporationCoefficient": 2.0,
-    "cubeMapResolution": 2048
+    "cubeMapResolution": 1024
   }
 }
