@@ -2,8 +2,6 @@
 #extension GL_ARB_separate_shader_objects : enable
 
 layout(set = 0, binding = 0) buffer readonly ubo {
-    vec4 waterColor_zero;
-    vec4 bodyCenter_zero;
     mat4 partMatrix[];
 } data;
 

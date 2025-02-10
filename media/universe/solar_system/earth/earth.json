@@ -87,7 +87,7 @@
       0.3,
       0.6
     ],
-    "radius": 6398000,
+    "radius": 6378000,
     "wavesHeight": 2
   },
   "atmosphere": {
