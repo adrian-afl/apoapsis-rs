@@ -1904,6 +1904,7 @@ dependencies = [
 name = "planetdraw-rs"
 version = "0.1.0"
 dependencies = [
+ "clap",
  "core",
  "game_stages",
  "glam",

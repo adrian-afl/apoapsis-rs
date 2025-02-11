@@ -1,4 +1,6 @@
 use crate::app::GameWindowApp;
+use crate::cli_args::Cli;
+use clap::Parser;
 use std::fs::File;
 use std::sync::{Arc, Mutex};
 use tracing::Level;
@@ -9,13 +11,16 @@ use winit::dpi::PhysicalSize;
 use winit::window::{Window, WindowAttributes};
 
 mod app;
+mod cli_args;
 
 fn main() {
+    let cli = Cli::parse();
+
     let subscriber = FmtSubscriber::builder()
         .with_ansi(false)
         .with_writer(File::create("./log.txt").unwrap())
         .with_span_events(FmtSpan::FULL)
-        .with_max_level(Level::TRACE)
+        .with_max_level(cli.log_level)
         .finish();
 
     tracing::subscriber::set_global_default(subscriber).unwrap();

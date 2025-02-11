@@ -63,3 +63,4 @@ vengine-rs = { workspace = true }
 winit = { workspace = true, features = ["rwh_06", "serde"] }
 game_stages = { path = "packages/game_stages" }
 core = { path = "packages/core" }
+clap = { workspace = true }
