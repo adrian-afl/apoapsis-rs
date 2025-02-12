@@ -14,6 +14,6 @@ planet_generator_library = { workspace = true }
 vengine-rs = { workspace = true }
 dashu-float = { workspace = true }
 glam = { workspace = true, features = ["serde"] }
-ash = { workspace = true, features = ["linked"] }
+ash = { workspace = true, features = ["loaded"] }
 rayon = { workspace = true }
 tracing = { workspace = true }

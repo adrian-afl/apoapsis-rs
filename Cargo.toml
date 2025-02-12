@@ -21,11 +21,11 @@ members = [
 ]
 
 [workspace.dependencies]
-vengine-rs = { git = "ssh://git@github.com/adrian-afl/vengine-rs.git", rev = "b1af7b477eeba142b4bc2cf8e0fa25229a670721" }
+vengine-rs = { git = "ssh://git@github.com/adrian-afl/vengine-rs.git", rev = "df28a6113b4aed28d4c0d1d0373dc662b374b525" }
 winit = { version = "0.30.7", features = ["rwh_06", "serde"] }
 dashu-float = { version = "0.4.3" }
 glam = { version = "0.29.2", features = ["serde"] }
-ash = { version = "0.38.0", features = ["linked"] }
+ash = { version = "0.38.0", features = ["loaded"] }
 rayon = "1.10.0"
 tracing = "0.1.41"
 tracing-subscriber = "0.3.19"

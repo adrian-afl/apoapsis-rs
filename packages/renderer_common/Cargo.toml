@@ -9,4 +9,4 @@ math = { workspace = true }
 vengine-rs = { workspace = true }
 thiserror = { workspace = true }
 glam = { workspace = true }
-ash = { workspace = true, features = ["linked"] }
+ash = { workspace = true, features = ["loaded"] }
