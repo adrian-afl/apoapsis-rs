@@ -32,7 +32,7 @@ pub fn add_craters(
 
         seed += 567567.45546567;
 
-        if probability < biome.craters_probability as f64 {
+        if probability > biome.craters_probability as f64 {
             continue;
         }
 

@@ -1,0 +1,92 @@
+{
+  "name": "moon",
+  "terrain": {
+    "icospherePath": "media/universe/solar_system/earth/moon/data",
+    "radius": 1737400,
+    "minHeight": -9000,
+    "maxHeight": 10000,
+    "terrainGeneration": {
+      "seed": 23423.0,
+      "cratersCount": 2256,
+      "fbmScale": 1,
+      "fbmIterations": 20,
+      "fbmFinalPower": 1.0,
+      "fbmIterationScaleCoefficient": 2,
+      "fbmIterationWeightCoefficient": 0.5,
+      "heightModifiers": [],
+      "colorModifiers": []
+    },
+    "biomeModifier": "random",
+    "biomes": [
+      {
+        "id": 0,
+        "name": "younger",
+        "color": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "roughness": 0.4,
+        "erosionStrength": 0.0,
+        "depositionStrength": 0.0,
+        "minAltitude": -9000,
+        "maxAltitude": 10000,
+        "minModifier": 90,
+        "maxModifier": 0,
+        "cratersProbability": 1.0,
+        "minCraterSize": 1000.0,
+        "maxCraterSize": 100000.0,
+        "seed": 234.0
+      },
+      {
+        "id": 1,
+        "name": "older",
+        "color": [
+          0.15,
+          0.1,
+          0.1
+        ],
+        "roughness": 0.4,
+        "erosionStrength": 0.0,
+        "depositionStrength": 0.0,
+        "minAltitude": -9000,
+        "maxAltitude": 10000,
+        "minModifier": 70,
+        "maxModifier": 390,
+        "cratersProbability": 1.0,
+        "minCraterSize": 1000.0,
+        "maxCraterSize": 100000.0,
+        "seed": 345.0
+      }
+    ]
+  },
+  "dynamics": {
+    "rotationAxis": {
+      "x": "0.05",
+      "y": "1.0",
+      "z": "0.05"
+    },
+    "rotationPeriod": 2332800,
+    "mass": "73476730900000000000000",
+    "motion": {
+      "Orbiting": {
+        "orbit_radius": "385000000",
+        "orbit_plane_normal": {
+          "x": "0.1",
+          "y": "1.0",
+          "z": "0.1"
+        },
+        "orbit_period": "2332800"
+      }
+    },
+    "satellitePaths": []
+  },
+  "generatorConfig": {
+    "outDir": "data",
+    "erosionIterations": 0,
+    "erosionDropletsCount": 0,
+    "erosionDropletVelocityCoefficient": 5.0,
+    "erosionDropletEvaporationCoefficient": 2.0,
+    "cubeMapResolution": 1024
+  }
+}

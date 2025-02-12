@@ -122,16 +122,18 @@
     "mass": "5972190000000000000000000",
     "motion": {
       "Orbiting": {
-        "orbit_radius": "149600000",
+        "orbit_radius": "149600000000",
         "orbit_plane_normal": {
-          "x": "0",
-          "y": "0",
-          "z": "0"
+          "x": "0.0",
+          "y": "1.0",
+          "z": "0.0"
         },
         "orbit_period": "31558118.4"
       }
     },
-    "satellitePaths": []
+    "satellitePaths": [
+      "media/universe/solar_system/earth/moon/moon.json"
+    ]
   },
   "generatorConfig": {
     "outDir": "data",

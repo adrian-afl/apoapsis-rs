@@ -53,6 +53,11 @@ impl Simulation {
             velocity: DecimalVector3d::zero(),
             orientation: DecimalMatrix3d::identity(),
         };
+        simulated_body.body.dynamics.rotation_axis.normalize();
+        match &mut simulated_body.body.dynamics.motion {
+            BodyMotion::Static(_) => (),
+            BodyMotion::Orbiting(ref mut data) => data.orbit_plane_normal.normalize(),
+        }
         for i in 0..body.dynamics.satellites.len() {
             simulated_body.satellites.push(self.add_hierarchy(
                 config,
