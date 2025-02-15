@@ -55,7 +55,7 @@ impl AtmosphereDrawer {
             &[VEImageUsage::Storage, VEImageUsage::Sampled],
         )?;
 
-        let low_freq_compute_shader = toolkit.create_shader_module(
+        let shader = toolkit.create_shader_module(
             "shaders/compiled/atmosphere/atmosphere.comp.spv",
             VEShaderModuleType::Compute,
         )?;
@@ -155,8 +155,7 @@ impl AtmosphereDrawer {
         let view = out_alpha_rgba.get_view(VEImageViewCreateInfo::simple_2d())?;
         data_set.bind_image_storage(8, &out_alpha_rgba, view)?;
 
-        let compute_stage =
-            toolkit.create_compute_stage(&[&data_set_layout], &low_freq_compute_shader)?;
+        let compute_stage = toolkit.create_compute_stage(&[&data_set_layout], &shader)?;
 
         Ok(AtmosphereDrawer {
             compute_stage,
@@ -166,6 +165,17 @@ impl AtmosphereDrawer {
             out_alpha_rgba,
             linear_sampler,
         })
+    }
+
+    pub fn recreate_stage(&mut self, toolkit: &VEToolkit) -> Result<(), RenderingError> {
+        let shader = toolkit.create_shader_module(
+            "shaders/compiled/atmosphere/atmosphere.comp.spv",
+            VEShaderModuleType::Compute,
+        )?;
+
+        self.compute_stage = toolkit.create_compute_stage(&[&self.data_set_layout], &shader)?;
+
+        Ok(())
     }
 
     pub fn set_celestial_buffer(

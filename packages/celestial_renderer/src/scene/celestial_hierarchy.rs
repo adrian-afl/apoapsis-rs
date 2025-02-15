@@ -3,6 +3,7 @@ use crate::geometry::common_icosphere::ICO_LEVEL_SUBDIVISIONS;
 use crate::geometry::icosphere_drawer::IcosphereDrawer;
 use crate::geometry::terrain_icosphere::{TerrainData, TerrainIcosphere};
 use crate::geometry::water_icosphere::{WaterData, WaterIcosphere};
+use dashu_float::DBig;
 use glam::DVec3;
 use math::decimal_vector_3d::DecimalVector3d;
 use planet_generator_library::generate_icosphere::{
@@ -20,6 +21,7 @@ pub struct RenderedBody {
     pub terrain_icosphere: Option<TerrainIcosphere>,
     pub water_icosphere: Option<WaterIcosphere>,
     pub celestial_body_buffer: CelestialBodyBuffer,
+    distance_to_camera: DBig,
 }
 
 pub struct CelestialHierarchy {
@@ -98,6 +100,8 @@ impl CelestialHierarchy {
                         terrain_icosphere,
                         water_icosphere,
                         celestial_body_buffer: buffer,
+                        distance_to_camera: camera_position
+                            .distance_to(&closest_hierarchy_body.position),
                     },
                 );
                 exists = true;
@@ -108,6 +112,8 @@ impl CelestialHierarchy {
                     .rendered_bodies
                     .get_mut(&closest_hierarchy_body.body.name)
                     .unwrap();
+                body.distance_to_camera =
+                    camera_position.distance_to(&closest_hierarchy_body.position);
                 // println!("{:?}", closest_star.body);
                 body.celestial_body_buffer.update(
                     &camera_position,
@@ -136,11 +142,11 @@ impl CelestialHierarchy {
     }
 
     pub fn get_rendered_bodies(&mut self) -> Vec<&mut RenderedBody> {
-        // TODO here sorting is needed but its not really possible yet, it needs some work
         let mut refs = vec![];
         for body in self.rendered_bodies.values_mut() {
             refs.push(body);
         }
+        refs.sort_by(|a, b| a.distance_to_camera.cmp(&b.distance_to_camera));
         refs
     }
 }

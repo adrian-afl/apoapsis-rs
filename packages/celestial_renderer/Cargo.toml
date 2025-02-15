@@ -10,6 +10,7 @@ universe_simulation = { workspace = true }
 math = { workspace = true }
 ecs = { workspace = true }
 planet_generator_library = { workspace = true }
+common_util = { workspace = true }
 
 vengine-rs = { workspace = true }
 dashu-float = { workspace = true }

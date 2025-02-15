@@ -86,6 +86,26 @@ impl CloudGeneratorLowFreq {
         })
     }
 
+    pub fn recreate_stage(&mut self, toolkit: &VEToolkit) -> Result<(), RenderingError> {
+        let shader = toolkit.create_shader_module(
+            "shaders/compiled/atmosphere/gen-clouds.comp.spv",
+            VEShaderModuleType::Compute,
+        )?;
+
+        self.compute_stage = toolkit.create_compute_stage(&[&self.data_set_layout], &shader)?;
+
+        self.compute_stage.begin_recording()?;
+        self.compute_stage.set_descriptor_set(0, &self.data_set);
+        self.compute_stage.dispatch(
+            LOW_FREQ_RES_WIDTH / WORKGROUP_SIZE,
+            LOW_FREQ_RES_HEIGHT / WORKGROUP_SIZE,
+            1,
+        );
+        self.compute_stage.end_recording()?;
+
+        Ok(())
+    }
+
     pub fn update_buffer(
         &mut self,
         seed: DVec4,

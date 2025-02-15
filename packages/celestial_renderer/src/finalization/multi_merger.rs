@@ -81,6 +81,17 @@ impl MultiMerger {
         })
     }
 
+    pub fn recreate_stage(&mut self, toolkit: &VEToolkit) -> Result<(), RenderingError> {
+        let shader = toolkit.create_shader_module(
+            "shaders/compiled/output/multi-merger.comp.spv",
+            VEShaderModuleType::Compute,
+        )?;
+
+        self.compute_stage = toolkit.create_compute_stage(&[&self.data_set_layout], &shader)?;
+
+        Ok(())
+    }
+
     pub fn update_inputs(
         &mut self,
         additive: &mut VEImage,

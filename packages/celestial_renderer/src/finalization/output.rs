@@ -16,6 +16,8 @@ use vengine_rs::image::image::{VEImage, VEImageUsage, VEImageViewCreateInfo};
 use vengine_rs::image::image_format::VEImageFormat;
 
 pub struct Output {
+    config: ResolutionConfig,
+
     pub compute_stage: VEComputeStage,
 
     data_set_layout: VEDescriptorSetLayout,
@@ -135,7 +137,27 @@ impl Output {
             data_set,
             output,
             buffer,
+            config: config.clone(),
         })
+    }
+
+    pub fn recreate_stage(&mut self, toolkit: &VEToolkit) -> Result<(), RenderingError> {
+        let shader = toolkit.create_shader_module(
+            "shaders/compiled/output/multi-merger.comp.spv",
+            VEShaderModuleType::Compute,
+        )?;
+
+        self.compute_stage = toolkit.create_compute_stage(&[&self.data_set_layout], &shader)?;
+
+        self.compute_stage.begin_recording()?;
+        self.compute_stage.set_descriptor_set(0, &self.data_set);
+        self.compute_stage.dispatch(
+            self.config.width / WORKGROUP_SIZE,
+            self.config.height / WORKGROUP_SIZE,
+            1,
+        );
+
+        Ok(())
     }
 
     pub fn update_buffer(&mut self, exposure: f64) -> Result<(), RenderingError> {

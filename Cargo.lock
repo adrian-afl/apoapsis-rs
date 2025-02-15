@@ -399,6 +399,7 @@ name = "celestial_renderer"
 version = "0.1.0"
 dependencies = [
  "ash",
+ "common_util",
  "dashu-float",
  "ecs",
  "glam",
@@ -1905,6 +1906,7 @@ name = "planetdraw-rs"
 version = "0.1.0"
 dependencies = [
  "clap",
+ "common_util",
  "core",
  "game_stages",
  "glam",

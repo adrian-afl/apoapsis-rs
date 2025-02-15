@@ -33,6 +33,8 @@ pub static WATER_ICOSPHERE_VERTEX_ATTRIBUTES: [VertexAttribFormat; 3] = [
 ];
 
 pub struct IcosphereDrawer {
+    config: ResolutionConfig,
+
     pub terrain_render_stage: VERenderStage,
     pub water_render_stage: VERenderStage,
 
@@ -40,6 +42,11 @@ pub struct IcosphereDrawer {
 
     common_set_layout: VEDescriptorSetLayout,
     common_set: VEDescriptorSet,
+
+    color_rgb_roughness_a_attachment: VEAttachment,
+    normal_rgb_distance_a_attachment: VEAttachment,
+    emission_rgb_metalness_a_attachment: VEAttachment,
+    shared_depth_buffer_attachment: VEAttachment,
 }
 
 impl Debug for IcosphereDrawer {
@@ -178,7 +185,75 @@ impl IcosphereDrawer {
             terrain_render_stage,
             water_render_stage,
             common_set,
+            config: config.clone(),
+            color_rgb_roughness_a_attachment,
+            normal_rgb_distance_a_attachment,
+            emission_rgb_metalness_a_attachment,
+            shared_depth_buffer_attachment,
         })
+    }
+
+    pub fn recreate_stage(&mut self, toolkit: &VEToolkit) -> Result<(), RenderingError> {
+        let shader = toolkit.create_shader_module(
+            "shaders/compiled/output/multi-merger.comp.spv",
+            VEShaderModuleType::Compute,
+        )?;
+
+        let terrain_vertex_shader = toolkit.create_shader_module(
+            "shaders/compiled/terrain/terrain.vert.spv",
+            VEShaderModuleType::Vertex,
+        )?;
+
+        let terrain_fragment_shader = toolkit.create_shader_module(
+            "shaders/compiled/terrain/terrain.frag.spv",
+            VEShaderModuleType::Fragment,
+        )?;
+
+        self.terrain_render_stage = toolkit.create_render_stage(
+            self.config.width,
+            self.config.height,
+            &[
+                &self.color_rgb_roughness_a_attachment,
+                &self.normal_rgb_distance_a_attachment,
+                &self.emission_rgb_metalness_a_attachment,
+                &self.shared_depth_buffer_attachment,
+            ],
+            &[&self.data_set_layout, &self.common_set_layout],
+            &terrain_vertex_shader,
+            &terrain_fragment_shader,
+            &TERRAIN_ICOSPHERE_VERTEX_ATTRIBUTES,
+            VEPrimitiveTopology::TriangleList,
+            VECullMode::Back,
+        )?;
+
+        let water_vertex_shader = toolkit.create_shader_module(
+            "shaders/compiled/water/water.vert.spv",
+            VEShaderModuleType::Vertex,
+        )?;
+
+        let water_fragment_shader = toolkit.create_shader_module(
+            "shaders/compiled/water/water.frag.spv",
+            VEShaderModuleType::Fragment,
+        )?;
+
+        self.water_render_stage = toolkit.create_render_stage(
+            self.config.width,
+            self.config.height,
+            &[
+                &self.color_rgb_roughness_a_attachment,
+                &self.normal_rgb_distance_a_attachment,
+                &self.emission_rgb_metalness_a_attachment,
+                &self.shared_depth_buffer_attachment,
+            ],
+            &[&self.data_set_layout, &self.common_set_layout],
+            &water_vertex_shader,
+            &water_fragment_shader,
+            &WATER_ICOSPHERE_VERTEX_ATTRIBUTES,
+            VEPrimitiveTopology::TriangleList,
+            VECullMode::Back,
+        )?;
+
+        Ok(())
     }
 
     pub fn record_terrain(&mut self, ico: &mut TerrainIcosphere) -> Result<(), RenderingError> {

@@ -120,7 +120,7 @@ void main() {
     Sphere cloudsMedianSphere = Sphere(bodyCenter, atmosphereStart + (cloudsMaxHeight + cloudsMinHeight) * 0.5);
     float cloudsHit = getForwardHitOrZero(rsi2X(geometryPosition, starDirection, cloudsMedianSphere));
     float meshCloudsShadow = hits(cloudsHit) ? 1.0 - lowResCloudsAtPoint(geometryPosition + cloudsHit * starDirection) : 1.0;
-    meshIrradiance *= pow(meshCloudsShadow, 2.0);
+   // meshIrradiance *= pow(meshCloudsShadow, 2.0);
 
     float ao = quickSSAO(0.03);
     vec3 meshAmbient = 0.1 * rayLoseEnergy(starRadiance, rayleighHeight, getAltitude(geometryPosition), atmosphereHitFromMesh)

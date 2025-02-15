@@ -1,7 +1,8 @@
 use crate::app::GameWindowApp;
 use crate::cli_args::CLIArgs;
-use crate::udp_debugging::UDP_DEBUGGING;
 use clap::Parser;
+use common_util::udebug;
+use common_util::udp_debugging::UDP_DEBUGGING;
 use std::fs::File;
 use std::sync::{Arc, Mutex};
 use tracing_subscriber::fmt::format::FmtSpan;
@@ -12,7 +13,6 @@ use winit::window::{Window, WindowAttributes};
 
 mod app;
 mod cli_args;
-mod udp_debugging;
 
 fn main() {
     let cli_args = Arc::new(CLIArgs::parse());
