@@ -3,7 +3,7 @@ use tracing::Level;
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
-pub struct Cli {
+pub struct CLIArgs {
     #[arg(short, long, default_value_t = Level::TRACE)]
     pub log_level: Level,
 

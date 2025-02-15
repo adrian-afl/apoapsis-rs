@@ -1,7 +1,11 @@
 {
   "keys": {
     "Pause": "Escape",
-    "Start": "Enter"
+    "Start": "Enter",
+    "WalkLeft": "KeyA",
+    "WalkRight": "KeyD",
+    "WalkForwards": "KeyW",
+    "WalkBackwards": "KeyS"
   },
   "mouse_buttons": {},
   "gamepad_buttons": {

@@ -2,7 +2,7 @@ use crate::decimal_vector_3d::DecimalVector3d;
 use crate::sin_cos::{cos, f64_to_dbig, sin};
 use dashu_float::ops::SquareRoot;
 use dashu_float::DBig;
-use glam::{DMat3, DMat4};
+use glam::{DMat3, DMat4, DQuat};
 use std::ops::Deref;
 use std::sync::LazyLock;
 
@@ -102,6 +102,16 @@ impl DecimalMatrix3d {
             out[k] = (&self.data[k][i] + &self.data[i][k]) * &half_by_f_root;
             out
         }
+    }
+
+    pub fn as_dquat(&self) -> DQuat {
+        let q = self.as_quat();
+        DQuat::from_xyzw(
+            q[0].to_f64().value(),
+            q[1].to_f64().value(),
+            q[2].to_f64().value(),
+            q[3].to_f64().value(),
+        )
     }
 
     pub fn as_dmat4(&self) -> DMat4 {

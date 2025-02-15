@@ -1,9 +1,8 @@
 use crate::app::GameWindowApp;
-use crate::cli_args::Cli;
+use crate::cli_args::CLIArgs;
 use clap::Parser;
 use std::fs::File;
 use std::sync::{Arc, Mutex};
-use tracing::Level;
 use tracing_subscriber::fmt::format::FmtSpan;
 use tracing_subscriber::FmtSubscriber;
 use vengine_rs::core::toolkit::{App, VEToolkit};
@@ -14,13 +13,13 @@ mod app;
 mod cli_args;
 
 fn main() {
-    let cli = Cli::parse();
+    let cli_args = Arc::new(CLIArgs::parse());
 
     let subscriber = FmtSubscriber::builder()
         .with_ansi(false)
         .with_writer(File::create("./log.txt").unwrap())
         .with_span_events(FmtSpan::FULL)
-        .with_max_level(cli.log_level)
+        .with_max_level(cli_args.log_level)
         .finish();
 
     tracing::subscriber::set_global_default(subscriber).unwrap();
@@ -30,8 +29,8 @@ fn main() {
         .with_title("Codename T.S.P.");
 
     VEToolkit::start(
-        Box::from(|toolkit: Arc<VEToolkit>, window: Arc<Mutex<Window>>| {
-            let app = GameWindowApp::new(toolkit, window);
+        Box::from(move |toolkit: Arc<VEToolkit>, window: Arc<Mutex<Window>>| {
+            let app = GameWindowApp::new(toolkit, window, cli_args.clone());
             Arc::new(Mutex::from(app)) as Arc<Mutex<dyn App>>
         }),
         window_attributes,

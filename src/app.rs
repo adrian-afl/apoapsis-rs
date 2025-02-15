@@ -1,5 +1,8 @@
+use crate::cli_args::{CLIArgs, EntrypointOverride};
 use core::game::Game;
+use core::game_stage_trait::GameStage;
 use core::stages::warmup_stage::WarmupStage;
+use game_stages::body_viewer_stage::BodyViewerStage;
 use game_stages::splash_screen_stage::SplashScreenStage;
 use glam::DVec2;
 use std::sync::{Arc, Mutex};
@@ -12,10 +15,25 @@ pub struct GameWindowApp {
 }
 
 impl GameWindowApp {
-    pub fn new(toolkit: Arc<VEToolkit>, window: Arc<Mutex<Window>>) -> GameWindowApp {
+    pub fn new(
+        toolkit: Arc<VEToolkit>,
+        window: Arc<Mutex<Window>>,
+        cli_args: Arc<CLIArgs>,
+    ) -> GameWindowApp {
         let mut game = Game::new(toolkit, window);
 
-        let initial_stage = Box::new(SplashScreenStage::new());
+        let initial_stage: Box<dyn GameStage> = match &cli_args.entry {
+            None => Box::new(SplashScreenStage::new()),
+            Some(entry) => match entry {
+                EntrypointOverride::BodyViewer { name } => {
+                    Box::new(BodyViewerStage::new(&game.get_context(), name))
+                }
+                EntrypointOverride::OnGroundSandbox => panic!("Not implemented"),
+                EntrypointOverride::InOrbitSandbox => panic!("Not implemented"),
+                EntrypointOverride::LoadSave { .. } => panic!("Not implemented"),
+            },
+        };
+
         game.push_game_stage(initial_stage);
         game.push_game_stage(Box::new(WarmupStage::new()));
         GameWindowApp { game }
