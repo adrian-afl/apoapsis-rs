@@ -5,7 +5,8 @@
     "WalkLeft": "KeyA",
     "WalkRight": "KeyD",
     "WalkForwards": "KeyW",
-    "WalkBackwards": "KeyS"
+    "WalkBackwards": "KeyS",
+    "RecompileShaders": "KeyP"
   },
   "mouse_buttons": {},
   "gamepad_buttons": {

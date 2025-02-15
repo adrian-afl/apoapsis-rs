@@ -11,6 +11,7 @@ renderer_common = { workspace = true }
 ecs = { workspace = true }
 input = { workspace = true }
 universe_simulation = { workspace = true }
+common_util = { workspace = true }
 
 vengine-rs = { workspace = true }
 winit = { workspace = true, features = ["rwh_06", "serde"] }

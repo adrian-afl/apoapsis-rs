@@ -18,10 +18,17 @@ use vengine_rs::graphics::vertex_attributes::VertexAttribFormat;
 use vengine_rs::image::image::VEImageViewCreateInfo;
 
 pub struct MeshDrawer {
+    config: ResolutionConfig,
+
     pub render_stage: VERenderStage,
     pub mesh_set_layout: VEDescriptorSetLayout,
     pub common_set_layout: VEDescriptorSetLayout,
     pub common_set: VEDescriptorSet,
+
+    color_rgb_roughness_a_attachment: VEAttachment,
+    normal_rgb_distance_a_attachment: VEAttachment,
+    emission_rgb_metalness_a_attachment: VEAttachment,
+    shared_depth_buffer_attachment: VEAttachment,
 }
 
 pub const MESH_DRAWER_VERTEX_ATTRIBUTES: [VertexAttribFormat; 4] = [
@@ -172,7 +179,43 @@ impl MeshDrawer {
             mesh_set_layout,
             common_set_layout,
             common_set,
+            config: config.clone(),
+            color_rgb_roughness_a_attachment,
+            normal_rgb_distance_a_attachment,
+            emission_rgb_metalness_a_attachment,
+            shared_depth_buffer_attachment,
         })
+    }
+
+    pub fn recreate_stage(&mut self, toolkit: &VEToolkit) -> Result<(), RenderingError> {
+        let vertex_shader = toolkit.create_shader_module(
+            "shaders/compiled/mesh/mesh.vert.spv",
+            VEShaderModuleType::Vertex,
+        )?;
+
+        let fragment_shader = toolkit.create_shader_module(
+            "shaders/compiled/mesh/mesh.frag.spv",
+            VEShaderModuleType::Fragment,
+        )?;
+
+        self.render_stage = toolkit.create_render_stage(
+            self.config.width,
+            self.config.height,
+            &[
+                &self.color_rgb_roughness_a_attachment,
+                &self.normal_rgb_distance_a_attachment,
+                &self.emission_rgb_metalness_a_attachment,
+                &self.shared_depth_buffer_attachment,
+            ],
+            &[&self.mesh_set_layout, &self.common_set_layout],
+            &vertex_shader,
+            &fragment_shader,
+            &MESH_DRAWER_VERTEX_ATTRIBUTES,
+            VEPrimitiveTopology::TriangleList,
+            VECullMode::Back,
+        )?;
+
+        Ok(())
     }
 
     pub fn record(&self, meshes: &[&Mesh]) -> Result<(), RenderingError> {

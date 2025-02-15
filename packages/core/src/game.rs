@@ -5,10 +5,12 @@ use crate::stages::stages_stack::StageStack;
 use crate::time_counter::TimeCounter;
 use celestial_renderer::renderer::Renderer;
 use celestial_renderer::rendering_system::RenderingSystem;
+use common_util::udebug;
 use ecs::components::ui::cursor_type::UICursorType;
 use ecs::components::ui::ui_text_component::UIFontSize;
 use glam::DVec2;
-use input::controls::Controls;
+use input::controls::{ControlEvent, Controls};
+use input::controls_mapping::ControlMapItem;
 use real_physics_engine::physics_system::PhysicsSystem;
 use renderer_common::camera::Camera;
 use renderer_common::resolution_config::ResolutionConfig;
@@ -131,6 +133,17 @@ impl Game {
         let window_size = self.window.lock().unwrap().inner_size();
         self.time_counter.update_time();
         self.controls.update_gamepad_helper();
+
+        if self
+            .controls
+            .get_new_events()
+            .contains(&ControlEvent::ControlActivate(
+                ControlMapItem::RecompileShaders,
+            ))
+        {
+            udebug!("Recreating the renderer pipeline (reload shaders)");
+            self.rendering_system.recreate_stages().unwrap();
+        }
 
         let mut transition_from_update = StageTransition::DoNothing;
 

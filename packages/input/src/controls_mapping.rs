@@ -1,15 +1,13 @@
 use crate::controls::ControlEvent;
-use crate::controls::Controls;
 use common_util::strip_json_line_comments::strip_json_line_comments;
 use gilrs::Button;
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::fs;
-use std::sync::Arc;
 use winit::event::MouseButton;
 use winit::keyboard::{KeyCode, PhysicalKey};
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Deserialize)]
+#[derive(Clone, Debug, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize)]
 pub enum ControlMapItem {
     Pause,
     MenuClickPrimary,
@@ -59,6 +57,9 @@ pub enum ControlMapItem {
 
     FlightExit,
     FlightShoot,
+
+    // DEBUG
+    RecompileShaders,
 }
 
 #[derive(Debug, Clone, Deserialize)]

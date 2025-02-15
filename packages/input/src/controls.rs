@@ -7,7 +7,7 @@ use winit::event::MouseButton;
 use winit::keyboard::PhysicalKey;
 use winit::window::Window;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Ord, PartialOrd, Eq, PartialEq)]
 pub enum ControlEvent {
     ControlActivate(ControlMapItem),
     ControlRelease(ControlMapItem),

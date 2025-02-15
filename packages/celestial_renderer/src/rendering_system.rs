@@ -36,6 +36,12 @@ impl RenderingSystem {
         }
     }
 
+    pub fn recreate_stages(&mut self) -> Result<(), RenderingError> {
+        self.renderer.lock().unwrap().recreate_stages()?;
+
+        Ok(())
+    }
+
     fn create_mesh_from_description(
         &self,
         description: &MeshDescription,

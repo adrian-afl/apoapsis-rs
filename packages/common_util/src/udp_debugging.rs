@@ -28,17 +28,17 @@ impl UDPDebugging {
 
 pub static UDP_DEBUGGING: LazyLock<UDPDebugging> = LazyLock::new(|| UDPDebugging {
     socket: UdpSocket::bind("127.0.0.1:0").unwrap(),
-    target_address: Mutex::new("127.0.0.1:7777".to_owned()),
+    target_address: Mutex::new("127.0.0.1:6000".to_owned()),
     enabled: Mutex::new(true),
 });
 
 #[macro_export]
 macro_rules! udebug {
     ($fmt_str:literal) => {{
-        $crate::udp_debugging::UDP_DEBUGGING.send($fmt_str);
+        $crate::udp_debugging::UDP_DEBUGGING.send(&format!("{}:{}: {}, ", file!(), line!(), $fmt_str));
     }};
 
     ($fmt_str:literal, $($args:expr),*) => {{
-        $crate::udp_debugging::UDP_DEBUGGING.send(&format!($fmt_str, $($args),*));
+        $crate::udp_debugging::UDP_DEBUGGING.send(&format!("{}:{}: {}, ", file!(), line!(), &format!($fmt_str, $($args),*)));
     }};
 }

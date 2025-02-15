@@ -139,6 +139,29 @@ impl Renderer {
         }
     }
 
+    pub fn recreate_stages(&mut self) -> Result<(), RenderingError> {
+        self.mesh_drawer.recreate_stage(&self.toolkit)?;
+        self.icosphere_drawer.recreate_stage(&self.toolkit)?;
+        self.cloud_generator_high_freq
+            .recreate_stage(&self.toolkit)?;
+        self.cloud_generator_low_freq
+            .recreate_stage(&self.toolkit)?;
+        self.atmosphere_drawer.recreate_stage(&self.toolkit)?;
+        self.multi_merger.recreate_stage(&self.toolkit)?;
+        self.multi_merger
+            .update_inputs(
+                &mut self.atmosphere_drawer.out_additive_rgb,
+                &mut self.atmosphere_drawer.out_alpha_rgba,
+                &self.config,
+            )
+            .expect("Failed to update multi_merger inputs");
+
+        self.output
+            .recreate_stage(&self.toolkit, &mut self.multi_merger)?;
+
+        Ok(())
+    }
+
     pub fn draw(
         &mut self,
         meshes: &[&Mesh],

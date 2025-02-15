@@ -194,11 +194,6 @@ impl IcosphereDrawer {
     }
 
     pub fn recreate_stage(&mut self, toolkit: &VEToolkit) -> Result<(), RenderingError> {
-        let shader = toolkit.create_shader_module(
-            "shaders/compiled/output/multi-merger.comp.spv",
-            VEShaderModuleType::Compute,
-        )?;
-
         let terrain_vertex_shader = toolkit.create_shader_module(
             "shaders/compiled/terrain/terrain.vert.spv",
             VEShaderModuleType::Vertex,

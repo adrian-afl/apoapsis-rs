@@ -49,7 +49,7 @@ impl Output {
             ],
         )?;
 
-        let hi_freq_compute_shader = toolkit.create_shader_module(
+        let shader = toolkit.create_shader_module(
             "shaders/compiled/output/output.comp.spv",
             VEShaderModuleType::Compute,
         )?;
@@ -100,8 +100,7 @@ impl Output {
         let view = output.get_view(VEImageViewCreateInfo::simple_2d())?;
         data_set.bind_image_storage(3, &output, view)?;
 
-        let compute_stage =
-            toolkit.create_compute_stage(&[&data_set_layout], &hi_freq_compute_shader)?;
+        let compute_stage = toolkit.create_compute_stage(&[&data_set_layout], &shader)?;
 
         compute_stage.begin_recording()?;
         compute_stage.set_descriptor_set(0, &data_set);
@@ -141,9 +140,13 @@ impl Output {
         })
     }
 
-    pub fn recreate_stage(&mut self, toolkit: &VEToolkit) -> Result<(), RenderingError> {
+    pub fn recreate_stage(
+        &mut self,
+        toolkit: &VEToolkit,
+        multi_merger: &mut MultiMerger,
+    ) -> Result<(), RenderingError> {
         let shader = toolkit.create_shader_module(
-            "shaders/compiled/output/multi-merger.comp.spv",
+            "shaders/compiled/output/output.comp.spv",
             VEShaderModuleType::Compute,
         )?;
 
@@ -156,6 +159,27 @@ impl Output {
             self.config.height / WORKGROUP_SIZE,
             1,
         );
+
+        // this here is unhinged
+        // its to clear the multimerger
+        unsafe {
+            toolkit.device.device.cmd_clear_color_image(
+                self.compute_stage.command_buffer.handle,
+                multi_merger.output.handle,
+                multi_merger.output.current_layout,
+                &vk::ClearColorValue {
+                    float32: [0.0, 0.0, 0.0, 0.0],
+                },
+                &[vk::ImageSubresourceRange::default()
+                    .aspect_mask(vk::ImageAspectFlags::COLOR)
+                    .base_mip_level(0)
+                    .level_count(1) // TODO mip mapping
+                    .base_array_layer(0)
+                    .layer_count(1)],
+            )
+        }
+
+        self.compute_stage.end_recording()?;
 
         Ok(())
     }
