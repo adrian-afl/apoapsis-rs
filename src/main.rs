@@ -1,5 +1,6 @@
 use crate::app::GameWindowApp;
 use crate::cli_args::CLIArgs;
+use crate::udp_debugging::UDP_DEBUGGING;
 use clap::Parser;
 use std::fs::File;
 use std::sync::{Arc, Mutex};
@@ -11,9 +12,15 @@ use winit::window::{Window, WindowAttributes};
 
 mod app;
 mod cli_args;
+mod udp_debugging;
 
 fn main() {
     let cli_args = Arc::new(CLIArgs::parse());
+
+    UDP_DEBUGGING.set_target("127.0.0.1:6000");
+
+    udebug!("test without formatting");
+    udebug!("test with formatting {} + {} = {}", 1, 2, 1 + 2);
 
     let subscriber = FmtSubscriber::builder()
         .with_ansi(false)
