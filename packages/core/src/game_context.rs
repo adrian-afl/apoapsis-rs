@@ -1,7 +1,7 @@
 use crate::time_counter::TimeCounter;
 use celestial_renderer::rendering_system::RenderingSystem;
 use ecs::components::ui::ui_text_component::UIFontSize;
-use glam::DVec2;
+use glam::{DVec2, DVec3};
 use input::controls::Controls;
 use math::decimal_vector_3d::DecimalVector3d;
 use ui_renderer::ui_system::UISystem;
@@ -44,5 +44,15 @@ impl<'a> GameContext<'a> {
 
     pub fn get_altitude(&self, point: &DecimalVector3d) -> Option<f64> {
         self.rendering_system.get_altitude(self.universe, &point)
+    }
+
+    pub fn get_terrain_distance_from_center(&self, body: &str, normal: DVec3) -> Option<f64> {
+        self.rendering_system
+            .get_terrain_distance_from_center(self.universe, body, normal)
+    }
+
+    pub fn get_water_distance_from_center(&self, body: &str, normal: DVec3) -> Option<f64> {
+        self.rendering_system
+            .get_water_distance_from_center(self.universe, body, normal)
     }
 }

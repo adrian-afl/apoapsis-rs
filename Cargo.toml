@@ -21,7 +21,7 @@ members = [
 ]
 
 [workspace.dependencies]
-vengine-rs = { git = "ssh://git@github.com/adrian-afl/vengine-rs.git", rev = "df28a6113b4aed28d4c0d1d0373dc662b374b525" }
+vengine-rs = { git = "ssh://git@github.com/adrian-afl/vengine-rs.git", rev = "db912468135ee6428c224102ee4b3483490b5950" }
 winit = { version = "0.30.7", features = ["rwh_06", "serde"] }
 dashu-float = { version = "0.4.3" }
 glam = { version = "0.29.2", features = ["serde"] }
@@ -40,6 +40,7 @@ rand_xoshiro = "0.6.0"
 thiserror = "2.0.11"
 rapier3d-f64 = { version = "0.23.0", features = ["simd-stable"] }
 fontdue = "0.9.2"
+embedded-graphics = "0.8.1"
 
 celestial_renderer = { path = "packages/celestial_renderer" }
 common_util = { path = "packages/common_util" }
@@ -65,3 +66,4 @@ game_stages = { path = "packages/game_stages" }
 core = { path = "packages/core" }
 common_util = { path = "packages/common_util" }
 clap = { workspace = true }
+

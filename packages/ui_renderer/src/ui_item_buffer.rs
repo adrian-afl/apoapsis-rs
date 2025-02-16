@@ -1,4 +1,4 @@
-use crate::font_atlas_generator::font_atlas_generator::FontAtlas;
+use crate::font_atlas_generator::common::FontAtlas;
 use crate::ui_rendered_item::UIRenderedItem;
 use ecs::components::ui::ui_text_component::UIFontSize;
 use renderer_common::buffer_writers::{write_float, write_uint, write_vec2, write_vec4};

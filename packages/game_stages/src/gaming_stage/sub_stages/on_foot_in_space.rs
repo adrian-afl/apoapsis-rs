@@ -6,7 +6,7 @@ pub struct OnFootInSpace {
 }
 
 impl OnFootInSpace {
-    pub fn support_current_situation(context: &GameContext, ecs: &ECSWorld) -> bool {
-        let altitude = 
+    pub fn support_current_situation(context: &GameContext, ecs: &ECSWorld) {
+        // let altitude =
     }
 }

@@ -3,6 +3,9 @@ use core::game::Game;
 use core::game_stage_trait::GameStage;
 use core::stages::warmup_stage::WarmupStage;
 use game_stages::body_viewer_stage::BodyViewerStage;
+use game_stages::gaming_stage;
+use game_stages::gaming_stage::gaming_initialize_sandbox_in_orbit::gaming_initialize_sandbox_in_orbit;
+use game_stages::gaming_stage::gaming_stage::GamingStage;
 use game_stages::splash_screen_stage::SplashScreenStage;
 use glam::DVec2;
 use std::sync::{Arc, Mutex};
@@ -22,20 +25,30 @@ impl GameWindowApp {
     ) -> GameWindowApp {
         let mut game = Game::new(toolkit, window);
 
-        let initial_stage: Box<dyn GameStage> = match &cli_args.entry {
-            None => Box::new(SplashScreenStage::new()),
+        match &cli_args.entry {
+            None => {
+                let initial_stage = Box::new(SplashScreenStage::new());
+                game.push_game_stage(initial_stage);
+                game.push_game_stage(Box::new(WarmupStage::new()));
+            }
             Some(entry) => match entry {
                 EntrypointOverride::BodyViewer { name } => {
-                    Box::new(BodyViewerStage::new(&game.get_context(), name))
+                    let stage = Box::new(BodyViewerStage::new(&game.get_context(), name));
+                    game.push_game_stage(stage);
                 }
                 EntrypointOverride::OnGroundSandbox => panic!("Not implemented"),
-                EntrypointOverride::InOrbitSandbox => panic!("Not implemented"),
+                EntrypointOverride::InOrbitSandbox => {
+                    let context = game.get_context();
+                    let mut stage = Box::new(GamingStage::new(&context));
+                    game.update_with(stage.get_ecs_world());
+                    let context = game.get_context();
+                    gaming_initialize_sandbox_in_orbit(&context, stage.get_ecs_world());
+                    game.push_game_stage(stage);
+                }
                 EntrypointOverride::LoadSave { .. } => panic!("Not implemented"),
             },
         };
 
-        game.push_game_stage(initial_stage);
-        game.push_game_stage(Box::new(WarmupStage::new()));
         GameWindowApp { game }
     }
 }

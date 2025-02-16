@@ -3,12 +3,14 @@ use crate::geometry::common_icosphere::ICO_LEVEL_SUBDIVISIONS;
 use crate::geometry::icosphere_drawer::IcosphereDrawer;
 use crate::geometry::terrain_icosphere::{TerrainData, TerrainIcosphere};
 use crate::geometry::water_icosphere::{WaterData, WaterIcosphere};
+use common_util::{profile, udebug};
 use dashu_float::DBig;
 use glam::DVec3;
 use math::decimal_vector_3d::DecimalVector3d;
 use planet_generator_library::generate_icosphere::{
     generate_base_icosphere, IcosphereSegmentGenerator, Triangle,
 };
+use rayon::join;
 use renderer_common::errors::RenderingError;
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
@@ -63,6 +65,10 @@ impl CelestialHierarchy {
                 .rendered_bodies
                 .contains_key(&closest_hierarchy_body.body.name);
             if !exists {
+                udebug!(
+                    "Adding body {} because it didnt exist in rendered bodies",
+                    &closest_hierarchy_body.body.name
+                );
                 let terrain_icosphere = match &closest_hierarchy_body.body.terrain {
                     None => None,
                     Some(terrain) => Some(TerrainIcosphere::new(
@@ -108,30 +114,60 @@ impl CelestialHierarchy {
             }
 
             if exists {
+                udebug!("Updating body {}", &closest_hierarchy_body.body.name);
                 let mut body = self
                     .rendered_bodies
                     .get_mut(&closest_hierarchy_body.body.name)
                     .unwrap();
-                body.distance_to_camera =
-                    camera_position.distance_to(&closest_hierarchy_body.position);
-                // println!("{:?}", closest_star.body);
-                body.celestial_body_buffer.update(
-                    &camera_position,
-                    &closest_star.position,
-                    match &closest_star.body.star_emission {
-                        None => DVec3::new(0.0, 0.0, 0.0),
-                        Some(radiance) => radiance.radiance,
+
+                join(
+                    || {
+                        profile!("update the buffer", {
+                            body.distance_to_camera =
+                                camera_position.distance_to(&closest_hierarchy_body.position);
+                            // println!("{:?}", closest_star.body);
+                            body.celestial_body_buffer
+                                .update(
+                                    &camera_position,
+                                    &closest_star.position,
+                                    match &closest_star.body.star_emission {
+                                        None => DVec3::new(0.0, 0.0, 0.0),
+                                        Some(radiance) => radiance.radiance,
+                                    },
+                                    &closest_hierarchy_body,
+                                )
+                                .unwrap();
+                        });
                     },
-                    &closest_hierarchy_body,
-                )?;
-
-                if let Some(ref mut icosphere) = &mut body.terrain_icosphere {
-                    icosphere.update_buffer(&camera_position, &closest_hierarchy_body)?;
-                }
-
-                if let Some(ref mut icosphere) = &mut body.water_icosphere {
-                    icosphere.update_buffer(&camera_position, &closest_hierarchy_body)?;
-                }
+                    || {
+                        join(
+                            || {
+                                profile!("update terrain_icosphere", {
+                                    if let Some(ref mut icosphere) = &mut body.terrain_icosphere {
+                                        icosphere
+                                            .update_buffer(
+                                                &camera_position,
+                                                &closest_hierarchy_body,
+                                            )
+                                            .unwrap();
+                                    }
+                                });
+                            },
+                            || {
+                                profile!("update water_icosphere", {
+                                    if let Some(ref mut icosphere) = &mut body.water_icosphere {
+                                        icosphere
+                                            .update_buffer(
+                                                &camera_position,
+                                                &closest_hierarchy_body,
+                                            )
+                                            .unwrap();
+                                    }
+                                });
+                            },
+                        );
+                    },
+                );
             }
         }
 

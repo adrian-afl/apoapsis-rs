@@ -1,7 +1,5 @@
-use crate::stage_factory::StageFactory;
-use common_util::easing::ease_expo_out;
+use crate::gaming_stage::plugins::debug_status_plugin::DebugStatusPlugin;
 use common_util::udebug;
-use common_util::utils::mix;
 use core::game_context::GameContext;
 use core::game_stage_trait::GameStage;
 use core::game_stage_trait::StageTransition;
@@ -9,23 +7,21 @@ use dashu_float::DBig;
 use ecs::components::camera::first_person_camera_control_component::FirstPersonCameraControlComponent;
 use ecs::components::common::transform_component::TransformComponent;
 use ecs::components::common::universe_clock_component::UniverseClockComponent;
-use ecs::components::ui::ui_box_component::UIBoxComponent;
-use ecs::components::ui::ui_color_component::UIColorComponent;
-use ecs::components::ui::ui_text_component::{UIFontSize, UITextComponent};
+use ecs::components::physics::simple_physics_component::SimplePhysicsComponent;
 use ecs::ecs_world::ECSWorld;
 use ecs::entity::Entity;
-use glam::{dvec4, DMat4, DQuat, DVec2, DVec3};
-use input::controls::ControlEvent;
+use glam::{dvec3, DVec3};
 use input::controls_mapping::ControlMapItem;
 use math::decimal_vector_3d::DecimalVector3d;
-use std::sync::Arc;
-use universe_simulation::simulation::Simulation;
+use math::get_quat_directions::get_quat_directions;
+use math::sin_cos::f64_to_dbig;
 
 pub struct GamingStage {
     ecs: ECSWorld,
 
-    camera_id: u64,
     player_id: u64,
+
+    debug_status_plugin: DebugStatusPlugin,
 }
 
 impl GamingStage {
@@ -37,30 +33,81 @@ impl GamingStage {
             Some(UniverseClockComponent::new(DBig::from(100), true));
         ecs.add(universe_clock);
 
-        let mut camera_entity = Entity::named("player");
-        camera_entity.components.camera_focus = true;
-        camera_entity.components.transform = Some(TransformComponent::new());
-        camera_entity.components.first_person_camera_control =
-            Some(FirstPersonCameraControlComponent::new(20.0));
-        let camera_id = camera_entity.id;
-        ecs.add(camera_entity);
-
         let mut player_entity = Entity::named("player");
-        let player_id = player_entity.id;
-        ecs.add(player_entity);
+        player_entity.components.camera_focus = true;
+        player_entity.components.first_person_camera_control =
+            Some(FirstPersonCameraControlComponent::new(75.0));
+
+        player_entity.components.transform = Some(TransformComponent::new());
+
+        player_entity.components.simple_physics = Some(SimplePhysicsComponent::new(
+            f64_to_dbig(100.0),
+            DecimalVector3d::zero(),
+            dvec3(0.0, 0.0, 0.0),
+        ));
+
+        player_entity.components.is_player = true;
+
+        let player_id = ecs.add(player_entity);
+
+        let debug_status_plugin = DebugStatusPlugin::new(context, &mut ecs);
 
         Self {
             ecs,
-            camera_id,
             player_id,
+            debug_status_plugin,
         }
     }
 }
 
 impl GameStage for GamingStage {
     fn update(&mut self, context: &GameContext) -> StageTransition {
-        if context.controls.was_control_activated(ControMa) {}
+        // if context.controls.was_control_activated(ControMa) {}
 
+        let player_entity = &mut self.ecs["player"];
+        let transform = player_entity.components.transform.as_ref().unwrap();
+        let simple_physics = player_entity.components.simple_physics.as_mut().unwrap();
+        let directions = get_quat_directions(transform.orientation.inverse());
+        let mut angular_velocity_change = dvec3(0.0, 0.0, 0.0);
+        if context
+            .controls
+            .get_control_state(ControlMapItem::FlightPitchUp)
+        {
+            angular_velocity_change += directions.left * 0.1;
+        }
+        if context
+            .controls
+            .get_control_state(ControlMapItem::FlightPitchDown)
+        {
+            angular_velocity_change += directions.right * 0.1;
+        }
+        if context
+            .controls
+            .get_control_state(ControlMapItem::FlightYawLeft)
+        {
+            angular_velocity_change += directions.down * 0.1;
+        }
+        if context
+            .controls
+            .get_control_state(ControlMapItem::FlightYawRight)
+        {
+            angular_velocity_change += directions.up * 0.1;
+        }
+        if context
+            .controls
+            .get_control_state(ControlMapItem::FlightRollLeft)
+        {
+            angular_velocity_change += directions.forwards * 0.1;
+        }
+        if context
+            .controls
+            .get_control_state(ControlMapItem::FlightRollRight)
+        {
+            angular_velocity_change += directions.backwards * 0.1;
+        }
+        simple_physics.angular_velocity += angular_velocity_change;
+
+        self.debug_status_plugin.update(context, &mut self.ecs);
         StageTransition::DoNothing
     }
 

@@ -1,4 +1,4 @@
-layout(set = COMMON_BUFFER_SET, binding = COMMON_BUFFER_BINDING) buffer commonDataBuffer {
+layout(set = COMMON_BUFFER_SET, binding = COMMON_BUFFER_BINDING) readonly buffer commonDataBuffer {
     vec4 resolution_zero_zero;
     vec4 fontAtlasSmallData[255];
     vec4 fontAtlasMediumData[255];

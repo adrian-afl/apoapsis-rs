@@ -1,29 +1,29 @@
 use crate::font_atlas_generator::common::{
     blit_box, CharPositionArrayItem, FontAtlas, GeneratedChar, Offset, Size,
 };
-use fontdue::Font;
 use std::collections::HashMap;
-use std::fs;
 use vengine_rs::core::toolkit::VEToolkit;
 use vengine_rs::image::image::VEImageUsage;
 use vengine_rs::image::image_format::VEImageFormat;
 
+use ecs::components::ui::ui_text_component::UIFontSize;
+use embedded_graphics::mono_font::ascii::{FONT_10X20, FONT_4X6, FONT_5X7, FONT_6X10, FONT_7X14};
+
 impl FontAtlas {
-    pub fn new_fontdue(
+    pub fn new_pixel_perfect(
         toolkit: &VEToolkit,
-        font_path: &str,
-        font_size: u8,
+        uifont_size: UIFontSize,
         supported_chars: &str,
     ) -> Self {
-        let font = Font::from_bytes(
-            fs::read(font_path).unwrap(),
-            fontdue::FontSettings::default(),
-        )
-        .unwrap();
+        let font = match uifont_size {
+            UIFontSize::Small => &FONT_5X7,
+            UIFontSize::Medium => &FONT_6X10,
+            UIFontSize::Large => &FONT_10X20,
+        };
 
         let mut generated = vec![];
         for c in supported_chars.chars() {
-            generated.push(GeneratedChar::generate(&font, font_size, c));
+            generated.push(GeneratedChar::generate_pixel_perfect(&font, c));
         }
         let width_sum: usize = generated.iter().map(|e| e.metrics.width + 5).sum();
         let height_max = generated.iter().map(|e| e.metrics.height).max().unwrap();

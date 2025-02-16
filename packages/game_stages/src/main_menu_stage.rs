@@ -1,4 +1,3 @@
-use crate::stage_factory::StageFactory;
 use common_util::easing::ease_expo_out;
 use common_util::utils::mix;
 use core::game_context::GameContext;
@@ -38,13 +37,13 @@ fn create_text(context: &GameContext, content: &str, x: f64, y: f64) -> Entity {
     text.components.ui_text = Some(UITextComponent::new(
         content,
         dvec4(1.0, 1.0, 1.0, 1.0),
-        UIFontSize::Medium,
+        UIFontSize::Small,
     ));
 
     text.components.ui_box = Some(
         UIBoxComponent::default()
             .with_position(DVec2::new(x, y))
-            .with_size(context.measure_text_pixels(&content, &UIFontSize::Medium)),
+            .with_size(context.measure_text_pixels(&content, &UIFontSize::Small)),
     );
 
     text.components.ui_color = Some(UIColorComponent::rgba(1.0, 1.0, 1.0, 0.0));

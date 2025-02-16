@@ -8,6 +8,7 @@ use ecs::components::rendering::mesh_component::{
     ColorOrTextureDescription, MeshDescription, ValueOrTextureDescription,
 };
 use ecs::ecs_world::ECSWorld;
+use glam::DVec3;
 use math::decimal_vector_3d::DecimalVector3d;
 use rayon::iter::ParallelIterator;
 use renderer_common::camera::Camera;
@@ -96,6 +97,40 @@ impl RenderingSystem {
 
                 None
             }
+        }
+    }
+
+    pub fn get_terrain_distance_from_center(
+        &self,
+        universe: &Simulation,
+        body: &str,
+        normal: DVec3,
+    ) -> Option<f64> {
+        let body = universe.get_body(body);
+        let rendered_body = self.celestial_hierarchy.get_rendered_body(&body.body.name);
+        match rendered_body {
+            None => None,
+            Some(rendered_body) => match &rendered_body.terrain_icosphere {
+                None => None,
+                Some(terrain) => Some(terrain.get_radius_at_normal(normal)),
+            },
+        }
+    }
+
+    pub fn get_water_distance_from_center(
+        &self,
+        universe: &Simulation,
+        body: &str,
+        normal: DVec3,
+    ) -> Option<f64> {
+        let body = universe.get_body(body);
+        let rendered_body = self.celestial_hierarchy.get_rendered_body(&body.body.name);
+        match rendered_body {
+            None => None,
+            Some(rendered_body) => match &rendered_body.water_icosphere {
+                None => None,
+                Some(water) => Some(water.get_radius_at_normal(normal)),
+            },
         }
     }
 
@@ -194,8 +229,6 @@ impl RenderingSystem {
 
         // this list here is so that if entity disappears, the mesh is cleaned up
         let detected_mesh_component_ids = Mutex::new(vec![]);
-
-        let renderer_mutex = Mutex::from(&self.renderer);
 
         ecs.parallel_process_all_by_components(
             &[&Components::Mesh, &Components::Transform],

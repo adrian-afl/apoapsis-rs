@@ -5,9 +5,10 @@ use crate::stages::stages_stack::StageStack;
 use crate::time_counter::TimeCounter;
 use celestial_renderer::renderer::Renderer;
 use celestial_renderer::rendering_system::RenderingSystem;
-use common_util::udebug;
+use common_util::{profile, udebug};
 use ecs::components::ui::cursor_type::UICursorType;
 use ecs::components::ui::ui_text_component::UIFontSize;
+use ecs::ecs_world::ECSWorld;
 use glam::DVec2;
 use input::controls::{ControlEvent, Controls};
 use input::controls_mapping::ControlMapItem;
@@ -120,112 +121,162 @@ impl Game {
             .measure_text_pixels(text, font_size)
     }
 
-    pub fn get_context(&self) -> GameContext {
+    pub fn get_context(&mut self) -> GameContext {
         GameContext::new(
             &self.ui_system,
+            &self.rendering_system,
             &self.time_counter,
             &self.universe_simulation,
             &self.controls,
         )
     }
 
-    pub fn update(&mut self) {
-        let window_size = self.window.lock().unwrap().inner_size();
-        self.time_counter.update_time();
-        self.controls.update_gamepad_helper();
+    pub fn update_with(&mut self, stage_ecs: &mut ECSWorld) {
+        self.camera_system
+            .update(&mut self.current_camera, stage_ecs);
 
-        if self
-            .controls
-            .get_new_events()
-            .contains(&ControlEvent::ControlActivate(
-                ControlMapItem::RecompileShaders,
-            ))
-        {
-            udebug!("Recreating the renderer pipeline (reload shaders)");
-            self.rendering_system.recreate_stages().unwrap();
-        }
+        self.universe_simulation_updater_system.update(
+            &mut self.universe_simulation,
+            stage_ecs,
+            self.time_counter.delta_time,
+        );
+
+        self.physics_system.update(
+            stage_ecs,
+            &self.universe_simulation,
+            self.time_counter.delta_time,
+        );
+
+        let window_size = self.window.lock().unwrap().inner_size();
+
+        let normalized_cursor_pos = self.controls.mouse.get_cursor_absolute()
+            / DVec2::new(window_size.width as f64, window_size.height as f64);
+
+        self.ui_system.update(stage_ecs, normalized_cursor_pos);
+
+        self.rendering_system.update(
+            stage_ecs,
+            &self.universe_simulation,
+            &self.current_camera,
+            self.time_counter.total_time,
+            self.time_counter.delta_time,
+        );
+    }
+
+    pub fn update(&mut self) {
+        profile!("before update", {
+            let window_size = self.window.lock().unwrap().inner_size();
+            self.time_counter.update_time();
+            self.controls.update_gamepad_helper();
+
+            if self
+                .controls
+                .get_new_events()
+                .contains(&ControlEvent::ControlActivate(
+                    ControlMapItem::RecompileShaders,
+                ))
+            {
+                udebug!("Recreating the renderer pipeline (reload shaders)");
+                self.rendering_system.recreate_stages().unwrap();
+            }
+        });
 
         let mut transition_from_update = StageTransition::DoNothing;
 
         if let Some(stage) = &self.stage_stack.head() {
             let mut stage = stage.lock().unwrap();
-            let context = GameContext::new(
-                &self.ui_system,
-                &self.time_counter,
-                &self.universe_simulation,
-                &mut self.controls,
-            );
+            let context = profile!("context create", {
+                GameContext::new(
+                    &self.ui_system,
+                    &self.rendering_system,
+                    &self.time_counter,
+                    &self.universe_simulation,
+                    &mut self.controls,
+                )
+            });
 
             transition_from_update = stage.update(&context);
             self.controls.clear_events();
 
             let stage_ecs = stage.get_ecs_world();
 
-            self.camera_system
-                .update(&mut self.current_camera, stage_ecs);
+            profile!("camera_system update", {
+                self.camera_system
+                    .update(&mut self.current_camera, stage_ecs);
+            });
 
-            self.universe_simulation_updater_system.update(
-                &mut self.universe_simulation,
-                stage_ecs,
-                self.time_counter.delta_time,
-            );
+            profile!("universe_simulation_updater_system update", {
+                self.universe_simulation_updater_system.update(
+                    &mut self.universe_simulation,
+                    stage_ecs,
+                    self.time_counter.delta_time,
+                );
+            });
 
-            self.physics_system.update(
-                stage_ecs,
-                &self.universe_simulation,
-                self.time_counter.delta_time,
-            );
+            profile!("physics_system update", {
+                self.physics_system.update(
+                    stage_ecs,
+                    &self.universe_simulation,
+                    self.time_counter.delta_time,
+                );
+            });
 
-            let normalized_cursor_pos = self.controls.mouse.get_cursor_absolute()
-                / DVec2::new(window_size.width as f64, window_size.height as f64);
+            profile!("ui_system & stuff update", {
+                let window_size = self.window.lock().unwrap().inner_size();
 
-            self.ui_system.update(stage_ecs, normalized_cursor_pos);
-            self.ui_raycast_system.update(
-                &mut self.ui_raycast_result,
-                stage_ecs,
-                normalized_cursor_pos,
-            );
-            let cursor_system_result = self
-                .ui_cursor_system
-                .update(stage_ecs, &self.ui_raycast_result);
-            match cursor_system_result.cursor_locked {
-                true => {
-                    if !self.controls.mouse.is_cursor_locked() {
-                        self.controls.mouse.lock_cursor();
+                let normalized_cursor_pos = self.controls.mouse.get_cursor_absolute()
+                    / DVec2::new(window_size.width as f64, window_size.height as f64);
+
+                self.ui_system.update(stage_ecs, normalized_cursor_pos);
+                self.ui_raycast_system.update(
+                    &mut self.ui_raycast_result,
+                    stage_ecs,
+                    normalized_cursor_pos,
+                );
+                let cursor_system_result = self
+                    .ui_cursor_system
+                    .update(stage_ecs, &self.ui_raycast_result);
+                match cursor_system_result.cursor_locked {
+                    true => {
+                        if !self.controls.mouse.is_cursor_locked() {
+                            self.controls.mouse.lock_cursor();
+                        }
+                    }
+                    false => {
+                        if self.controls.mouse.is_cursor_locked() {
+                            self.controls.mouse.unlock_cursor();
+                        }
                     }
                 }
-                false => {
-                    if self.controls.mouse.is_cursor_locked() {
-                        self.controls.mouse.unlock_cursor();
+                match cursor_system_result.cursor_type {
+                    UICursorType::Arrow => {
+                        if self.controls.mouse.get_cursor_type() != CursorIcon::Default {
+                            self.controls.mouse.set_cursor_type(CursorIcon::Default)
+                        }
+                    }
+                    UICursorType::Pointer => {
+                        if self.controls.mouse.get_cursor_type() != CursorIcon::Pointer {
+                            self.controls.mouse.set_cursor_type(CursorIcon::Pointer)
+                        }
+                    }
+                    UICursorType::Grab => {
+                        if self.controls.mouse.get_cursor_type() != CursorIcon::Pointer {
+                            self.controls.mouse.set_cursor_type(CursorIcon::Pointer)
+                        }
                     }
                 }
-            }
-            match cursor_system_result.cursor_type {
-                UICursorType::Arrow => {
-                    if self.controls.mouse.get_cursor_type() != CursorIcon::Default {
-                        self.controls.mouse.set_cursor_type(CursorIcon::Default)
-                    }
-                }
-                UICursorType::Pointer => {
-                    if self.controls.mouse.get_cursor_type() != CursorIcon::Pointer {
-                        self.controls.mouse.set_cursor_type(CursorIcon::Pointer)
-                    }
-                }
-                UICursorType::Grab => {
-                    if self.controls.mouse.get_cursor_type() != CursorIcon::Pointer {
-                        self.controls.mouse.set_cursor_type(CursorIcon::Pointer)
-                    }
-                }
-            }
+            });
 
-            self.rendering_system.update(
-                stage_ecs,
-                &self.universe_simulation,
-                &self.current_camera,
-                self.time_counter.total_time,
-                self.time_counter.delta_time,
-            );
-        }
+            profile!("rendering_system update", {
+                self.rendering_system.update(
+                    stage_ecs,
+                    &self.universe_simulation,
+                    &self.current_camera,
+                    self.time_counter.total_time,
+                    self.time_counter.delta_time,
+                );
+            });
+        };
 
         match transition_from_update {
             StageTransition::PushStage(stage) => self.stage_stack.push(stage),

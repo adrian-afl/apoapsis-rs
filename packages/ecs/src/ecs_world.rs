@@ -70,13 +70,15 @@ impl ECSWorld {
         world
     }
 
-    pub fn add(&mut self, entity: Entity) {
+    pub fn add(&mut self, entity: Entity) -> u64 {
         if self.entities.contains_key(&entity.id) {
             //return Err(ECSError::FailedToAddDuplicateEntity);
             // actually, why not just do nothing?
-            return;
+            return entity.id;
         }
+        let id = entity.id;
         self.entities.insert(entity.id, entity);
+        id
     }
 
     pub fn remove(&mut self, entity: Entity) {

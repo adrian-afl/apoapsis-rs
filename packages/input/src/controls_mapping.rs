@@ -39,6 +39,8 @@ pub enum ControlMapItem {
     FlightRollLeft,
     FlightRollRight,
 
+    FlightKillRotation,
+
     FlightCameraModeSwitch,
     FlightCameraFrameSwitch,
     FlightZoom,
@@ -60,6 +62,7 @@ pub enum ControlMapItem {
 
     // DEBUG
     RecompileShaders,
+    DevConsole,
 }
 
 #[derive(Debug, Clone, Deserialize)]

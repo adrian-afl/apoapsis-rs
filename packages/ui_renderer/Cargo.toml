@@ -12,4 +12,5 @@ fontdue = { workspace = true }
 glam = { workspace = true }
 rayon = { workspace = true }
 thiserror = { workspace = true }
+embedded-graphics = { workspace = true }
 

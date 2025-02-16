@@ -74,7 +74,7 @@ impl DecimalMatrix3d {
         let half = DBIGHALF.deref();
 
         if f_trace > DBig::ZERO {
-            let f_root = (f_trace + DBig::ONE).sqrt();
+            let f_root = (f_trace + DBig::ONE).with_precision(20).value().sqrt();
             let w = half * &f_root;
             let half_by_f_root = half / &f_root;
             let x = (&self.data[1][2] - &self.data[2][1]) * &half_by_f_root;
@@ -92,8 +92,10 @@ impl DecimalMatrix3d {
             let j = (i + 1) % 3;
             let k = (i + 2) % 3;
 
-            let f_root =
-                (&self.data[i][i] - &self.data[j][j] - &self.data[k][k] + DBig::ONE).sqrt();
+            let f_root = (&self.data[i][i] - &self.data[j][j] - &self.data[k][k] + DBig::ONE)
+                .with_precision(20)
+                .value()
+                .sqrt();
             let mut out = [DBig::ZERO, DBig::ZERO, DBig::ZERO, DBig::ZERO];
             out[i] = half * &f_root;
             let half_by_f_root = half / &f_root;

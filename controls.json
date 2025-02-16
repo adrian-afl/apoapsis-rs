@@ -6,7 +6,13 @@
     "WalkRight": "KeyD",
     "WalkForwards": "KeyW",
     "WalkBackwards": "KeyS",
-    "RecompileShaders": "KeyP"
+    "RecompileShaders": "KeyP",
+    "FlightPitchUp": "KeyS",
+    "FlightPitchDown": "KeyW",
+    "FlightYawLeft": "KeyQ",
+    "FlightYawRight": "KeyE",
+    "FlightRollLeft": "KeyA",
+    "FlightRollRight": "KeyD"
   },
   "mouse_buttons": {},
   "gamepad_buttons": {

@@ -1,4 +1,4 @@
-use crate::font_atlas_generator::font_atlas_generator::FontAtlas;
+use crate::font_atlas_generator::common::FontAtlas;
 use crate::ui_common_buffer::UICommonBuffer;
 use crate::ui_rendered_item::UIRenderedItem;
 use ecs::components::ui::ui_text_component::UIFontSize;
@@ -170,24 +170,21 @@ impl UIDrawer {
 
         let font = "media/Perfect DOS VGA 437.ttf";
 
-        let mut font_atlas_small = FontAtlas::new(
+        let mut font_atlas_small = FontAtlas::new_pixel_perfect(
             toolkit,
-            font,
-            16,
+            UIFontSize::Small,
             " !\\\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~",
         );
 
-        let mut font_atlas_medium = FontAtlas::new(
+        let mut font_atlas_medium = FontAtlas::new_pixel_perfect(
             toolkit,
-            font,
-            24,
+            UIFontSize::Medium,
             " !\\\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~",
         );
 
-        let mut font_atlas_large = FontAtlas::new(
+        let mut font_atlas_large = FontAtlas::new_pixel_perfect(
             toolkit,
-            font,
-            32,
+            UIFontSize::Large,
             " !\\\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~",
         );
 

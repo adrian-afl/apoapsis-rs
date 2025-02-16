@@ -1,5 +1,6 @@
 use glam::{DMat4, DQuat, DVec2, DVec3, DVec4};
 use math::decimal_vector_3d::DecimalVector3d;
+use math::get_quat_directions::{get_quat_directions, QuatDirections};
 
 #[derive(Debug, Clone)]
 pub struct FrustumCone {
@@ -10,23 +11,13 @@ pub struct FrustumCone {
 }
 
 #[derive(Debug, Clone)]
-pub struct CameraDirections {
-    pub up: DVec3,
-    pub down: DVec3,
-    pub left: DVec3,
-    pub right: DVec3,
-    pub forwards: DVec3,
-    pub backwards: DVec3,
-}
-
-#[derive(Debug, Clone)]
 pub struct Camera {
     pub projection_matrix: DMat4,
     pub view_matrix: DMat4,
     pub position: DecimalVector3d,
     pub orientation: DQuat,
     pub frustum_cone: FrustumCone,
-    pub directions: CameraDirections,
+    pub directions: QuatDirections,
 }
 
 impl Camera {
@@ -42,7 +33,7 @@ impl Camera {
                 top_left: DVec3::new(0.0, 0.0, -1.0),
                 top_right: DVec3::new(0.0, 0.0, -1.0),
             },
-            directions: CameraDirections {
+            directions: QuatDirections {
                 up: DVec3::new(0.0, 0.0, -1.0),
                 down: DVec3::new(0.0, 0.0, -1.0),
                 left: DVec3::new(0.0, 0.0, -1.0),
@@ -95,15 +86,8 @@ impl Camera {
         (DVec3::new(clip.x, clip.y, clip.z) / clip.w).normalize()
     }
 
-    fn get_directions(&self) -> CameraDirections {
+    fn get_directions(&self) -> QuatDirections {
         let inverse = self.orientation.clone().inverse();
-        CameraDirections {
-            forwards: inverse * DVec3::new(0.0, 0.0, -1.0),
-            backwards: inverse * DVec3::new(0.0, 0.0, 1.0),
-            up: inverse * DVec3::new(0.0, 1.0, 0.0),
-            down: inverse * DVec3::new(0.0, -1.0, 0.0),
-            left: inverse * DVec3::new(-1.0, 0.0, 0.0),
-            right: inverse * DVec3::new(1.0, 0.0, 0.0),
-        }
+        get_quat_directions(inverse)
     }
 }

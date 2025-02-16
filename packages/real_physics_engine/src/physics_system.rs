@@ -1,5 +1,6 @@
 use crate::build_collider::build_collider;
 use crate::real_physics_system::{RealPhysicsSystem, SetRealPhysicsBodyKinematics};
+use common_util::udebug;
 use dashu_float::DBig;
 use ecs::component_trait::Components;
 use ecs::components::common::transform_component::TransformComponent;
@@ -74,8 +75,6 @@ impl PhysicsSystem {
     }
 
     fn phase1(&mut self, ecs: &mut ECSWorld, universe_simulation: &Simulation, delta_time: f64) {
-        // println!("PhysicsSystem / phase1");
-
         let decimal_delta_time = f64_to_dbig(delta_time);
         let decimal_half_delta_time = f64_to_dbig(delta_time * 0.5);
 

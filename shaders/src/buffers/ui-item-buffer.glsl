@@ -1,4 +1,4 @@
-layout(set = ITEM_BUFFER_SET, binding = ITEM_BUFFER_BINDING) buffer meshDataBuffer {
+layout(set = ITEM_BUFFER_SET, binding = ITEM_BUFFER_BINDING) readonly buffer meshDataBuffer {
     vec4 size_position;
     vec4 orientation_zero_zero;
     vec4 color;

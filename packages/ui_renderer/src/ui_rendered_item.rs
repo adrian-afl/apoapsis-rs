@@ -1,4 +1,4 @@
-use crate::font_atlas_generator::font_atlas_generator::FontAtlas;
+use crate::font_atlas_generator::common::FontAtlas;
 use crate::ui_item_buffer::UIItemBuffer;
 use ecs::components::ui::ui_text_component::UIFontSize;
 use glam::{DVec2, DVec4};
