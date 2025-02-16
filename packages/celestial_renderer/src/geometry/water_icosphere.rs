@@ -88,6 +88,10 @@ impl WaterIcosphere {
         })
     }
 
+    pub fn get_radius_at_normal(&self, normal: DVec3) -> f64 {
+        self.loaded_data.loaded_height.get(normal)
+    }
+
     pub fn preload(&mut self, toolkit: &VEToolkit) -> Result<(), RenderingError> {
         let which_to_preload = which_part_to_preload(
             &self.loaded_data.metadata,

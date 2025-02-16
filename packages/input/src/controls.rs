@@ -38,6 +38,16 @@ impl Controls {
         *self.controls_state.get(&control).unwrap_or(&false)
     }
 
+    pub fn was_control_activated(&self, control: ControlMapItem) -> bool {
+        self.new_events
+            .contains(&ControlEvent::ControlActivate(control))
+    }
+
+    pub fn was_control_released(&self, control: ControlMapItem) -> bool {
+        self.new_events
+            .contains(&ControlEvent::ControlRelease(control))
+    }
+
     pub fn on_mouse_button(&mut self, button: MouseButton, state: bool) {
         let mapped = self.mapping.map_mouse_button_event(button, state);
         for event in mapped {

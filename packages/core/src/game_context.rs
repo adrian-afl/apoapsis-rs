@@ -1,12 +1,15 @@
 use crate::time_counter::TimeCounter;
+use celestial_renderer::rendering_system::RenderingSystem;
 use ecs::components::ui::ui_text_component::UIFontSize;
 use glam::DVec2;
 use input::controls::Controls;
+use math::decimal_vector_3d::DecimalVector3d;
 use ui_renderer::ui_system::UISystem;
 use universe_simulation::simulation::Simulation;
 
 pub struct GameContext<'a> {
     ui_system: &'a UISystem,
+    rendering_system: &'a RenderingSystem,
     pub total_time: f64,
     pub delta_time: f64,
     pub controls: &'a Controls,
@@ -16,12 +19,14 @@ pub struct GameContext<'a> {
 impl<'a> GameContext<'a> {
     pub fn new(
         ui_system: &'a UISystem,
+        rendering_system: &'a RenderingSystem,
         time_counter: &TimeCounter,
         universe: &'a Simulation,
         controls: &'a Controls,
     ) -> Self {
         Self {
             ui_system,
+            rendering_system,
             total_time: time_counter.total_time,
             delta_time: time_counter.delta_time,
             universe,
@@ -35,5 +40,9 @@ impl<'a> GameContext<'a> {
             .lock()
             .unwrap()
             .measure_text_pixels(text, font_size)
+    }
+
+    pub fn get_altitude(&self, point: &DecimalVector3d) -> Option<f64> {
+        self.rendering_system.get_altitude(self.universe, &point)
     }
 }

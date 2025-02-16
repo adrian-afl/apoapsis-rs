@@ -558,6 +558,7 @@ dependencies = [
  "ecs",
  "glam",
  "input",
+ "math",
  "real_physics_engine",
  "renderer_common",
  "ui_renderer",

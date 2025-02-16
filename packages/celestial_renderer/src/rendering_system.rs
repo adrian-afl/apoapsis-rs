@@ -8,6 +8,7 @@ use ecs::components::rendering::mesh_component::{
     ColorOrTextureDescription, MeshDescription, ValueOrTextureDescription,
 };
 use ecs::ecs_world::ECSWorld;
+use math::decimal_vector_3d::DecimalVector3d;
 use rayon::iter::ParallelIterator;
 use renderer_common::camera::Camera;
 use renderer_common::errors::RenderingError;
@@ -40,6 +41,62 @@ impl RenderingSystem {
         self.renderer.lock().unwrap().recreate_stages()?;
 
         Ok(())
+    }
+
+    pub fn get_altitude(&self, universe: &Simulation, point: &DecimalVector3d) -> Option<f64> {
+        let closest_body = universe.find_closest_body(&point);
+        let rendered_body = self
+            .celestial_hierarchy
+            .get_rendered_body(&closest_body.body.name);
+        match rendered_body {
+            None => None,
+            Some(rendered_body) => {
+                let mut normal = (point - &closest_body.position);
+                let distance_center = normal.length();
+                normal.normalize();
+                let mut normal = normal.to_dvec3();
+                normal = closest_body.orientation.as_dquat() * normal;
+                normal.normalize();
+
+                let terrain_altitude = match &rendered_body.terrain_icosphere {
+                    None => None,
+                    Some(terrain) => Some(
+                        distance_center.to_f64().value() - terrain.get_radius_at_normal(normal),
+                    ),
+                };
+                let water_altitude = match &rendered_body.water_icosphere {
+                    None => None,
+                    Some(water) => {
+                        Some(distance_center.to_f64().value() - water.get_radius_at_normal(normal))
+                    }
+                };
+                let atmosphere_altitude = match &closest_body.body.atmosphere {
+                    None => None,
+                    Some(atmo) => Some(distance_center.to_f64().value() - atmo.start),
+                };
+                if terrain_altitude.is_none()
+                    && water_altitude.is_none()
+                    && atmosphere_altitude.is_none()
+                {
+                    return None;
+                }
+                if terrain_altitude.is_none() && water_altitude.is_none() {
+                    return atmosphere_altitude;
+                }
+
+                if terrain_altitude.is_some() && water_altitude.is_some() {
+                    return Some(terrain_altitude.unwrap().min(water_altitude.unwrap()));
+                }
+                if terrain_altitude.is_some() {
+                    return terrain_altitude;
+                }
+                if water_altitude.is_some() {
+                    return water_altitude;
+                }
+
+                None
+            }
+        }
     }
 
     fn create_mesh_from_description(

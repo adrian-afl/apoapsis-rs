@@ -12,6 +12,7 @@ use crate::scene::material::Material;
 use crate::scene::mesh::Mesh;
 use common_util::udebug;
 use glam::DVec4;
+use math::decimal_vector_3d::DecimalVector3d;
 use renderer_common::camera::Camera;
 use renderer_common::empty_textures::EMPTY_TEXTURES;
 use renderer_common::errors::RenderingError;

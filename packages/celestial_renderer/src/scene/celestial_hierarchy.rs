@@ -141,6 +141,10 @@ impl CelestialHierarchy {
         Ok(())
     }
 
+    pub fn get_rendered_body(&self, name: &str) -> Option<&RenderedBody> {
+        self.rendered_bodies.get(name)
+    }
+
     pub fn get_rendered_bodies(&mut self) -> Vec<&mut RenderedBody> {
         let mut refs = vec![];
         for body in self.rendered_bodies.values_mut() {

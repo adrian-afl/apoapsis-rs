@@ -4,7 +4,7 @@ use crate::geometry::common_icosphere::{
     PreloadDetectionResultAction, ICO_LEVEL_SUBDIVISIONS,
 };
 use crate::geometry::icosphere_drawer::TERRAIN_ICOSPHERE_VERTEX_ATTRIBUTES;
-use glam::DMat4;
+use glam::{DMat4, DVec3};
 use math::decimal_vector_3d::DecimalVector3d;
 use planet_generator_library::cubemap_data::CubeMapDataLayer;
 use planet_generator_library::generate_icosphere::{
@@ -86,6 +86,10 @@ impl TerrainIcosphere {
             data_buffer,
             data_set,
         })
+    }
+
+    pub fn get_radius_at_normal(&self, normal: DVec3) -> f64 {
+        self.loaded_data.loaded_height.get(normal)
     }
 
     pub fn preload(&mut self, toolkit: &VEToolkit) -> Result<(), RenderingError> {
