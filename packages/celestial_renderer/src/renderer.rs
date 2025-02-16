@@ -185,7 +185,7 @@ impl Renderer {
             )?;
         });
 
-        let celestial_bodies = profile!("get_rendered_bodies", {
+        let mut celestial_bodies = profile!("get_rendered_bodies", {
             celestial_hierarchy.get_rendered_bodies()
         });
 
@@ -216,7 +216,8 @@ impl Renderer {
 
         let mut wait_for_semaphores = vec![self.mesh_drawing_semaphore.clone()];
 
-        for mut body in celestial_bodies {
+        for (i, body) in celestial_bodies.iter_mut().enumerate() {
+            let is_closest = i == 0;
             self.atmosphere_drawer
                 .set_celestial_buffer(&body.celestial_body_buffer, &self.config)
                 .expect("Failed to set_celestial_buffer for atmosphere_drawer");
@@ -289,7 +290,11 @@ impl Renderer {
                 match &mut body.terrain_icosphere {
                     None => (),
                     Some(ref mut icosphere) => {
-                        icosphere.preload(&self.toolkit)?;
+                        if is_closest {
+                            icosphere.preload(&self.toolkit)?;
+                        } else {
+                            icosphere.preload_lowest_quality(&self.toolkit)?;
+                        }
 
                         self.icosphere_drawer.record_terrain(icosphere)?;
                         let queue = &self
@@ -306,7 +311,7 @@ impl Renderer {
                                 wait_for_semaphores.clone(),
                                 vec![self.terrain_drawing_semaphore.clone()],
                             )
-                            .expect("Failed to draw terain");
+                            .expect("Failed to draw terrain");
                         wait_for_semaphores = vec![self.terrain_drawing_semaphore.clone()];
                     }
                 }
@@ -316,7 +321,11 @@ impl Renderer {
                 match &mut body.water_icosphere {
                     None => (),
                     Some(ref mut icosphere) => {
-                        icosphere.preload(&self.toolkit)?;
+                        if is_closest {
+                            icosphere.preload(&self.toolkit)?
+                        } else {
+                            icosphere.preload_lowest_quality(&self.toolkit)?
+                        };
 
                         self.icosphere_drawer.record_water(icosphere)?;
                         let queue = &self

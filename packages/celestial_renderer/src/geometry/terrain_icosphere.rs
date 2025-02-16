@@ -50,6 +50,12 @@ pub struct TerrainData {
     pub dir_path: String,
 }
 
+#[derive(Ord, PartialOrd, Eq, PartialEq, Clone, Copy)]
+pub enum PreloadResult {
+    ChangesMade,
+    NotChanged,
+}
+
 impl TerrainIcosphere {
     pub fn new(
         toolkit: &VEToolkit,
@@ -92,7 +98,7 @@ impl TerrainIcosphere {
         self.loaded_data.loaded_height.get(normal)
     }
 
-    pub fn preload(&mut self, toolkit: &VEToolkit) -> Result<(), RenderingError> {
+    pub fn preload(&mut self, toolkit: &VEToolkit) -> Result<PreloadResult, RenderingError> {
         let which_to_preload = which_part_to_preload(
             &self.loaded_data.metadata,
             &self.loaded_data.part_matrices,
@@ -120,7 +126,33 @@ impl TerrainIcosphere {
             }
         });
 
-        Ok(())
+        Ok(if which_to_preload.len() > 0 {
+            PreloadResult::ChangesMade
+        } else {
+            PreloadResult::NotChanged
+        })
+    }
+
+    pub fn preload_lowest_quality(
+        &mut self,
+        toolkit: &VEToolkit,
+    ) -> Result<PreloadResult, RenderingError> {
+        let mut locked = self.currently_loaded.lock().unwrap();
+        let mut anything_changed = false;
+        for keyval in locked.iter_mut() {
+            if keyval.1.level != 1 {
+                let geometry = self.load_geometry(toolkit, *keyval.0, 1)?;
+                keyval.1.level = 1;
+                keyval.1.vertex_buffer = geometry.vertex_buffer;
+                anything_changed = true;
+            }
+        }
+
+        Ok(if anything_changed {
+            PreloadResult::ChangesMade
+        } else {
+            PreloadResult::NotChanged
+        })
     }
 
     pub fn update_buffer(
