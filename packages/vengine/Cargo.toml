@@ -1,0 +1,17 @@
+[package]
+name = "vengine-rs"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+winit = { workspace = true }
+ash-window = { workspace = true }
+ash = { workspace = true }
+image = { workspace = true }
+thiserror = { workspace = true }
+common_util = { workspace = true }
+
+[lints.clippy]
+map_unwrap_or = "deny"
+unwrap_used = "deny"
+expect_used = "deny"

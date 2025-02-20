@@ -5,6 +5,7 @@ use ecs::components::ui::ui_text_component::UIFontSize;
 use glam::DVec2;
 use renderer_common::errors::RenderingError;
 use renderer_common::resolution_config::ResolutionConfig;
+use vengine_rs::core::command_buffer::VECommandBuffer;
 use vengine_rs::core::descriptor_set::VEDescriptorSet;
 use vengine_rs::core::descriptor_set_layout::{
     VEDescriptorSetFieldStage, VEDescriptorSetFieldType, VEDescriptorSetLayout,
@@ -235,19 +236,19 @@ impl UIDrawer {
         )
     }
 
-    pub fn record(&self, items: &[&UIRenderedItem]) -> Result<(), RenderingError> {
-        self.render_stage.begin_recording()?;
+    pub fn record(&self, command_buffer: &VECommandBuffer, items: &[&UIRenderedItem]) {
+        self.render_stage.bind(&command_buffer);
 
-        self.render_stage.set_descriptor_set(1, &self.common_set);
+        self.render_stage
+            .set_descriptor_set(&command_buffer, 1, &self.common_set);
 
         for item in items {
             self.render_stage
-                .set_descriptor_set(0, &item.descriptor_set);
-            self.render_stage.draw_instanced(&self.quad_geometry, 1);
+                .set_descriptor_set(&command_buffer, 0, &item.descriptor_set);
+            self.quad_geometry.draw_instanced(&command_buffer, 1);
         }
 
-        self.render_stage.end_recording()?;
-        Ok(())
+        self.render_stage.end_render_pass(&command_buffer);
     }
 
     pub fn measure_text_pixels(&self, text: &str, font_size: &UIFontSize) -> DVec2 {

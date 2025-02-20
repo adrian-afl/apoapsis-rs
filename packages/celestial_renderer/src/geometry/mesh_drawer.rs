@@ -3,7 +3,7 @@ use crate::geometry::g_buffer::GBuffer;
 use crate::scene::mesh::Mesh;
 use renderer_common::errors::RenderingError;
 use renderer_common::resolution_config::ResolutionConfig;
-use std::cell::Cell;
+use vengine_rs::core::command_buffer::VECommandBuffer;
 use vengine_rs::core::descriptor_set::VEDescriptorSet;
 use vengine_rs::core::descriptor_set_layout::{
     VEDescriptorSetFieldStage, VEDescriptorSetFieldType, VEDescriptorSetLayout,
@@ -218,18 +218,23 @@ impl MeshDrawer {
         Ok(())
     }
 
-    pub fn record(&self, meshes: &[&Mesh]) -> Result<(), RenderingError> {
-        self.render_stage.begin_recording()?;
+    pub fn record(
+        &self,
+        stage: &VERenderStage,
+        command_buffer: &VECommandBuffer,
+        meshes: &[&Mesh],
+    ) {
+        stage.bind(&command_buffer);
 
-        self.render_stage.set_descriptor_set(1, &self.common_set);
+        self.render_stage
+            .set_descriptor_set(&command_buffer, 1, &self.common_set);
 
         for mesh in meshes {
             self.render_stage
-                .set_descriptor_set(0, &mesh.descriptor_set);
-            self.render_stage.draw_instanced(&mesh.geometry, 1);
+                .set_descriptor_set(&command_buffer, 0, &mesh.descriptor_set);
+            mesh.geometry.draw_instanced(&command_buffer, 1);
         }
 
-        self.render_stage.end_recording()?;
-        Ok(())
+        stage.end_render_pass(&command_buffer);
     }
 }

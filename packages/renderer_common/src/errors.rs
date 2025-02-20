@@ -2,6 +2,7 @@ use std::io;
 use thiserror::Error;
 use vengine_rs::buffer::buffer::VEBufferError;
 use vengine_rs::compute::compute_stage::VEComputeStageError;
+use vengine_rs::core::command_buffer::VECommandBufferError;
 use vengine_rs::core::descriptor_set::VEDescriptorSetError;
 use vengine_rs::core::descriptor_set_layout::VEDescriptorSetLayoutError;
 use vengine_rs::core::shader_module::VEShaderModuleError;
@@ -39,6 +40,9 @@ pub enum RenderingError {
 
     #[error("buffer error")]
     BufferError(#[from] VEBufferError),
+
+    #[error("command buffer error")]
+    CommandBufferError(#[from] VECommandBufferError),
 
     #[error("vertex buffer error")]
     VertexBufferError(#[from] VEVertexBufferError),

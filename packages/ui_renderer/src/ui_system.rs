@@ -12,6 +12,7 @@ use renderer_common::resolution_config::ResolutionConfig;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, RwLock};
 use thiserror::Error;
+use vengine_rs::core::command_buffer::VECommandBuffer;
 use vengine_rs::core::toolkit::VEToolkit;
 use vengine_rs::image::image::VEImageUsage;
 
@@ -130,12 +131,18 @@ impl UISystem {
 
         let detected_entity_ids = detected_entity_ids.lock().unwrap();
         locked_map.retain(|k, _| detected_entity_ids.contains(k));
+    }
+
+    pub fn with_items<F>(&self, mut run: F)
+    where
+        F: FnMut(&[&UIRenderedItem]),
+    {
+        let locked_map = self.currently_rendered_items.read().unwrap();
 
         // println!("UIRenderer / update C");
 
         let items = locked_map.values().collect::<Vec<_>>();
 
-        let ui_drawer = self.ui_drawer.lock().unwrap();
-        ui_drawer.record(&items).unwrap();
+        run(&items);
     }
 }

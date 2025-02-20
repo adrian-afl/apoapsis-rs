@@ -2,6 +2,7 @@ use crate::buffers::cloud_generator_low_freq_buffer::CloudGeneratorLowFreqBuffer
 use glam::DVec4;
 use renderer_common::errors::RenderingError;
 use vengine_rs::compute::compute_stage::VEComputeStage;
+use vengine_rs::core::command_buffer::VECommandBuffer;
 use vengine_rs::core::descriptor_set::VEDescriptorSet;
 use vengine_rs::core::descriptor_set_layout::{
     VEDescriptorSetFieldStage, VEDescriptorSetFieldType, VEDescriptorSetLayout,
@@ -65,17 +66,10 @@ impl CloudGeneratorLowFreq {
         let view = low_freq_data_r.get_view(VEImageViewCreateInfo::simple_2d())?;
         data_set.bind_image_storage(1, &low_freq_data_r, view)?;
 
+        let command_buffer = toolkit.create_command_buffer()?;
+
         let compute_stage =
             toolkit.create_compute_stage(&[&data_set_layout], &low_freq_compute_shader)?;
-
-        compute_stage.begin_recording()?;
-        compute_stage.set_descriptor_set(0, &data_set);
-        compute_stage.dispatch(
-            LOW_FREQ_RES_WIDTH / WORKGROUP_SIZE,
-            LOW_FREQ_RES_HEIGHT / WORKGROUP_SIZE,
-            1,
-        );
-        compute_stage.end_recording()?;
 
         Ok(CloudGeneratorLowFreq {
             compute_stage,
@@ -86,6 +80,18 @@ impl CloudGeneratorLowFreq {
         })
     }
 
+    pub fn record(&self, command_buffer: &VECommandBuffer) {
+        self.compute_stage.bind(&command_buffer);
+        self.compute_stage
+            .set_descriptor_set(&command_buffer, 0, &self.data_set);
+        self.compute_stage.dispatch(
+            &command_buffer,
+            LOW_FREQ_RES_WIDTH / WORKGROUP_SIZE,
+            LOW_FREQ_RES_HEIGHT / WORKGROUP_SIZE,
+            1,
+        );
+    }
+
     pub fn recreate_stage(&mut self, toolkit: &VEToolkit) -> Result<(), RenderingError> {
         let shader = toolkit.create_shader_module(
             "shaders/compiled/atmosphere/gen-clouds.comp.spv",
@@ -93,15 +99,6 @@ impl CloudGeneratorLowFreq {
         )?;
 
         self.compute_stage = toolkit.create_compute_stage(&[&self.data_set_layout], &shader)?;
-
-        self.compute_stage.begin_recording()?;
-        self.compute_stage.set_descriptor_set(0, &self.data_set);
-        self.compute_stage.dispatch(
-            LOW_FREQ_RES_WIDTH / WORKGROUP_SIZE,
-            LOW_FREQ_RES_HEIGHT / WORKGROUP_SIZE,
-            1,
-        );
-        self.compute_stage.end_recording()?;
 
         Ok(())
     }

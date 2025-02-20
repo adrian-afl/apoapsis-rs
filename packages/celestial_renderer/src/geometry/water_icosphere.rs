@@ -1,7 +1,7 @@
 use crate::buffers::water_icosphere_data_buffer::WaterIcosphereDataBuffer;
 use crate::geometry::common_icosphere::{
     update_icosphere_matrices, which_part_to_preload, IcosphereLoadedGeometry,
-    PreloadDetectionResultAction, ICO_LEVEL_SUBDIVISIONS,
+    PreloadDetectionResultAction, PreloadResult, ICO_LEVEL_SUBDIVISIONS,
 };
 use crate::geometry::icosphere_drawer::WATER_ICOSPHERE_VERTEX_ATTRIBUTES;
 use glam::{DMat4, DVec3};
@@ -20,6 +20,7 @@ use renderer_common::errors::RenderingError;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use universe_simulation::simulation::SimulatedBody;
+use vengine_rs::core::command_buffer::VECommandBuffer;
 use vengine_rs::core::descriptor_set::VEDescriptorSet;
 use vengine_rs::core::descriptor_set_layout::VEDescriptorSetLayout;
 use vengine_rs::core::toolkit::VEToolkit;
@@ -48,12 +49,6 @@ pub struct WaterData {
     pub radius: f64,
     pub water_color: DVec3,
     pub dir_path: String,
-}
-
-#[derive(Ord, PartialOrd, Eq, PartialEq, Clone, Copy)]
-pub enum PreloadResult {
-    ChangesMade,
-    NotChanged,
 }
 
 impl WaterIcosphere {
@@ -178,15 +173,17 @@ impl WaterIcosphere {
         Ok(())
     }
 
-    pub fn draw(&mut self, stage: &VERenderStage) -> Result<(), RenderingError> {
+    pub fn record(&self, stage: &VERenderStage, command_buffer: &VECommandBuffer) {
+        stage.bind(command_buffer);
+
         self.loaded_data.metadata.par_iter().for_each(|m| {
             let locked = self.currently_loaded.lock().unwrap();
             if let Some(mapped) = locked.get(&m.base_segment) {
-                stage.draw_instanced(&mapped.vertex_buffer, 1);
+                mapped.vertex_buffer.draw_instanced(command_buffer, 1);
             }
         });
 
-        Ok(())
+        stage.end_render_pass(command_buffer);
     }
 
     fn load_geometry(

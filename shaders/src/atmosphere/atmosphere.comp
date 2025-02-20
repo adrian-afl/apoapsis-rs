@@ -9,19 +9,19 @@ layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 #define COMMON_BUFFER_BINDING 0
 #include "buffers/common-buffer.glsl"
 
-#define CELESTIAL_BUFFER_SET 0
-#define CELESTIAL_BUFFER_BINDING 1
+layout(set = 0, binding = 1, rgba8_snorm) uniform image2D gBufferColorRGBroughnessA;
+layout(set = 0, binding = 2, rgba32f) uniform image2D gBufferNormalRGBdistanceA;
+layout(set = 0, binding = 3, rgba8_snorm) uniform image2D gBufferEmissionRGBmetalnessA;
+
+layout(set = 0, binding = 4) uniform sampler2D cloudsLowFreqTextureDensityR;
+layout(set = 0, binding = 5) uniform sampler3D cloudsHighFreqTextureDensityR;
+
+layout(set = 0, binding = 6, rgba16f) uniform restrict image2D outAdditiveRGB; // the restrict might bite my ass
+layout(set = 0, binding = 7, rgba16f) uniform restrict image2D outAlphaRGBA; // the restrict might bite my ass
+
+#define CELESTIAL_BUFFER_SET 1
+#define CELESTIAL_BUFFER_BINDING 0
 #include "buffers/celestial-body-buffer.glsl"
-
-layout(set = 0, binding = 2, rgba8_snorm) uniform image2D gBufferColorRGBroughnessA;
-layout(set = 0, binding = 3, rgba32f) uniform image2D gBufferNormalRGBdistanceA;
-layout(set = 0, binding = 4, rgba8_snorm) uniform image2D gBufferEmissionRGBmetalnessA;
-
-layout(set = 0, binding = 5) uniform sampler2D cloudsLowFreqTextureDensityR;
-layout(set = 0, binding = 6) uniform sampler3D cloudsHighFreqTextureDensityR;
-
-layout(set = 0, binding = 7, rgba16f) uniform restrict image2D outAdditiveRGB; // the restrict might bite my ass
-layout(set = 0, binding = 8, rgba16f) uniform restrict image2D outAlphaRGBA; // the restrict might bite my ass
 
 #include "include/frustum-cone.glsl"
 #include "include/sphere-raytracing.glsl"

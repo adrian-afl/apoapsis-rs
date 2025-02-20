@@ -1,11 +1,15 @@
+use ash::vk::{AccessFlags, ImageAspectFlags, ImageLayout, PipelineStageFlags};
 use renderer_common::errors::RenderingError;
 use renderer_common::resolution_config::ResolutionConfig;
 use vengine_rs::compute::compute_stage::VEComputeStage;
+use vengine_rs::core::command_buffer::VECommandBuffer;
 use vengine_rs::core::descriptor_set::VEDescriptorSet;
 use vengine_rs::core::descriptor_set_layout::{
     VEDescriptorSetFieldStage, VEDescriptorSetFieldType, VEDescriptorSetLayout,
     VEDescriptorSetLayoutField,
 };
+use vengine_rs::core::device::VEDevice;
+use vengine_rs::core::memory_barrier::{submit_barriers, VEImageMemoryBarrier};
 use vengine_rs::core::shader_module::VEShaderModuleType;
 use vengine_rs::core::toolkit::VEToolkit;
 use vengine_rs::image::image::{VEImage, VEImageUsage, VEImageViewCreateInfo};
@@ -26,6 +30,8 @@ impl MultiMerger {
     pub fn new(
         config: &ResolutionConfig,
         toolkit: &VEToolkit,
+        input_additive: &mut VEImage,
+        input_alpha: &mut VEImage,
     ) -> Result<MultiMerger, RenderingError> {
         let mut output = toolkit.create_image_full(
             config.width,
@@ -73,6 +79,12 @@ impl MultiMerger {
         let compute_stage =
             toolkit.create_compute_stage(&[&data_set_layout], &hi_freq_compute_shader)?;
 
+        let view = input_additive.get_view(VEImageViewCreateInfo::simple_2d())?;
+        data_set.bind_image_storage(0, input_additive, view)?;
+
+        let view = input_alpha.get_view(VEImageViewCreateInfo::simple_2d())?;
+        data_set.bind_image_storage(1, input_alpha, view)?;
+
         Ok(MultiMerger {
             compute_stage,
             data_set_layout,
@@ -92,27 +104,39 @@ impl MultiMerger {
         Ok(())
     }
 
-    pub fn update_inputs(
-        &mut self,
-        additive: &mut VEImage,
-        alpha: &mut VEImage,
+    pub fn record(
+        &self,
+        device: &VEDevice,
+        command_buffer: &VECommandBuffer,
         config: &ResolutionConfig,
-    ) -> Result<(), RenderingError> {
-        let view = additive.get_view(VEImageViewCreateInfo::simple_2d())?;
-        self.data_set.bind_image_storage(0, additive, view)?;
-
-        let view = alpha.get_view(VEImageViewCreateInfo::simple_2d())?;
-        self.data_set.bind_image_storage(1, alpha, view)?;
-
-        self.compute_stage.begin_recording()?;
-        self.compute_stage.set_descriptor_set(0, &self.data_set);
+    ) {
+        self.compute_stage.bind(command_buffer);
+        self.compute_stage
+            .set_descriptor_set(&command_buffer, 0, &self.data_set);
         self.compute_stage.dispatch(
+            &command_buffer,
             config.width / WORKGROUP_SIZE,
             config.height / WORKGROUP_SIZE,
             1,
         );
-        self.compute_stage.end_recording()?;
 
-        Ok(())
+        let barrier = VEImageMemoryBarrier {
+            image: self.output.handle,
+            aspect: ImageAspectFlags::COLOR,
+            src_access: AccessFlags::SHADER_WRITE,
+            dst_access: AccessFlags::SHADER_READ,
+            old_layout: ImageLayout::GENERAL,
+            new_layout: ImageLayout::GENERAL,
+        };
+
+        submit_barriers(
+            device,
+            &command_buffer,
+            PipelineStageFlags::COMPUTE_SHADER,
+            PipelineStageFlags::COMPUTE_SHADER,
+            &[],
+            &[],
+            &[barrier.build()],
+        );
     }
 }

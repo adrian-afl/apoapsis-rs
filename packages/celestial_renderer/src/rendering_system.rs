@@ -15,6 +15,7 @@ use renderer_common::camera::Camera;
 use renderer_common::errors::RenderingError;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, RwLock};
+use ui_renderer::ui_system::UISystem;
 use universe_simulation::simulation::Simulation;
 use vengine_rs::core::toolkit::VEToolkit;
 use vengine_rs::image::image::VEImageUsage;
@@ -222,6 +223,7 @@ impl RenderingSystem {
         ecs: &mut ECSWorld,
         universe_simulation: &Simulation,
         camera: &Camera,
+        ui_system: &UISystem,
         total_time: f64,
         delta_time: f64,
     ) {
@@ -300,24 +302,27 @@ impl RenderingSystem {
 
         // println!("RenderingSystem / Draw");
 
-        let render_result = self.renderer.lock().unwrap().draw(
-            &self
-                .currently_rendered_meshes
-                .try_read()
-                .unwrap()
-                .values()
-                .collect::<Vec<_>>(),
-            universe_simulation,
-            &mut self.celestial_hierarchy,
-            &camera,
-            total_time,
-            delta_time,
-        );
+        ui_system.with_items(|items| {
+            let render_result = self.renderer.lock().unwrap().draw(
+                &self
+                    .currently_rendered_meshes
+                    .try_read()
+                    .unwrap()
+                    .values()
+                    .collect::<Vec<_>>(),
+                items,
+                universe_simulation,
+                &mut self.celestial_hierarchy,
+                &camera,
+                total_time,
+                delta_time,
+            );
 
-        // println!("RenderingSystem / End");
-        match render_result {
-            Ok(_) => (),
-            Err(err) => println!("Render failed! Reason: {}", err),
-        }
+            // println!("RenderingSystem / End");
+            match render_result {
+                Ok(_) => (),
+                Err(err) => println!("Render failed! Reason: {}", err),
+            }
+        });
     }
 }

@@ -1,9 +1,9 @@
-use crate::buffers::celestial_body_buffer::CelestialBodyBuffer;
 use crate::buffers::common_buffer::CommonBuffer;
 use crate::geometry::g_buffer::GBuffer;
 use renderer_common::errors::RenderingError;
 use renderer_common::resolution_config::ResolutionConfig;
 use vengine_rs::compute::compute_stage::VEComputeStage;
+use vengine_rs::core::command_buffer::VECommandBuffer;
 use vengine_rs::core::descriptor_set::VEDescriptorSet;
 use vengine_rs::core::descriptor_set_layout::{
     VEDescriptorSetFieldStage, VEDescriptorSetFieldType, VEDescriptorSetLayout,
@@ -19,8 +19,10 @@ use vengine_rs::image::sampler::{VESampler, VESamplerAddressMode};
 pub struct AtmosphereDrawer {
     pub compute_stage: VEComputeStage,
 
-    data_set_layout: VEDescriptorSetLayout,
-    data_set: VEDescriptorSet,
+    pub body_data_set_layout: VEDescriptorSetLayout,
+
+    common_data_set_layout: VEDescriptorSetLayout,
+    common_data_set: VEDescriptorSet,
 
     pub out_additive_rgb: VEImage,
     pub out_alpha_rgba: VEImage,
@@ -67,7 +69,15 @@ impl AtmosphereDrawer {
             false,
         )?;
 
-        let mut data_set_layout = toolkit.create_descriptor_set_layout(&[
+        let mut body_data_set_layout =
+            toolkit.create_descriptor_set_layout(&[VEDescriptorSetLayoutField {
+                // celestial data buffer
+                binding: 0,
+                typ: VEDescriptorSetFieldType::UniformBuffer,
+                stage: VEDescriptorSetFieldStage::Compute,
+            }])?;
+
+        let mut common_data_set_layout = toolkit.create_descriptor_set_layout(&[
             VEDescriptorSetLayoutField {
                 // common data buffer
                 binding: 0,
@@ -75,92 +85,88 @@ impl AtmosphereDrawer {
                 stage: VEDescriptorSetFieldStage::Compute,
             },
             VEDescriptorSetLayoutField {
-                // celestial data buffer
-                binding: 1,
-                typ: VEDescriptorSetFieldType::UniformBuffer,
-                stage: VEDescriptorSetFieldStage::Compute,
-            },
-            VEDescriptorSetLayoutField {
                 // gBufferColorRGBroughnessA image
-                binding: 2,
+                binding: 1,
                 typ: VEDescriptorSetFieldType::StorageImage,
                 stage: VEDescriptorSetFieldStage::Compute,
             },
             VEDescriptorSetLayoutField {
                 // gBufferNormalRGBdistanceA image
-                binding: 3,
+                binding: 2,
                 typ: VEDescriptorSetFieldType::StorageImage,
                 stage: VEDescriptorSetFieldStage::Compute,
             },
             VEDescriptorSetLayoutField {
                 // gBufferEmissionRGBmetalnessA image
-                binding: 4,
+                binding: 3,
                 typ: VEDescriptorSetFieldType::StorageImage,
                 stage: VEDescriptorSetFieldStage::Compute,
             },
             VEDescriptorSetLayoutField {
                 // cloudsLowFreqTextureDensityR image
-                binding: 5,
+                binding: 4,
                 typ: VEDescriptorSetFieldType::Sampler,
                 stage: VEDescriptorSetFieldStage::Compute,
             },
             VEDescriptorSetLayoutField {
                 // cloudsHighFreqTextureDensityR image
-                binding: 6,
+                binding: 5,
                 typ: VEDescriptorSetFieldType::Sampler,
                 stage: VEDescriptorSetFieldStage::Compute,
             },
             VEDescriptorSetLayoutField {
                 // outAdditiveRGB image
-                binding: 7,
+                binding: 6,
                 typ: VEDescriptorSetFieldType::StorageImage,
                 stage: VEDescriptorSetFieldStage::Compute,
             },
             VEDescriptorSetLayoutField {
                 // outAlphaRGBA image
-                binding: 8,
+                binding: 7,
                 typ: VEDescriptorSetFieldType::StorageImage,
                 stage: VEDescriptorSetFieldStage::Compute,
             },
         ])?;
 
-        let data_set = data_set_layout.create_descriptor_set()?;
+        let common_data_set = common_data_set_layout.create_descriptor_set()?;
 
-        data_set.bind_buffer(0, &common_buffer.buffer)?;
+        common_data_set.bind_buffer(0, &common_buffer.buffer)?;
 
         let view = g_buffer
             .color_rgb_roughness_a
             .get_view(VEImageViewCreateInfo::simple_2d())?;
-        data_set.bind_image_storage(2, &g_buffer.color_rgb_roughness_a, view)?;
+        common_data_set.bind_image_storage(1, &g_buffer.color_rgb_roughness_a, view)?;
 
         let view = g_buffer
             .normal_rgb_distance_a
             .get_view(VEImageViewCreateInfo::simple_2d())?;
-        data_set.bind_image_storage(3, &g_buffer.normal_rgb_distance_a, view)?;
+        common_data_set.bind_image_storage(2, &g_buffer.normal_rgb_distance_a, view)?;
 
         let view = g_buffer
             .emission_rgb_metalness_a
             .get_view(VEImageViewCreateInfo::simple_2d())?;
-        data_set.bind_image_storage(4, &g_buffer.emission_rgb_metalness_a, view)?;
+        common_data_set.bind_image_storage(3, &g_buffer.emission_rgb_metalness_a, view)?;
 
         let view = clouds_data_low_freq.get_view(VEImageViewCreateInfo::simple_2d())?;
-        data_set.bind_image_sampler(5, clouds_data_low_freq, view, &linear_sampler)?;
+        common_data_set.bind_image_sampler(4, clouds_data_low_freq, view, &linear_sampler)?;
 
         let view = clouds_data_high_freq.get_view(VEImageViewCreateInfo::simple_3d())?;
-        data_set.bind_image_sampler(6, clouds_data_high_freq, view, &linear_sampler)?;
+        common_data_set.bind_image_sampler(5, clouds_data_high_freq, view, &linear_sampler)?;
 
         let view = out_additive_rgb.get_view(VEImageViewCreateInfo::simple_2d())?;
-        data_set.bind_image_storage(7, &out_additive_rgb, view)?;
+        common_data_set.bind_image_storage(6, &out_additive_rgb, view)?;
 
         let view = out_alpha_rgba.get_view(VEImageViewCreateInfo::simple_2d())?;
-        data_set.bind_image_storage(8, &out_alpha_rgba, view)?;
+        common_data_set.bind_image_storage(7, &out_alpha_rgba, view)?;
 
-        let compute_stage = toolkit.create_compute_stage(&[&data_set_layout], &shader)?;
+        let compute_stage = toolkit
+            .create_compute_stage(&[&common_data_set_layout, &body_data_set_layout], &shader)?;
 
         Ok(AtmosphereDrawer {
             compute_stage,
-            data_set_layout,
-            data_set,
+            body_data_set_layout,
+            common_data_set_layout,
+            common_data_set,
             out_additive_rgb,
             out_alpha_rgba,
             linear_sampler,
@@ -173,27 +179,33 @@ impl AtmosphereDrawer {
             VEShaderModuleType::Compute,
         )?;
 
-        self.compute_stage = toolkit.create_compute_stage(&[&self.data_set_layout], &shader)?;
+        self.compute_stage = toolkit.create_compute_stage(
+            &[&self.common_data_set_layout, &self.body_data_set_layout],
+            &shader,
+        )?;
 
         Ok(())
     }
 
-    pub fn set_celestial_buffer(
+    pub fn record(
         &self,
-        celestial_buffer: &CelestialBodyBuffer,
+        command_buffer: &VECommandBuffer,
+        body_data_set: &VEDescriptorSet,
         config: &ResolutionConfig,
-    ) -> Result<(), RenderingError> {
-        self.data_set.bind_buffer(1, &celestial_buffer.buffer)?;
+    ) {
+        self.compute_stage.bind(command_buffer);
 
-        self.compute_stage.begin_recording()?;
-        self.compute_stage.set_descriptor_set(0, &self.data_set);
+        self.compute_stage
+            .set_descriptor_set(command_buffer, 0, &self.common_data_set);
+
+        self.compute_stage
+            .set_descriptor_set(command_buffer, 1, body_data_set);
+
         self.compute_stage.dispatch(
+            command_buffer,
             config.width / WORKGROUP_SIZE,
             config.height / WORKGROUP_SIZE,
             1,
         );
-        self.compute_stage.end_recording()?;
-
-        Ok(())
     }
 }

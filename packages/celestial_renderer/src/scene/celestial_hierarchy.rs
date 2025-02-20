@@ -1,4 +1,6 @@
+use crate::atmosphere::atmosphere_drawer::AtmosphereDrawer;
 use crate::buffers::celestial_body_buffer::CelestialBodyBuffer;
+use crate::buffers::terrain_icosphere_data_buffer::TerrainIcosphereDataBuffer;
 use crate::geometry::common_icosphere::ICO_LEVEL_SUBDIVISIONS;
 use crate::geometry::icosphere_drawer::IcosphereDrawer;
 use crate::geometry::terrain_icosphere::{TerrainData, TerrainIcosphere};
@@ -10,12 +12,16 @@ use math::decimal_vector_3d::DecimalVector3d;
 use planet_generator_library::generate_icosphere::{
     generate_base_icosphere, IcosphereSegmentGenerator, Triangle,
 };
+use rayon::iter::ParallelIterator;
 use rayon::join;
+use rayon::prelude::{IntoParallelRefIterator, IntoParallelRefMutIterator};
 use renderer_common::errors::RenderingError;
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 use universe_simulation::body_definitions::BodyCelestialBodyDefinition;
 use universe_simulation::simulation::Simulation;
+use vengine_rs::core::descriptor_set::VEDescriptorSet;
+use vengine_rs::core::descriptor_set_layout::VEDescriptorSetLayout;
 use vengine_rs::core::toolkit::VEToolkit;
 
 pub struct RenderedBody {
@@ -23,6 +29,7 @@ pub struct RenderedBody {
     pub terrain_icosphere: Option<TerrainIcosphere>,
     pub water_icosphere: Option<WaterIcosphere>,
     pub celestial_body_buffer: CelestialBodyBuffer,
+    pub body_data_set: VEDescriptorSet,
     distance_to_camera: DBig,
 }
 
@@ -53,8 +60,9 @@ impl CelestialHierarchy {
         universe_simulation: &Simulation,
         camera_position: &DecimalVector3d,
         icosphere_drawer: &mut IcosphereDrawer,
+        atmosphere_drawer: &mut AtmosphereDrawer,
     ) -> Result<(), RenderingError> {
-        let closest_hierarchy = universe_simulation.find_closest_hierarchy(&camera_position);
+        let mut closest_hierarchy = universe_simulation.find_closest_hierarchy(&camera_position);
 
         let closest_star = universe_simulation.find_closest_static(&camera_position);
 
@@ -71,33 +79,43 @@ impl CelestialHierarchy {
                 );
                 let terrain_icosphere = match &closest_hierarchy_body.body.terrain {
                     None => None,
-                    Some(terrain) => Some(TerrainIcosphere::new(
-                        &self.toolkit,
-                        self.generator.clone(),
-                        TerrainData {
-                            radius: terrain.radius,
-                            dir_path: terrain.icosphere_path.clone(),
-                        },
-                        self.base_icosphere.clone(),
-                        &mut icosphere_drawer.data_set_layout,
-                    )?),
+                    Some(terrain) => Some(
+                        TerrainIcosphere::new(
+                            &self.toolkit,
+                            self.generator.clone(),
+                            TerrainData {
+                                radius: terrain.radius,
+                                dir_path: terrain.icosphere_path.clone(),
+                            },
+                            self.base_icosphere.clone(),
+                            &mut icosphere_drawer.data_set_layout,
+                        )
+                        .unwrap(),
+                    ),
                 };
                 let water_icosphere = match &closest_hierarchy_body.body.water {
                     None => None,
-                    Some(water) => Some(WaterIcosphere::new(
-                        &self.toolkit,
-                        self.generator.clone(),
-                        WaterData {
-                            radius: water.radius,
-                            water_color: water.color,
-                            dir_path: water.icosphere_path.clone(),
-                        },
-                        self.base_icosphere.clone(),
-                        &mut icosphere_drawer.data_set_layout,
-                    )?),
+                    Some(water) => Some(
+                        WaterIcosphere::new(
+                            &self.toolkit,
+                            self.generator.clone(),
+                            WaterData {
+                                radius: water.radius,
+                                water_color: water.color,
+                                dir_path: water.icosphere_path.clone(),
+                            },
+                            self.base_icosphere.clone(),
+                            &mut icosphere_drawer.data_set_layout,
+                        )
+                        .unwrap(),
+                    ),
                 };
 
-                let buffer = CelestialBodyBuffer::new(&self.toolkit)?;
+                let buffer = CelestialBodyBuffer::new(&self.toolkit).unwrap();
+                let body_data_set = atmosphere_drawer
+                    .body_data_set_layout
+                    .create_descriptor_set()?;
+                body_data_set.bind_buffer(0, &buffer.buffer)?;
 
                 self.rendered_bodies.insert(
                     closest_hierarchy_body.body.name.clone(),
@@ -105,6 +123,7 @@ impl CelestialHierarchy {
                         body: closest_hierarchy_body.body.clone(),
                         terrain_icosphere,
                         water_icosphere,
+                        body_data_set,
                         celestial_body_buffer: buffer,
                         distance_to_camera: camera_position
                             .distance_to(&closest_hierarchy_body.position),
@@ -181,9 +200,18 @@ impl CelestialHierarchy {
         self.rendered_bodies.get(name)
     }
 
-    pub fn get_rendered_bodies(&mut self) -> Vec<&mut RenderedBody> {
+    pub fn get_rendered_bodies_mut(&mut self) -> Vec<&mut RenderedBody> {
         let mut refs = vec![];
         for body in self.rendered_bodies.values_mut() {
+            refs.push(body);
+        }
+        refs.sort_by(|a, b| a.distance_to_camera.cmp(&b.distance_to_camera));
+        refs
+    }
+
+    pub fn get_rendered_bodies(&self) -> Vec<&RenderedBody> {
+        let mut refs = vec![];
+        for body in self.rendered_bodies.values() {
             refs.push(body);
         }
         refs.sort_by(|a, b| a.distance_to_camera.cmp(&b.distance_to_camera));

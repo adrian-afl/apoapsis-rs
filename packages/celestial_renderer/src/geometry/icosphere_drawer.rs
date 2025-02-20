@@ -5,6 +5,7 @@ use crate::geometry::water_icosphere::WaterIcosphere;
 use renderer_common::errors::RenderingError;
 use renderer_common::resolution_config::ResolutionConfig;
 use std::fmt::{Debug, Formatter};
+use vengine_rs::core::command_buffer::VECommandBuffer;
 use vengine_rs::core::descriptor_set::VEDescriptorSet;
 use vengine_rs::core::descriptor_set_layout::{
     VEDescriptorSetFieldStage, VEDescriptorSetFieldType, VEDescriptorSetLayout,
@@ -251,30 +252,11 @@ impl IcosphereDrawer {
         Ok(())
     }
 
-    pub fn record_terrain(&mut self, ico: &mut TerrainIcosphere) -> Result<(), RenderingError> {
-        self.terrain_render_stage.begin_recording()?;
-
-        self.terrain_render_stage
-            .set_descriptor_set(0, &ico.data_set);
-        self.terrain_render_stage
-            .set_descriptor_set(1, &self.common_set);
-        ico.draw(&self.terrain_render_stage)?;
-
-        self.terrain_render_stage.end_recording()?;
-
-        Ok(())
+    pub fn record_terrain(&self, command_buffer: &VECommandBuffer, ico: &TerrainIcosphere) {
+        ico.record(&self.terrain_render_stage, command_buffer);
     }
 
-    pub fn record_water(&mut self, ico: &mut WaterIcosphere) -> Result<(), RenderingError> {
-        self.water_render_stage.begin_recording()?;
-
-        self.water_render_stage.set_descriptor_set(0, &ico.data_set);
-        self.water_render_stage
-            .set_descriptor_set(1, &self.common_set);
-        ico.draw(&self.water_render_stage)?;
-
-        self.water_render_stage.end_recording()?;
-
-        Ok(())
+    pub fn record_water(&self, command_buffer: &VECommandBuffer, ico: &WaterIcosphere) {
+        ico.record(&self.water_render_stage, command_buffer);
     }
 }

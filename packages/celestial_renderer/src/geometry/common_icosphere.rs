@@ -31,6 +31,12 @@ pub struct PreloadDetectionResult {
     pub action: PreloadDetectionResultAction,
 }
 
+#[derive(Ord, PartialOrd, Eq, PartialEq, Clone, Copy)]
+pub enum PreloadResult {
+    ChangesMade,
+    NotChanged,
+}
+
 pub fn which_part_to_preload(
     metadata: &Vec<IcosphereMetadataItem>,
     part_matrices: &Vec<DMat4>,

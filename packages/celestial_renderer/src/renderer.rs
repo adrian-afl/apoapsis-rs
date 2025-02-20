@@ -4,6 +4,7 @@ use crate::atmosphere::clouds_generator_low_freq::CloudGeneratorLowFreq;
 use crate::buffers::common_buffer::CommonBuffer;
 use crate::finalization::multi_merger::MultiMerger;
 use crate::finalization::output::Output;
+use crate::geometry::common_icosphere::PreloadResult;
 use crate::geometry::g_buffer::GBuffer;
 use crate::geometry::icosphere_drawer::IcosphereDrawer;
 use crate::geometry::mesh_drawer::MeshDrawer;
@@ -20,8 +21,11 @@ use renderer_common::resolution_config::ResolutionConfig;
 use std::sync::{Arc, Mutex};
 use std::time::SystemTime;
 use ui_renderer::ui_drawer::UIDrawer;
+use ui_renderer::ui_rendered_item::UIRenderedItem;
+use ui_renderer::ui_system::UISystem;
 use universe_simulation::body_definitions::BodyCelestialBodyDefinition;
 use universe_simulation::simulation::Simulation;
+use vengine_rs::core::command_buffer::VECommandBuffer;
 use vengine_rs::core::semaphore::VESemaphore;
 use vengine_rs::core::toolkit::VEToolkit;
 use vengine_rs::graphics::vertex_buffer::VEVertexBuffer;
@@ -53,6 +57,8 @@ pub struct Renderer {
     outputting_semaphore: Arc<Mutex<VESemaphore>>,
     terrain_drawing_semaphore: Arc<Mutex<VESemaphore>>,
     water_drawing_semaphore: Arc<Mutex<VESemaphore>>,
+
+    command_buffer: VECommandBuffer,
 }
 
 impl Renderer {
@@ -73,17 +79,6 @@ impl Renderer {
             IcosphereDrawer::new(&toolkit, &config, &mut g_buffer, &common_buffer)
                 .expect("Failed to create TerrainIcosphereDrawer");
 
-        let mut multi_merger =
-            MultiMerger::new(&config, &toolkit).expect("Failed to create MultiMerger");
-
-        let output = Output::new(
-            &config,
-            &mut multi_merger,
-            &mut ui_drawer.lock().unwrap(),
-            &toolkit,
-        )
-        .expect("Failed to create Output");
-
         let mut cloud_generator_low_freq =
             CloudGeneratorLowFreq::new(&toolkit).expect("Failed to create CloudGeneratorLowFreq");
         let mut cloud_generator_high_freq =
@@ -99,13 +94,21 @@ impl Renderer {
         )
         .expect("Failed to create AtmosphereDrawer");
 
-        multi_merger
-            .update_inputs(
-                &mut atmosphere_drawer.out_additive_rgb,
-                &mut atmosphere_drawer.out_alpha_rgba,
-                &config,
-            )
-            .expect("Failed to update multi_merger inputs");
+        let mut multi_merger = MultiMerger::new(
+            &config,
+            &toolkit,
+            &mut atmosphere_drawer.out_additive_rgb,
+            &mut atmosphere_drawer.out_alpha_rgba,
+        )
+        .expect("Failed to create MultiMerger");
+
+        let output = Output::new(
+            &config,
+            &mut multi_merger,
+            &mut ui_drawer.lock().unwrap(),
+            &toolkit,
+        )
+        .expect("Failed to create Output");
 
         Self {
             config: config.clone(),
@@ -136,6 +139,8 @@ impl Renderer {
             outputting_semaphore: Arc::new(Mutex::from(toolkit.create_semaphore().unwrap())),
             terrain_drawing_semaphore: Arc::new(Mutex::from(toolkit.create_semaphore().unwrap())),
             water_drawing_semaphore: Arc::new(Mutex::from(toolkit.create_semaphore().unwrap())),
+
+            command_buffer: toolkit.create_command_buffer().unwrap(),
         }
     }
 
@@ -148,13 +153,14 @@ impl Renderer {
             .recreate_stage(&self.toolkit)?;
         self.atmosphere_drawer.recreate_stage(&self.toolkit)?;
         self.multi_merger.recreate_stage(&self.toolkit)?;
-        self.multi_merger
-            .update_inputs(
-                &mut self.atmosphere_drawer.out_additive_rgb,
-                &mut self.atmosphere_drawer.out_alpha_rgba,
-                &self.config,
-            )
-            .expect("Failed to update multi_merger inputs");
+        // self.multi_merger // I might need to readd this
+        //     .update_inputs(
+        //         &self.toolkit.device,
+        //         &mut self.atmosphere_drawer.out_additive_rgb,
+        //         &mut self.atmosphere_drawer.out_alpha_rgba,
+        //         &self.config,
+        //     )
+        //     .expect("Failed to update multi_merger inputs");
 
         self.output
             .recreate_stage(&self.toolkit, &mut self.multi_merger)?;
@@ -162,9 +168,57 @@ impl Renderer {
         Ok(())
     }
 
+    pub fn record(
+        &self,
+        meshes: &[&Mesh],
+        ui_items: &[&UIRenderedItem],
+        celestial_hierarchy: &CelestialHierarchy,
+    ) {
+        self.command_buffer.begin().unwrap();
+        let mut celestial_bodies = celestial_hierarchy.get_rendered_bodies();
+
+        self.mesh_drawer
+            .record(&self.mesh_drawer.render_stage, &self.command_buffer, meshes);
+
+        for (i, body) in celestial_bodies.iter().enumerate() {
+            self.cloud_generator_low_freq.record(&self.command_buffer);
+            self.cloud_generator_high_freq.record(&self.command_buffer);
+            match &body.terrain_icosphere {
+                None => (),
+                Some(icosphere) => {
+                    self.icosphere_drawer
+                        .record_terrain(&self.command_buffer, icosphere);
+                }
+            }
+
+            match &body.water_icosphere {
+                None => (),
+                Some(icosphere) => {
+                    self.icosphere_drawer
+                        .record_water(&self.command_buffer, icosphere);
+                }
+            }
+
+            self.atmosphere_drawer
+                .record(&self.command_buffer, &body.body_data_set, &self.config);
+
+            self.multi_merger
+                .record(&self.toolkit.device, &self.command_buffer, &self.config);
+        }
+
+        self.ui_drawer
+            .lock()
+            .unwrap()
+            .record(&self.command_buffer, ui_items);
+
+        self.output.record(&self.command_buffer, &self.multi_merger);
+        self.command_buffer.end().unwrap();
+    }
+
     pub fn draw(
         &mut self,
         meshes: &[&Mesh],
+        ui_items: &[&UIRenderedItem],
         universe_simulation: &Simulation,
         celestial_hierarchy: &mut CelestialHierarchy,
         camera: &Camera,
@@ -182,137 +236,36 @@ impl Renderer {
                 universe_simulation,
                 &camera.position,
                 &mut self.icosphere_drawer,
+                &mut self.atmosphere_drawer,
             )?;
         });
 
         let mut celestial_bodies = profile!("get_rendered_bodies", {
-            celestial_hierarchy.get_rendered_bodies()
+            celestial_hierarchy.get_rendered_bodies_mut()
         });
 
         let mut swapchain = self.toolkit.swapchain.lock().unwrap();
 
-        profile!("mesh_drawer record & draw", {
-            self.mesh_drawer
-                .record(meshes)
-                .expect("Failed to record mesh_drawer");
-
-            {
-                let queue = &self
-                    .toolkit
-                    .queue
-                    .lock()
-                    .map_err(|_| RenderingError::QueueLockingFailed)?;
-                self.mesh_drawer
-                    .render_stage
-                    .command_buffer
-                    .submit(
-                        &queue,
-                        vec![swapchain.blit_done_semaphore.clone()],
-                        vec![self.mesh_drawing_semaphore.clone()],
-                    )
-                    .expect("Failed to draw mesh_drawer");
-            }
-        });
-
-        let mut wait_for_semaphores = vec![self.mesh_drawing_semaphore.clone()];
+        let mut any_updates = false;
 
         for (i, body) in celestial_bodies.iter_mut().enumerate() {
             let is_closest = i == 0;
-            self.atmosphere_drawer
-                .set_celestial_buffer(&body.celestial_body_buffer, &self.config)
-                .expect("Failed to set_celestial_buffer for atmosphere_drawer");
-
-            udebug!("Drawing {}", body.body.name);
-
-            profile!("clouds", {
-                match &body.body.atmosphere {
-                    None => (),
-                    Some(atmosphere) => {
-                        match &atmosphere.clouds {
-                            None => (),
-                            Some(_) => {
-                                self.cloud_generator_high_freq
-                                    .update_buffer(
-                                        DVec4::new(
-                                            atmosphere.seed,
-                                            atmosphere.seed, // TODO...
-                                            atmosphere.seed,
-                                            atmosphere.seed,
-                                        ),
-                                        total_time,
-                                        1.0,
-                                    )
-                                    .expect("Failed to update cloud_generator_high_freq");
-                                self.cloud_generator_low_freq
-                                    .update_buffer(
-                                        DVec4::new(
-                                            atmosphere.seed,
-                                            atmosphere.seed,
-                                            atmosphere.seed,
-                                            atmosphere.seed,
-                                        ),
-                                        total_time,
-                                        1.0,
-                                    )
-                                    .expect("Failed to update cloud_generator_low_freq");
-
-                                let queue = &self
-                                    .toolkit
-                                    .queue
-                                    .lock()
-                                    .map_err(|_| RenderingError::QueueLockingFailed)?;
-                                self.cloud_generator_high_freq
-                                    .compute_stage
-                                    .command_buffer
-                                    .submit(
-                                        queue,
-                                        vec![],
-                                        vec![self.clouds_generation_high_freq_semaphore.clone()],
-                                    )
-                                    .expect("Failed to compute cloud_generator_high_freq");
-
-                                self.cloud_generator_low_freq
-                                    .compute_stage
-                                    .command_buffer
-                                    .submit(
-                                        queue,
-                                        vec![],
-                                        vec![self.clouds_generation_low_freq_semaphore.clone()],
-                                    )
-                                    .expect("Failed to compute cloud_generator_low_freq");
-                            }
-                        }
-                    }
-                }
-            });
 
             profile!("terrain", {
                 match &mut body.terrain_icosphere {
                     None => (),
                     Some(ref mut icosphere) => {
-                        if is_closest {
-                            icosphere.preload(&self.toolkit)?;
+                        let preload_result = if is_closest {
+                            icosphere.preload(&self.toolkit)?
                         } else {
-                            icosphere.preload_lowest_quality(&self.toolkit)?;
+                            icosphere.preload_lowest_quality(&self.toolkit)?
+                        };
+                        match preload_result {
+                            PreloadResult::ChangesMade => {
+                                any_updates = true;
+                            }
+                            PreloadResult::NotChanged => (),
                         }
-
-                        self.icosphere_drawer.record_terrain(icosphere)?;
-                        let queue = &self
-                            .toolkit
-                            .queue
-                            .lock()
-                            .map_err(|_| RenderingError::QueueLockingFailed)?;
-
-                        self.icosphere_drawer
-                            .terrain_render_stage
-                            .command_buffer
-                            .submit(
-                                queue,
-                                wait_for_semaphores.clone(),
-                                vec![self.terrain_drawing_semaphore.clone()],
-                            )
-                            .expect("Failed to draw terrain");
-                        wait_for_semaphores = vec![self.terrain_drawing_semaphore.clone()];
                     }
                 }
             });
@@ -321,126 +274,43 @@ impl Renderer {
                 match &mut body.water_icosphere {
                     None => (),
                     Some(ref mut icosphere) => {
-                        if is_closest {
+                        let preload_result = if is_closest {
                             icosphere.preload(&self.toolkit)?
                         } else {
                             icosphere.preload_lowest_quality(&self.toolkit)?
                         };
 
-                        self.icosphere_drawer.record_water(icosphere)?;
-                        let queue = &self
-                            .toolkit
-                            .queue
-                            .lock()
-                            .map_err(|_| RenderingError::QueueLockingFailed)?;
-
-                        self.icosphere_drawer
-                            .water_render_stage
-                            .command_buffer
-                            .submit(
-                                queue,
-                                wait_for_semaphores.clone(),
-                                vec![self.water_drawing_semaphore.clone()],
-                            )
-                            .expect("Failed to draw water");
-                        wait_for_semaphores = vec![self.water_drawing_semaphore.clone()];
+                        match preload_result {
+                            PreloadResult::ChangesMade => {
+                                any_updates = true;
+                            }
+                            PreloadResult::NotChanged => (),
+                        }
                     }
                 }
-            });
-
-            profile!("atmosphere", {
-                match &body.body.atmosphere {
-                    None => (),
-                    Some(_) => {
-                        let mut semaphores = wait_for_semaphores.clone();
-                        semaphores.push(self.clouds_generation_high_freq_semaphore.clone());
-                        semaphores.push(self.clouds_generation_low_freq_semaphore.clone());
-
-                        let queue = &self
-                            .toolkit
-                            .queue
-                            .lock()
-                            .map_err(|_| RenderingError::QueueLockingFailed)?;
-                        self.atmosphere_drawer
-                            .compute_stage
-                            .command_buffer
-                            .submit(
-                                queue,
-                                semaphores,
-                                vec![self.atmosphere_drawing_semaphore.clone()],
-                            )
-                            .expect("Failed to compute atmosphere");
-                        wait_for_semaphores = vec![self.atmosphere_drawing_semaphore.clone()]
-                    }
-                }
-            });
-
-            profile!("multimerger", {
-                let queue = &self
-                    .toolkit
-                    .queue
-                    .lock()
-                    .map_err(|_| RenderingError::QueueLockingFailed)?;
-
-                self.multi_merger
-                    .compute_stage
-                    .command_buffer
-                    .submit(
-                        queue,
-                        wait_for_semaphores.clone(),
-                        vec![self.multi_merging_semaphore.clone()],
-                    )
-                    .expect("Failed to compute multi_merger");
-                wait_for_semaphores = vec![self.multi_merging_semaphore.clone()];
-
-                queue.wait_idle().unwrap(); // TODO this could be better if i had a fence/ wait for semaphore before rerecording
-                                            // but i could do it differently, if i had just 1 command buffer and record it and then just submit
-                                            // todo later
             });
         }
 
-        profile!("draw ui", {
+        if any_updates {
+            // should aso check for meshes etc, maybe a trnasient entity to detect this
+            self.record(meshes, ui_items, celestial_hierarchy);
+        }
+        {
             let queue = &self
                 .toolkit
                 .queue
                 .lock()
                 .map_err(|_| RenderingError::QueueLockingFailed)?;
-            self.ui_drawer
-                .lock()
-                .unwrap()
-                .render_stage
-                .command_buffer
+            queue.wait_idle().unwrap();
+
+            self.command_buffer
                 .submit(
                     queue,
-                    wait_for_semaphores.clone(),
-                    vec![self.ui_drawing_semaphore.clone()],
+                    vec![swapchain.blit_done_semaphore.clone()],
+                    vec![self.outputting_semaphore.clone()],
                 )
-                .expect("Failed to draw ui");
-            wait_for_semaphores = vec![self.ui_drawing_semaphore.clone()];
-        });
-
-        profile!("output", {
-            self.output
-                .update_buffer(1.0)
-                .expect("Failed to update output buffer");
-            {
-                let queue = &self
-                    .toolkit
-                    .queue
-                    .lock()
-                    .map_err(|_| RenderingError::QueueLockingFailed)?;
-                self.output
-                    .compute_stage
-                    .command_buffer
-                    .submit(
-                        queue,
-                        wait_for_semaphores.clone(),
-                        vec![self.outputting_semaphore.clone()],
-                    )
-                    .expect("Failed to compute output");
-            }
-        });
-
+                .expect("Failed to compute output");
+        }
         profile!("blit to swapchain", {
             swapchain
                 .blit(&self.output.output, vec![self.outputting_semaphore.clone()])

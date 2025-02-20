@@ -3,13 +3,16 @@ use crate::finalization::multi_merger::MultiMerger;
 use ash::vk;
 use renderer_common::errors::RenderingError;
 use renderer_common::resolution_config::ResolutionConfig;
+use std::sync::Arc;
 use ui_renderer::ui_drawer::UIDrawer;
 use vengine_rs::compute::compute_stage::VEComputeStage;
+use vengine_rs::core::command_buffer::VECommandBuffer;
 use vengine_rs::core::descriptor_set::VEDescriptorSet;
 use vengine_rs::core::descriptor_set_layout::{
     VEDescriptorSetFieldStage, VEDescriptorSetFieldType, VEDescriptorSetLayout,
     VEDescriptorSetLayoutField,
 };
+use vengine_rs::core::device::VEDevice;
 use vengine_rs::core::shader_module::VEShaderModuleType;
 use vengine_rs::core::toolkit::VEToolkit;
 use vengine_rs::image::image::{VEImage, VEImageUsage, VEImageViewCreateInfo};
@@ -17,6 +20,8 @@ use vengine_rs::image::image_format::VEImageFormat;
 
 pub struct Output {
     config: ResolutionConfig,
+
+    device: Arc<VEDevice>,
 
     pub compute_stage: VEComputeStage,
 
@@ -102,19 +107,33 @@ impl Output {
 
         let compute_stage = toolkit.create_compute_stage(&[&data_set_layout], &shader)?;
 
-        compute_stage.begin_recording()?;
-        compute_stage.set_descriptor_set(0, &data_set);
-        compute_stage.dispatch(
-            config.width / WORKGROUP_SIZE,
-            config.height / WORKGROUP_SIZE,
+        Ok(Output {
+            device: toolkit.device.clone(),
+            compute_stage,
+            data_set_layout,
+            data_set,
+            output,
+            buffer,
+            config: config.clone(),
+        })
+    }
+
+    pub fn record(&self, command_buffer: &VECommandBuffer, multi_merger: &MultiMerger) {
+        self.compute_stage.bind(&command_buffer);
+        self.compute_stage
+            .set_descriptor_set(&command_buffer, 0, &self.data_set);
+        self.compute_stage.dispatch(
+            &command_buffer,
+            self.config.width / WORKGROUP_SIZE,
+            self.config.height / WORKGROUP_SIZE,
             1,
         );
 
         // this here is unhinged
         // its to clear the multimerger
         unsafe {
-            toolkit.device.device.cmd_clear_color_image(
-                compute_stage.command_buffer.handle,
+            self.device.device.cmd_clear_color_image(
+                command_buffer.handle,
                 multi_merger.output.handle,
                 multi_merger.output.current_layout,
                 &vk::ClearColorValue {
@@ -128,16 +147,6 @@ impl Output {
                     .layer_count(1)],
             )
         }
-        compute_stage.end_recording()?;
-
-        Ok(Output {
-            compute_stage,
-            data_set_layout,
-            data_set,
-            output,
-            buffer,
-            config: config.clone(),
-        })
     }
 
     pub fn recreate_stage(
@@ -151,35 +160,6 @@ impl Output {
         )?;
 
         self.compute_stage = toolkit.create_compute_stage(&[&self.data_set_layout], &shader)?;
-
-        self.compute_stage.begin_recording()?;
-        self.compute_stage.set_descriptor_set(0, &self.data_set);
-        self.compute_stage.dispatch(
-            self.config.width / WORKGROUP_SIZE,
-            self.config.height / WORKGROUP_SIZE,
-            1,
-        );
-
-        // this here is unhinged
-        // its to clear the multimerger
-        unsafe {
-            toolkit.device.device.cmd_clear_color_image(
-                self.compute_stage.command_buffer.handle,
-                multi_merger.output.handle,
-                multi_merger.output.current_layout,
-                &vk::ClearColorValue {
-                    float32: [0.0, 0.0, 0.0, 0.0],
-                },
-                &[vk::ImageSubresourceRange::default()
-                    .aspect_mask(vk::ImageAspectFlags::COLOR)
-                    .base_mip_level(0)
-                    .level_count(1) // TODO mip mapping
-                    .base_array_layer(0)
-                    .layer_count(1)],
-            )
-        }
-
-        self.compute_stage.end_recording()?;
 
         Ok(())
     }

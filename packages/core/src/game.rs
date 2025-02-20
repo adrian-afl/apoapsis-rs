@@ -158,6 +158,7 @@ impl Game {
             stage_ecs,
             &self.universe_simulation,
             &self.current_camera,
+            &self.ui_system,
             self.time_counter.total_time,
             self.time_counter.delta_time,
         );
@@ -272,6 +273,7 @@ impl Game {
                     stage_ecs,
                     &self.universe_simulation,
                     &self.current_camera,
+                    &self.ui_system,
                     self.time_counter.total_time,
                     self.time_counter.delta_time,
                 );
