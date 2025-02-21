@@ -36,11 +36,11 @@ pub static UDP_DEBUGGING: LazyLock<UDPDebugging> = LazyLock::new(|| UDPDebugging
 macro_rules! udebug {
     ($fmt_str:literal) => {{
         #[cfg(debug_assertions)]
-        $crate::udp_debugging::UDP_DEBUGGING.send(&format!("{}:{}: {}, ", file!(), line!(), $fmt_str));
+        $crate::udp_debugging::UDP_DEBUGGING.send(&format!("{}:{}: {}", file!(), line!(), $fmt_str));
     }};
 
     ($fmt_str:literal, $($args:expr),*) => {{
         #[cfg(debug_assertions)]
-        $crate::udp_debugging::UDP_DEBUGGING.send(&format!("{}:{}: {}, ", file!(), line!(), &format!($fmt_str, $($args),*)));
+        $crate::udp_debugging::UDP_DEBUGGING.send(&format!("{}:{}: {}", file!(), line!(), &format!($fmt_str, $($args),*)));
     }};
 }

@@ -9,7 +9,7 @@ use vengine_rs::core::descriptor_set_layout::{
     VEDescriptorSetLayoutField,
 };
 use vengine_rs::core::device::VEDevice;
-use vengine_rs::core::memory_barrier::{submit_barriers, VEImageMemoryBarrier};
+use vengine_rs::core::memory_barrier::{submit_barriers, VEImageMemoryBarrier, VEMemoryBarrier};
 use vengine_rs::core::shader_module::VEShaderModuleType;
 use vengine_rs::core::toolkit::VEToolkit;
 use vengine_rs::image::image::{VEImage, VEImageUsage, VEImageViewCreateInfo};

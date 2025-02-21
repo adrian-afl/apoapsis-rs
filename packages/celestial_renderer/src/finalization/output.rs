@@ -1,6 +1,7 @@
 use crate::buffers::output_buffer::OutputBuffer;
 use crate::finalization::multi_merger::MultiMerger;
 use ash::vk;
+use ash::vk::{AccessFlags, ImageAspectFlags, ImageLayout, PipelineStageFlags};
 use renderer_common::errors::RenderingError;
 use renderer_common::resolution_config::ResolutionConfig;
 use std::sync::Arc;
@@ -13,6 +14,7 @@ use vengine_rs::core::descriptor_set_layout::{
     VEDescriptorSetLayoutField,
 };
 use vengine_rs::core::device::VEDevice;
+use vengine_rs::core::memory_barrier::{submit_barriers, VEImageMemoryBarrier, VEMemoryBarrier};
 use vengine_rs::core::shader_module::VEShaderModuleType;
 use vengine_rs::core::toolkit::VEToolkit;
 use vengine_rs::image::image::{VEImage, VEImageUsage, VEImageViewCreateInfo};
@@ -129,15 +131,36 @@ impl Output {
             1,
         );
 
-        // this here is unhinged
-        // its to clear the multimerger
+        let barrier = VEImageMemoryBarrier {
+            image: multi_merger.output.handle,
+            aspect: ImageAspectFlags::COLOR,
+            src_access: AccessFlags::SHADER_READ,
+            dst_access: AccessFlags::SHADER_WRITE
+                | AccessFlags::MEMORY_WRITE
+                | AccessFlags::TRANSFER_WRITE,
+            old_layout: ImageLayout::GENERAL,
+            new_layout: ImageLayout::GENERAL,
+        };
+
+        submit_barriers(
+            &self.device,
+            &command_buffer,
+            PipelineStageFlags::COMPUTE_SHADER,
+            PipelineStageFlags::ALL_COMMANDS,
+            &[],
+            &[],
+            &[barrier.build()],
+        );
+        //
+        // // this here is unhinged
+        // // its to clear the multimerger
         unsafe {
             self.device.device.cmd_clear_color_image(
                 command_buffer.handle,
                 multi_merger.output.handle,
                 multi_merger.output.current_layout,
                 &vk::ClearColorValue {
-                    float32: [0.0, 0.0, 0.0, 0.0],
+                    float32: [0.0, 0.0, 0.0, 1.0],
                 },
                 &[vk::ImageSubresourceRange::default()
                     .aspect_mask(vk::ImageAspectFlags::COLOR)
@@ -147,6 +170,27 @@ impl Output {
                     .layer_count(1)],
             )
         }
+
+        let barrier = VEImageMemoryBarrier {
+            image: multi_merger.output.handle,
+            aspect: ImageAspectFlags::COLOR,
+            src_access: AccessFlags::SHADER_WRITE
+                | AccessFlags::MEMORY_WRITE
+                | AccessFlags::TRANSFER_WRITE,
+            dst_access: AccessFlags::SHADER_READ,
+            old_layout: ImageLayout::GENERAL,
+            new_layout: ImageLayout::GENERAL,
+        };
+
+        submit_barriers(
+            &self.device,
+            &command_buffer,
+            PipelineStageFlags::COMPUTE_SHADER,
+            PipelineStageFlags::ALL_COMMANDS,
+            &[],
+            &[],
+            &[barrier.build()],
+        );
     }
 
     pub fn recreate_stage(

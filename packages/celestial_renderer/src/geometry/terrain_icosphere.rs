@@ -167,11 +167,18 @@ impl TerrainIcosphere {
         Ok(())
     }
 
-    pub fn record(&self, stage: &VERenderStage, command_buffer: &VECommandBuffer) {
+    pub fn record(
+        &self,
+        stage: &VERenderStage,
+        command_buffer: &VECommandBuffer,
+        common_set: &VEDescriptorSet,
+    ) {
         stage.bind(command_buffer);
+        stage.set_descriptor_set(command_buffer, 0, &self.data_set);
+        stage.set_descriptor_set(command_buffer, 1, common_set);
 
-        self.loaded_data.metadata.par_iter().for_each(|m| {
-            let locked = self.currently_loaded.lock().unwrap();
+        let locked = self.currently_loaded.lock().unwrap();
+        self.loaded_data.metadata.iter().for_each(|m| {
             if let Some(mapped) = locked.get(&m.base_segment) {
                 mapped.vertex_buffer.draw_instanced(command_buffer, 1);
             }

@@ -19,8 +19,7 @@ fn main() {
 
     UDP_DEBUGGING.set_target("127.0.0.1:6000");
 
-    udebug!("test without formatting");
-    udebug!("test with formatting {} + {} = {}", 1, 2, 1 + 2);
+    udebug!("!clear");
 
     let subscriber = FmtSubscriber::builder()
         .with_ansi(false)

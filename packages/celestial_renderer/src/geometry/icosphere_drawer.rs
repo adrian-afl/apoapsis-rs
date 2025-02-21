@@ -253,10 +253,10 @@ impl IcosphereDrawer {
     }
 
     pub fn record_terrain(&self, command_buffer: &VECommandBuffer, ico: &TerrainIcosphere) {
-        ico.record(&self.terrain_render_stage, command_buffer);
+        ico.record(&self.terrain_render_stage, command_buffer, &self.common_set);
     }
 
     pub fn record_water(&self, command_buffer: &VECommandBuffer, ico: &WaterIcosphere) {
-        ico.record(&self.water_render_stage, command_buffer);
+        ico.record(&self.water_render_stage, command_buffer, &self.common_set);
     }
 }

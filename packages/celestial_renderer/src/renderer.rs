@@ -175,7 +175,7 @@ impl Renderer {
         celestial_hierarchy: &CelestialHierarchy,
     ) {
         self.command_buffer.begin().unwrap();
-        let mut celestial_bodies = celestial_hierarchy.get_rendered_bodies();
+        let celestial_bodies = celestial_hierarchy.get_rendered_bodies();
 
         self.mesh_drawer
             .record(&self.mesh_drawer.render_stage, &self.command_buffer, meshes);
@@ -244,9 +244,11 @@ impl Renderer {
             celestial_hierarchy.get_rendered_bodies_mut()
         });
 
+        self.output.update_buffer(1.0)?;
+
         let mut swapchain = self.toolkit.swapchain.lock().unwrap();
 
-        let mut any_updates = false;
+        let mut any_updates = true;
 
         for (i, body) in celestial_bodies.iter_mut().enumerate() {
             let is_closest = i == 0;
