@@ -8,10 +8,12 @@ use renderer_common::errors::RenderingError;
 use std::fmt::{Debug, Formatter, Write};
 use universe_simulation::simulation::SimulatedBody;
 use vengine_rs::buffer::buffer::{VEBuffer, VEBufferUsage};
+use vengine_rs::core::command_buffer::VECommandBuffer;
 use vengine_rs::core::memory_properties::VEMemoryProperties;
 use vengine_rs::core::toolkit::VEToolkit;
 
 pub struct CelestialBodyBuffer {
+    staging_buffer: VEBuffer,
     pub buffer: VEBuffer,
 }
 
@@ -24,10 +26,15 @@ impl Debug for CelestialBodyBuffer {
 impl CelestialBodyBuffer {
     pub fn new(toolkit: &VEToolkit) -> Result<CelestialBodyBuffer, RenderingError> {
         Ok(CelestialBodyBuffer {
-            buffer: toolkit.create_buffer(
+            staging_buffer: toolkit.create_buffer(
                 &[VEBufferUsage::Uniform],
                 8 * 1024,
                 Some(VEMemoryProperties::HostCoherent),
+            )?,
+            buffer: toolkit.create_buffer(
+                &[VEBufferUsage::Uniform],
+                8 * 1024,
+                Some(VEMemoryProperties::DeviceLocal),
             )?,
         })
     }
@@ -57,10 +64,11 @@ impl CelestialBodyBuffer {
         &mut self,
         camera_position: &DecimalVector3d,
         star_position: &DecimalVector3d,
+        star_irradiance: DVec3,
         star_radiance: DVec3,
         body: &SimulatedBody,
     ) -> Result<(), RenderingError> {
-        let ptr = self.buffer.map()? as *mut f32;
+        let ptr = self.staging_buffer.map()? as *mut f32;
 
         let mut offset = 0;
 
@@ -189,8 +197,19 @@ impl CelestialBodyBuffer {
         };
 
         offset += write_vec3_zero(ptr, offset, star_direction.to_dvec3());
+        offset += write_vec3_zero(ptr, offset, star_irradiance);
         offset += write_vec3_zero(ptr, offset, star_radiance);
 
         Ok(())
+    }
+
+    pub fn record_copy_from_staging(&self, command_buffer: &VECommandBuffer) {
+        self.staging_buffer.copy_to_cmd(
+            command_buffer,
+            &self.buffer,
+            0,
+            0,
+            self.staging_buffer.size,
+        );
     }
 }

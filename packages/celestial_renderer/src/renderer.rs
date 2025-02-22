@@ -11,6 +11,8 @@ use crate::geometry::mesh_drawer::MeshDrawer;
 use crate::scene::celestial_hierarchy::CelestialHierarchy;
 use crate::scene::material::Material;
 use crate::scene::mesh::Mesh;
+use ash::vk;
+use ash::vk::{AccessFlags, ImageAspectFlags, ImageLayout, PipelineStageFlags};
 use common_util::{profile, udebug};
 use glam::DVec4;
 use math::decimal_vector_3d::DecimalVector3d;
@@ -26,6 +28,7 @@ use ui_renderer::ui_system::UISystem;
 use universe_simulation::body_definitions::BodyCelestialBodyDefinition;
 use universe_simulation::simulation::Simulation;
 use vengine_rs::core::command_buffer::VECommandBuffer;
+use vengine_rs::core::memory_barrier::{submit_barriers, VEImageMemoryBarrier};
 use vengine_rs::core::semaphore::VESemaphore;
 use vengine_rs::core::toolkit::VEToolkit;
 use vengine_rs::graphics::vertex_buffer::VEVertexBuffer;
@@ -175,12 +178,49 @@ impl Renderer {
         celestial_hierarchy: &CelestialHierarchy,
     ) {
         self.command_buffer.begin().unwrap();
+
+        self.common_buffer
+            .record_copy_from_staging(&self.command_buffer);
+
+        for mesh in meshes {
+            mesh.mesh_buffer
+                .lock()
+                .unwrap()
+                .record_copy_from_staging(&self.command_buffer);
+        }
+
+        self.output
+            .buffer
+            .record_copy_from_staging(&self.command_buffer);
+        self.cloud_generator_low_freq
+            .buffer
+            .record_copy_from_staging(&self.command_buffer);
+        self.cloud_generator_high_freq
+            .buffer
+            .record_copy_from_staging(&self.command_buffer);
+
         let celestial_bodies = celestial_hierarchy.get_rendered_bodies();
 
         self.mesh_drawer
             .record(&self.mesh_drawer.render_stage, &self.command_buffer, meshes);
 
         for (i, body) in celestial_bodies.iter().enumerate() {
+            body.celestial_body_buffer
+                .record_copy_from_staging(&self.command_buffer);
+
+            // let is_closest = i == 0;
+            // if !is_closest {
+            //     self.mesh_drawer.record(
+            //         &self.mesh_drawer.render_stage,
+            //         &self.command_buffer,
+            //         meshes,
+            //     );
+            // } else {
+            //     // todo temporary just to clear
+            //     self.mesh_drawer
+            //         .record(&self.mesh_drawer.render_stage, &self.command_buffer, &[]);
+            // }
+
             self.cloud_generator_low_freq.record(&self.command_buffer);
             self.cloud_generator_high_freq.record(&self.command_buffer);
             match &body.terrain_icosphere {
@@ -198,6 +238,47 @@ impl Renderer {
                         .record_water(&self.command_buffer, icosphere);
                 }
             }
+
+            let barrier_color_rgb_roughness_a = VEImageMemoryBarrier {
+                image: self.g_buffer.color_rgb_roughness_a.handle,
+                aspect: ImageAspectFlags::COLOR,
+                src_access: AccessFlags::COLOR_ATTACHMENT_WRITE,
+                dst_access: AccessFlags::SHADER_READ,
+                old_layout: ImageLayout::GENERAL,
+                new_layout: ImageLayout::GENERAL,
+            };
+
+            let barrier_emission_rgb_metalness_a = VEImageMemoryBarrier {
+                image: self.g_buffer.emission_rgb_metalness_a.handle,
+                aspect: ImageAspectFlags::COLOR,
+                src_access: AccessFlags::COLOR_ATTACHMENT_WRITE,
+                dst_access: AccessFlags::SHADER_READ,
+                old_layout: ImageLayout::GENERAL,
+                new_layout: ImageLayout::GENERAL,
+            };
+
+            let barrier_normal_rgb_distance_a = VEImageMemoryBarrier {
+                image: self.g_buffer.normal_rgb_distance_a.handle,
+                aspect: ImageAspectFlags::COLOR,
+                src_access: AccessFlags::COLOR_ATTACHMENT_WRITE,
+                dst_access: AccessFlags::SHADER_READ,
+                old_layout: ImageLayout::GENERAL,
+                new_layout: ImageLayout::GENERAL,
+            };
+
+            submit_barriers(
+                &self.toolkit.device,
+                &self.command_buffer,
+                PipelineStageFlags::ALL_GRAPHICS,
+                PipelineStageFlags::COMPUTE_SHADER,
+                &[],
+                &[],
+                &[
+                    barrier_color_rgb_roughness_a.build(),
+                    barrier_emission_rgb_metalness_a.build(),
+                    barrier_normal_rgb_distance_a.build(),
+                ],
+            );
 
             self.atmosphere_drawer
                 .record(&self.command_buffer, &body.body_data_set, &self.config);
@@ -248,7 +329,7 @@ impl Renderer {
 
         let mut swapchain = self.toolkit.swapchain.lock().unwrap();
 
-        let mut any_updates = true;
+        let mut any_updates = false;
 
         for (i, body) in celestial_bodies.iter_mut().enumerate() {
             let is_closest = i == 0;
@@ -260,7 +341,7 @@ impl Renderer {
                         let preload_result = if is_closest {
                             icosphere.preload(&self.toolkit)?
                         } else {
-                            icosphere.preload_lowest_quality(&self.toolkit)?
+                            icosphere.preload(&self.toolkit)?
                         };
                         match preload_result {
                             PreloadResult::ChangesMade => {
@@ -279,7 +360,7 @@ impl Renderer {
                         let preload_result = if is_closest {
                             icosphere.preload(&self.toolkit)?
                         } else {
-                            icosphere.preload_lowest_quality(&self.toolkit)?
+                            icosphere.preload(&self.toolkit)?
                         };
 
                         match preload_result {

@@ -95,7 +95,7 @@ void main() {
 
     float cloudsLambertian = (dot(starDirection, cloudsResult.normal) * 0.5 + 0.5) * 0.5 + 0.5;
     // float fadeModifier = clamp(1.0 - (getForwardHitOrZero(atmosphereHits) / (atmosphereStart * 0.31415)), 0.0, 1.0);
-    vec3 resultCloudsRadiance = rayLoseEnergy(starRadiance, rayleighHeight, getAltitude(cloudsResult.distance * dir), atmosphereHitFromClouds) 
+    vec3 resultCloudsRadiance = rayLoseEnergy(starIrradiance, rayleighHeight, getAltitude(cloudsResult.distance * dir), atmosphereHitFromClouds) 
         * cloudsColor 
         * 2.0
         * (cloudsLambertian)
@@ -115,7 +115,7 @@ void main() {
     
     vec2 atmosphereHitsFromMesh = rsi2X(cloudsResult.distance * dir, starDirection, atmoSphere);
     float atmosphereHitFromMesh = getForwardHitOrZero(atmosphereHitsFromClouds);
-    vec3 meshIrradiance = rayLoseEnergy(starRadiance, rayleighHeight, getAltitude(geometryPosition), atmosphereHitFromMesh);
+    vec3 meshIrradiance = rayLoseEnergy(starIrradiance, rayleighHeight, getAltitude(geometryPosition), atmosphereHitFromMesh);
     
     Sphere cloudsMedianSphere = Sphere(bodyCenter, atmosphereStart + (cloudsMaxHeight + cloudsMinHeight) * 0.5);
     float cloudsHit = getForwardHitOrZero(rsi2X(geometryPosition, starDirection, cloudsMedianSphere));
@@ -123,7 +123,7 @@ void main() {
    // meshIrradiance *= pow(meshCloudsShadow, 2.0);
 
     float ao = quickSSAO(0.03);
-    vec3 meshAmbient = 0.1 * rayLoseEnergy(starRadiance, rayleighHeight, getAltitude(geometryPosition), atmosphereHitFromMesh)
+    vec3 meshAmbient = 0.1 * rayLoseEnergy(starIrradiance, rayleighHeight, getAltitude(geometryPosition), atmosphereHitFromMesh)
     * geometryColorRoughness.rgb
     * ((dot(geometryNormal, starDirection) * 0.5 + 0.5) * 0.5 + 0.5) * ao;
 

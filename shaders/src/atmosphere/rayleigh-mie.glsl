@@ -77,7 +77,7 @@ RayleighMieResult raymarchRayleighMie(vec3 start, vec3 end, float cloudsDistance
     float godRayShadow = hits(cloudsHit) ? 1.0 - lowResCloudsAtPoint(pos + cloudsHit * starDirection) : 1.0;
     shadow *= pow(godRayShadow, 3.0);
 
-    vec3 lightGettingScattered = rayLoseEnergy(starRadiance, rayleighHeight, altitude, atmoHits);
+    vec3 lightGettingScattered = rayLoseEnergy(starIrradiance, rayleighHeight, altitude, atmoHits);
     vec3 lightIncomingToCamera = rayleighColor 
                     * rayLoseEnergy(lightGettingScattered, altitude, startAltitude, distance(start, pos));
 

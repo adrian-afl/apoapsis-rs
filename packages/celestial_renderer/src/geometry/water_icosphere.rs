@@ -179,6 +179,8 @@ impl WaterIcosphere {
         command_buffer: &VECommandBuffer,
         common_set: &VEDescriptorSet,
     ) {
+        self.data_buffer.record_copy_from_staging(command_buffer);
+
         stage.bind(command_buffer);
         stage.set_descriptor_set(command_buffer, 0, &self.data_set);
         stage.set_descriptor_set(command_buffer, 1, common_set);

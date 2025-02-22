@@ -19,7 +19,7 @@ pub struct CloudGeneratorLowFreq {
     data_set_layout: VEDescriptorSetLayout,
     data_set: VEDescriptorSet,
 
-    buffer: CloudGeneratorLowFreqBuffer,
+    pub buffer: CloudGeneratorLowFreqBuffer,
 
     pub low_freq_data_r: VEImage, // I could... make this a cubemap and fill it with a compute shader
 }

@@ -30,7 +30,7 @@ pub struct Output {
     data_set_layout: VEDescriptorSetLayout,
     data_set: VEDescriptorSet,
 
-    buffer: OutputBuffer,
+    pub buffer: OutputBuffer,
 
     pub output: VEImage,
 }

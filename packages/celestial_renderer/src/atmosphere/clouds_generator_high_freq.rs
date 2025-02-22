@@ -20,7 +20,7 @@ pub struct CloudGeneratorHighFreq {
     data_set_layout: VEDescriptorSetLayout,
     data_set: VEDescriptorSet,
 
-    buffer: CloudGeneratorHighFreqBuffer,
+    pub buffer: CloudGeneratorHighFreqBuffer,
 
     pub high_freq_data_r: VEImage,
 }

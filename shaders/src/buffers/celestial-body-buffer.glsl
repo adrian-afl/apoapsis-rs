@@ -16,6 +16,7 @@ layout(set = CELESTIAL_BUFFER_SET, binding = CELESTIAL_BUFFER_BINDING) uniform c
     vec4 mieColor_mieDensity;
 
     vec4 starDirection_zero;
+    vec4 starIrradiance_zero;
     vec4 starRadiance_zero;
 } celestialData;
 
@@ -36,4 +37,5 @@ vec3 mieColor = celestialData.mieColor_mieDensity.rgb;
 float mieDensity = celestialData.mieColor_mieDensity.a;
 
 vec3 starDirection = celestialData.starDirection_zero.xyz;
+vec3 starIrradiance = celestialData.starIrradiance_zero.xyz;
 vec3 starRadiance = celestialData.starRadiance_zero.xyz;

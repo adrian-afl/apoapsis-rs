@@ -24,7 +24,7 @@ pub struct Mesh {
     pub material: Material,
 
     pub descriptor_set: VEDescriptorSet,
-    mesh_buffer: Mutex<MeshBuffer>,
+    pub mesh_buffer: Mutex<MeshBuffer>,
     sampler: VESampler,
 }
 

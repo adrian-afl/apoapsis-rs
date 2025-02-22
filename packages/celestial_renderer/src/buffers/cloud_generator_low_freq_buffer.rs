@@ -3,20 +3,27 @@ use planet_generator_library::noise::fbm;
 use renderer_common::buffer_writers::{write_float, write_vec4};
 use renderer_common::errors::RenderingError;
 use vengine_rs::buffer::buffer::{VEBuffer, VEBufferUsage};
+use vengine_rs::core::command_buffer::VECommandBuffer;
 use vengine_rs::core::memory_properties::VEMemoryProperties;
 use vengine_rs::core::toolkit::VEToolkit;
 
 pub struct CloudGeneratorLowFreqBuffer {
+    staging_buffer: VEBuffer,
     pub buffer: VEBuffer,
 }
 
 impl CloudGeneratorLowFreqBuffer {
     pub fn new(toolkit: &VEToolkit) -> Result<CloudGeneratorLowFreqBuffer, RenderingError> {
         Ok(CloudGeneratorLowFreqBuffer {
-            buffer: toolkit.create_buffer(
+            staging_buffer: toolkit.create_buffer(
                 &[VEBufferUsage::Uniform],
                 128,
                 Some(VEMemoryProperties::HostCoherent),
+            )?,
+            buffer: toolkit.create_buffer(
+                &[VEBufferUsage::Uniform],
+                128,
+                Some(VEMemoryProperties::DeviceLocal),
             )?,
         })
     }
@@ -32,7 +39,7 @@ impl CloudGeneratorLowFreqBuffer {
         elapsed: f64,
         frequency: f64,
     ) -> Result<(), RenderingError> {
-        let ptr = self.buffer.map()? as *mut f32;
+        let ptr = self.staging_buffer.map()? as *mut f32;
 
         let mut offset = 0;
 
@@ -45,5 +52,15 @@ impl CloudGeneratorLowFreqBuffer {
         offset += write_float(ptr, offset, frequency);
 
         Ok(())
+    }
+
+    pub fn record_copy_from_staging(&self, command_buffer: &VECommandBuffer) {
+        self.staging_buffer.copy_to_cmd(
+            command_buffer,
+            &self.buffer,
+            0,
+            0,
+            self.staging_buffer.size,
+        );
     }
 }

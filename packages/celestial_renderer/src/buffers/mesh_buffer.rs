@@ -6,20 +6,27 @@ use renderer_common::buffer_writers::{
 };
 use renderer_common::errors::RenderingError;
 use vengine_rs::buffer::buffer::{VEBuffer, VEBufferUsage};
+use vengine_rs::core::command_buffer::VECommandBuffer;
 use vengine_rs::core::memory_properties::VEMemoryProperties;
 use vengine_rs::core::toolkit::VEToolkit;
 
 pub struct MeshBuffer {
+    staging_buffer: VEBuffer,
     pub buffer: VEBuffer,
 }
 
 impl MeshBuffer {
     pub fn new(toolkit: &VEToolkit) -> Result<MeshBuffer, RenderingError> {
         Ok(MeshBuffer {
-            buffer: toolkit.create_buffer(
+            staging_buffer: toolkit.create_buffer(
                 &[VEBufferUsage::Uniform],
                 8 * 1024,
                 Some(VEMemoryProperties::HostCoherent),
+            )?,
+            buffer: toolkit.create_buffer(
+                &[VEBufferUsage::Uniform],
+                8 * 1024,
+                Some(VEMemoryProperties::DeviceLocal),
             )?,
         })
     }
@@ -51,7 +58,7 @@ impl MeshBuffer {
     float bumpTextureScale;
     */
     pub fn update(&mut self, mesh: &Mesh) -> Result<(), RenderingError> {
-        let ptr = self.buffer.map()? as *mut f32;
+        let ptr = self.staging_buffer.map()? as *mut f32;
 
         let mut offset = 0;
         //mat4 modelMatrix;
@@ -222,5 +229,15 @@ impl MeshBuffer {
         );
 
         Ok(())
+    }
+
+    pub fn record_copy_from_staging(&self, command_buffer: &VECommandBuffer) {
+        self.staging_buffer.copy_to_cmd(
+            command_buffer,
+            &self.buffer,
+            0,
+            0,
+            self.staging_buffer.size,
+        );
     }
 }

@@ -33,5 +33,5 @@ float cloudsFBM(vec3 p, int iterations){
 void main() {
     vec3 normal = normalize(polarToXyz(UV));
     float result = cloudsFBM(normal * frequency + seed.xyz + elapsed * 0.00001, 8);
-    imageStore(outColor, iUV, vec4(result, 0.0, 0.0, 0.0));
+    imageStore(outColor, iUV, vec4(0.0, 0.0, 0.0, 0.0));
 }

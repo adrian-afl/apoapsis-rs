@@ -134,7 +134,7 @@ impl CelestialHierarchy {
 
             if exists {
                 udebug!("Updating body {}", &closest_hierarchy_body.body.name);
-                let mut body = self
+                let body = self
                     .rendered_bodies
                     .get_mut(&closest_hierarchy_body.body.name)
                     .unwrap();
@@ -150,6 +150,10 @@ impl CelestialHierarchy {
                                     &camera_position,
                                     &closest_star.position,
                                     match &closest_star.body.star_emission {
+                                        None => DVec3::new(0.0, 0.0, 0.0),
+                                        Some(radiance) => radiance.radiance,
+                                    },
+                                    match &body.body.star_emission {
                                         None => DVec3::new(0.0, 0.0, 0.0),
                                         Some(radiance) => radiance.radiance,
                                     },
