@@ -310,8 +310,8 @@ impl Renderer {
             submit_barriers(
                 &self.toolkit.device,
                 &self.command_buffer,
+                PipelineStageFlags::ALL_COMMANDS,
                 PipelineStageFlags::ALL_GRAPHICS,
-                PipelineStageFlags::COMPUTE_SHADER,
                 &[],
                 &[],
                 &[

@@ -15,14 +15,14 @@ impl TerrainIcosphereDataBuffer {
     pub fn new(toolkit: &VEToolkit) -> Result<Self, RenderingError> {
         Ok(Self {
             staging_buffer: toolkit.create_buffer(
-                &[VEBufferUsage::Storage],
+                &[VEBufferUsage::Storage, VEBufferUsage::TransferSource],
                 64 * 1024,
-                Some(VEMemoryProperties::HostCoherent), // should REALLY be device local...
+                Some(VEMemoryProperties::HostCoherent),
             )?,
             buffer: toolkit.create_buffer(
-                &[VEBufferUsage::Storage],
+                &[VEBufferUsage::Storage, VEBufferUsage::TransferDestination],
                 64 * 1024,
-                Some(VEMemoryProperties::DeviceLocal), // should REALLY be device local...
+                Some(VEMemoryProperties::DeviceLocal),
             )?,
         })
     }

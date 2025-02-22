@@ -15,12 +15,12 @@ impl OutputBuffer {
     pub fn new(toolkit: &VEToolkit) -> Result<OutputBuffer, RenderingError> {
         Ok(OutputBuffer {
             staging_buffer: toolkit.create_buffer(
-                &[VEBufferUsage::Uniform],
+                &[VEBufferUsage::Uniform, VEBufferUsage::TransferSource],
                 16,
                 Some(VEMemoryProperties::HostCoherent),
             )?,
             buffer: toolkit.create_buffer(
-                &[VEBufferUsage::Uniform],
+                &[VEBufferUsage::Uniform, VEBufferUsage::TransferDestination],
                 16,
                 Some(VEMemoryProperties::DeviceLocal),
             )?,

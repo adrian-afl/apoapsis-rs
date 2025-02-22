@@ -18,7 +18,11 @@ impl GBuffer {
             config.height,
             1,
             VEImageFormat::RGBA8unorm,
-            &[VEImageUsage::ColorAttachment, VEImageUsage::Storage],
+            &[
+                VEImageUsage::ColorAttachment,
+                VEImageUsage::Storage,
+                VEImageUsage::TransferDestination,
+            ],
         )?;
 
         let emission_rgb_metalness_a = toolkit.create_image_full(
@@ -26,7 +30,11 @@ impl GBuffer {
             config.height,
             1,
             VEImageFormat::RGBA8unorm,
-            &[VEImageUsage::ColorAttachment, VEImageUsage::Storage],
+            &[
+                VEImageUsage::ColorAttachment,
+                VEImageUsage::Storage,
+                VEImageUsage::TransferDestination,
+            ],
         )?;
 
         let normal_rgb_distance_a = toolkit.create_image_full(
@@ -34,7 +42,11 @@ impl GBuffer {
             config.height,
             1,
             VEImageFormat::RGBA32f,
-            &[VEImageUsage::ColorAttachment, VEImageUsage::Storage],
+            &[
+                VEImageUsage::ColorAttachment,
+                VEImageUsage::Storage,
+                VEImageUsage::TransferDestination,
+            ],
         )?;
 
         let shared_depth_buffer = toolkit.create_image_full(
@@ -42,7 +54,11 @@ impl GBuffer {
             config.height,
             1,
             VEImageFormat::Depth32f,
-            &[VEImageUsage::DepthAttachment, VEImageUsage::Sampled],
+            &[
+                VEImageUsage::DepthAttachment,
+                VEImageUsage::Sampled,
+                VEImageUsage::TransferDestination,
+            ],
         )?;
 
         //##########

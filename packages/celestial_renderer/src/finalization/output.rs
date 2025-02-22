@@ -185,8 +185,8 @@ impl Output {
         submit_barriers(
             &self.device,
             &command_buffer,
-            PipelineStageFlags::COMPUTE_SHADER,
             PipelineStageFlags::ALL_COMMANDS,
+            PipelineStageFlags::COMPUTE_SHADER,
             &[],
             &[],
             &[barrier.build()],

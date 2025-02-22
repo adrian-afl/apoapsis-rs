@@ -16,12 +16,12 @@ impl CloudGeneratorHighFreqBuffer {
     pub fn new(toolkit: &VEToolkit) -> Result<CloudGeneratorHighFreqBuffer, RenderingError> {
         Ok(CloudGeneratorHighFreqBuffer {
             staging_buffer: toolkit.create_buffer(
-                &[VEBufferUsage::Uniform],
+                &[VEBufferUsage::Uniform, VEBufferUsage::TransferSource],
                 128,
                 Some(VEMemoryProperties::HostCoherent),
             )?,
             buffer: toolkit.create_buffer(
-                &[VEBufferUsage::Uniform],
+                &[VEBufferUsage::Uniform, VEBufferUsage::TransferDestination],
                 128,
                 Some(VEMemoryProperties::DeviceLocal),
             )?,

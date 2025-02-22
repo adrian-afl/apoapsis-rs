@@ -15,12 +15,12 @@ impl CommonBuffer {
     pub fn new(toolkit: &VEToolkit) -> Result<CommonBuffer, RenderingError> {
         Ok(CommonBuffer {
             staging_buffer: toolkit.create_buffer(
-                &[VEBufferUsage::Uniform],
+                &[VEBufferUsage::Uniform, VEBufferUsage::TransferSource],
                 512,
                 Some(VEMemoryProperties::HostCoherent),
             )?,
             buffer: toolkit.create_buffer(
-                &[VEBufferUsage::Uniform],
+                &[VEBufferUsage::Uniform, VEBufferUsage::TransferDestination],
                 512,
                 Some(VEMemoryProperties::DeviceLocal),
             )?,

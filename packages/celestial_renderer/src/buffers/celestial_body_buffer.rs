@@ -27,12 +27,12 @@ impl CelestialBodyBuffer {
     pub fn new(toolkit: &VEToolkit) -> Result<CelestialBodyBuffer, RenderingError> {
         Ok(CelestialBodyBuffer {
             staging_buffer: toolkit.create_buffer(
-                &[VEBufferUsage::Uniform],
+                &[VEBufferUsage::Uniform, VEBufferUsage::TransferSource],
                 8 * 1024,
                 Some(VEMemoryProperties::HostCoherent),
             )?,
             buffer: toolkit.create_buffer(
-                &[VEBufferUsage::Uniform],
+                &[VEBufferUsage::Uniform, VEBufferUsage::TransferDestination],
                 8 * 1024,
                 Some(VEMemoryProperties::DeviceLocal),
             )?,
