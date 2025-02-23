@@ -3,6 +3,7 @@ use crate::renderer::Renderer;
 use crate::scene::celestial_hierarchy::CelestialHierarchy;
 use crate::scene::material::{ColorOrTexture, Material, ScaledTexture, ValueOrTexture};
 use crate::scene::mesh::Mesh;
+use common_util::profile;
 use ecs::component_trait::Components;
 use ecs::components::rendering::mesh_component::{
     ColorOrTextureDescription, MeshDescription, ValueOrTextureDescription,
@@ -232,70 +233,74 @@ impl RenderingSystem {
 
         // this list here is so that if entity disappears, the mesh is cleaned up
         let detected_mesh_component_ids = Mutex::new(vec![]);
+        profile!("rendering_system update / mesh update pass 1", {
+            ecs.parallel_process_all_by_components(
+                &[&Components::Mesh, &Components::Transform],
+                |entity| {
+                    // println!("RenderingSystem / Parallel {}", entity.id);
+                    let transform_component = entity.components.transform.as_ref().unwrap();
+                    let mesh_components = &entity.components.mesh;
 
-        ecs.parallel_process_all_by_components(
-            &[&Components::Mesh, &Components::Transform],
-            |entity| {
-                // println!("RenderingSystem / Parallel {}", entity.id);
-                let transform_component = entity.components.transform.as_ref().unwrap();
-                let mesh_components = &entity.components.mesh;
+                    for mesh_component in mesh_components {
+                        // println!("RenderingSystem / For mesh component {}", mesh_component.id);
+                        let relative_position = &transform_component.position - &camera.position;
+                        let relative_position = relative_position.to_dvec3();
 
-                for mesh_component in mesh_components {
-                    // println!("RenderingSystem / For mesh component {}", mesh_component.id);
-                    let relative_position = &transform_component.position - &camera.position;
-                    let relative_position = relative_position.to_dvec3();
+                        let should_render = relative_position.length() < self.rendering_cutoff;
 
-                    let should_render = relative_position.length() < self.rendering_cutoff;
+                        let mut exists = self
+                            .currently_rendered_meshes
+                            .read()
+                            .unwrap()
+                            .contains_key(&mesh_component.id);
 
-                    let mut exists = self
-                        .currently_rendered_meshes
-                        .read()
-                        .unwrap()
-                        .contains_key(&mesh_component.id);
-
-                    if should_render && !exists {
-                        // println!("RenderingSystem / ADD {}", mesh_component.id);
-                        match self.create_mesh_from_description(&mesh_component.description) {
-                            Err(err) => println!("Failed to create a mesh! Reason: {}", err),
-                            Ok(mesh) => {
-                                self.currently_rendered_meshes
-                                    .write()
-                                    .unwrap()
-                                    .insert(mesh_component.id, mesh);
-                                exists = true;
+                        if should_render && !exists {
+                            // println!("RenderingSystem / ADD {}", mesh_component.id);
+                            match self.create_mesh_from_description(&mesh_component.description) {
+                                Err(err) => println!("Failed to create a mesh! Reason: {}", err),
+                                Ok(mesh) => {
+                                    self.currently_rendered_meshes
+                                        .write()
+                                        .unwrap()
+                                        .insert(mesh_component.id, mesh);
+                                    exists = true;
+                                }
                             }
                         }
-                    }
 
-                    if should_render && exists {
-                        detected_mesh_component_ids
-                            .lock()
-                            .unwrap()
-                            .push(mesh_component.id);
+                        if should_render && exists {
+                            detected_mesh_component_ids
+                                .lock()
+                                .unwrap()
+                                .push(mesh_component.id);
 
-                        // println!("RenderingSystem / UPDATE {}", mesh_component.id);
-                        let mut locked_map = self.currently_rendered_meshes.write().unwrap();
-                        let mesh = locked_map.get_mut(&mesh_component.id).unwrap();
-                        mesh.position.assign(&transform_component.position);
-                        mesh.scale = transform_component.scale.clone();
-                        mesh.orientation = transform_component.orientation.clone();
+                            // println!("RenderingSystem / UPDATE {}", mesh_component.id);
+                            let mut locked_map = self.currently_rendered_meshes.write().unwrap();
+                            let mesh = locked_map.get_mut(&mesh_component.id).unwrap();
+                            mesh.position.assign(&transform_component.position);
+                            mesh.scale = transform_component.scale.clone();
+                            mesh.orientation = transform_component.orientation.clone();
+                        }
                     }
-                }
-            },
-        );
+                },
+            );
+        });
 
         // TODO this should clear up meshes that are removed from the ECS completely
         // does it work? maybe
         // update it turns out to be working
-        let mut locked_map = self.currently_rendered_meshes.write().unwrap();
-        let detected_mesh_component_ids = detected_mesh_component_ids.lock().unwrap();
-        locked_map.retain(|k, _| detected_mesh_component_ids.contains(k));
-        drop(locked_map);
-
         {
             let mut locked_map = self.currently_rendered_meshes.write().unwrap();
-            locked_map.par_iter_mut().for_each(|(_, mesh)| {
-                mesh.update(&camera.position).unwrap();
+            let detected_mesh_component_ids = detected_mesh_component_ids.lock().unwrap();
+
+            profile!("rendering_system update / mesh update retain", {
+                locked_map.retain(|k, _| detected_mesh_component_ids.contains(k));
+            });
+
+            profile!("rendering_system update / mesh update pass 2", {
+                locked_map.par_iter_mut().for_each(|(_, mesh)| {
+                    mesh.update(&camera.position).unwrap();
+                });
             });
         }
         // println!("RenderingSystem / After render");
