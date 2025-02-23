@@ -12,7 +12,8 @@
     "FlightYawLeft": "KeyA",
     "FlightYawRight": "KeyD",
     "FlightRollLeft": "KeyQ",
-    "FlightRollRight": "KeyE"
+    "FlightRollRight": "KeyE",
+    "FlightShoot": "Space"
   },
   "mouse_buttons": {},
   "gamepad_buttons": {

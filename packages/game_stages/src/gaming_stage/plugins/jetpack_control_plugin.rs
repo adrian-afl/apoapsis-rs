@@ -19,7 +19,7 @@ impl DebugStatusPlugin {
         let player_entity = &mut ecs["player"];
         let transform = player_entity.components.transform.as_ref().unwrap();
         let simple_physics = player_entity.components.simple_physics.as_mut().unwrap();
-        let directions = get_quat_directions(transform.orientation.inverse());
+        let directions = get_quat_directions(transform.orientation);
         let mut angular_velocity_change = dvec3(0.0, 0.0, 0.0);
         if context
             .controls

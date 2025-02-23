@@ -61,7 +61,7 @@ impl Camera {
     }
 
     pub fn update(&mut self) {
-        self.view_matrix = DMat4::from_quat(self.orientation);
+        self.view_matrix = DMat4::from_quat(self.orientation.inverse());
         self.frustum_cone = self.get_frustum_cone();
         self.directions = self.get_directions();
     }

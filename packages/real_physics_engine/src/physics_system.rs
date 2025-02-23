@@ -112,7 +112,7 @@ impl PhysicsSystem {
                                 .to_dvec3();
 
                             {
-                                let mut map = self.currently_simulated_bodies.try_write().unwrap();
+                                let mut map = self.currently_simulated_bodies.write().unwrap();
                                 let simulated_object = map.get_mut(&id).unwrap();
                                 simulated_object.phase_1_relative_position = relative_position;
                                 simulated_object.phase_1_relative_linear_velocity =
@@ -133,10 +133,9 @@ impl PhysicsSystem {
                                 relative_position = current_linear_velocity.to_dvec3()
                             }
 
-                            let map = self.currently_simulated_bodies.try_read().unwrap();
+                            let map = self.currently_simulated_bodies.read().unwrap();
                             let simulated_object = map.get(&id).unwrap();
-                            let mut real_physics_system =
-                                self.real_physics_system.try_write().unwrap();
+                            let mut real_physics_system = self.real_physics_system.write().unwrap();
                             real_physics_system
                                 .set_body_kinematics(
                                     simulated_object.rigid_body,
@@ -186,13 +185,13 @@ impl PhysicsSystem {
                         .unwrap()
                         .push(real_physics.id);
 
-                    let map = self.currently_simulated_bodies.try_read().unwrap();
+                    let map = self.currently_simulated_bodies.read().unwrap();
                     let simulated = map.get(&real_physics.id);
 
                     if simulated.is_some() {
                         let simulated = simulated.unwrap();
 
-                        let real_physics_system = self.real_physics_system.try_read().unwrap();
+                        let real_physics_system = self.real_physics_system.read().unwrap();
                         let kinematics = real_physics_system
                             .get_body_kinematics(simulated.rigid_body)
                             .unwrap();
@@ -219,16 +218,16 @@ impl PhysicsSystem {
 
         // TODO this should clear up elements that are removed from the ECS completely
         // does it work? maybe
-        let locked_map = self.currently_simulated_bodies.try_write().unwrap();
+        let locked_map = self.currently_simulated_bodies.write().unwrap();
         let detected_mesh_component_ids = detected_element_real_physics_ids.lock().unwrap();
         let keys: Vec<u64> = locked_map.keys().map(|x| *x).collect();
         drop(locked_map);
 
         keys.par_iter().for_each(|key| {
             if !detected_mesh_component_ids.contains(key) {
-                let mut real_physics_system = self.real_physics_system.try_write().unwrap();
+                let mut real_physics_system = self.real_physics_system.write().unwrap();
                 let mut currently_simulated_bodies =
-                    self.currently_simulated_bodies.try_write().unwrap();
+                    self.currently_simulated_bodies.write().unwrap();
                 // unload
                 println!("PSY UNLOAD {}", key);
                 Self::stop_real_physics_sim(
@@ -289,14 +288,13 @@ impl PhysicsSystem {
 
         let mut exists = self
             .currently_simulated_bodies
-            .try_read()
+            .read()
             .unwrap()
             .contains_key(&real_physics.id);
 
         if !should_simulate && exists {
-            let mut real_physics_system = self.real_physics_system.try_write().unwrap();
-            let mut currently_simulated_bodies =
-                self.currently_simulated_bodies.try_write().unwrap();
+            let mut real_physics_system = self.real_physics_system.write().unwrap();
+            let mut currently_simulated_bodies = self.currently_simulated_bodies.write().unwrap();
             // unload
             println!("PSY UNLOAD {}", real_physics.id);
             Self::stop_real_physics_sim(
@@ -306,9 +304,8 @@ impl PhysicsSystem {
             );
             exists = false;
         } else if should_simulate && !exists {
-            let mut real_physics_system = self.real_physics_system.try_write().unwrap();
-            let mut currently_simulated_bodies =
-                self.currently_simulated_bodies.try_write().unwrap();
+            let mut real_physics_system = self.real_physics_system.write().unwrap();
+            let mut currently_simulated_bodies = self.currently_simulated_bodies.write().unwrap();
             // load
             println!("PSY LOAD {}", real_physics.id);
             Self::start_real_physics_sim(
@@ -390,10 +387,7 @@ impl PhysicsSystem {
         if should_continue {
             self.phase1(ecs, universe_simulation, delta_time);
 
-            self.real_physics_system
-                .try_write()
-                .unwrap()
-                .step(delta_time);
+            self.real_physics_system.write().unwrap().step(delta_time);
 
             self.phase2(ecs);
         }

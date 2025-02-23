@@ -11,6 +11,7 @@ use ecs::ecs_world::ECSWorld;
 use glam::DVec3;
 use math::decimal_vector_3d::DecimalVector3d;
 use rayon::iter::ParallelIterator;
+use rayon::prelude::IntoParallelRefMutIterator;
 use renderer_common::camera::Camera;
 use renderer_common::errors::RenderingError;
 use std::collections::HashMap;
@@ -240,10 +241,6 @@ impl RenderingSystem {
                 let mesh_components = &entity.components.mesh;
 
                 for mesh_component in mesh_components {
-                    detected_mesh_component_ids
-                        .lock()
-                        .unwrap()
-                        .push(mesh_component.id);
                     // println!("RenderingSystem / For mesh component {}", mesh_component.id);
                     let relative_position = &transform_component.position - &camera.position;
                     let relative_position = relative_position.to_dvec3();
@@ -252,24 +249,17 @@ impl RenderingSystem {
 
                     let mut exists = self
                         .currently_rendered_meshes
-                        .try_read()
+                        .read()
                         .unwrap()
                         .contains_key(&mesh_component.id);
 
-                    if !should_render && exists {
-                        // println!("RenderingSystem / REMOVE {}", mesh_component.id);
-                        self.currently_rendered_meshes
-                            .try_write()
-                            .unwrap()
-                            .remove(&mesh_component.id);
-                        exists = false;
-                    } else if should_render && !exists {
+                    if should_render && !exists {
                         // println!("RenderingSystem / ADD {}", mesh_component.id);
                         match self.create_mesh_from_description(&mesh_component.description) {
                             Err(err) => println!("Failed to create a mesh! Reason: {}", err),
                             Ok(mesh) => {
                                 self.currently_rendered_meshes
-                                    .try_write()
+                                    .write()
                                     .unwrap()
                                     .insert(mesh_component.id, mesh);
                                 exists = true;
@@ -278,14 +268,17 @@ impl RenderingSystem {
                     }
 
                     if should_render && exists {
+                        detected_mesh_component_ids
+                            .lock()
+                            .unwrap()
+                            .push(mesh_component.id);
+
                         // println!("RenderingSystem / UPDATE {}", mesh_component.id);
-                        let mut locked_map = self.currently_rendered_meshes.try_write().unwrap();
+                        let mut locked_map = self.currently_rendered_meshes.write().unwrap();
                         let mesh = locked_map.get_mut(&mesh_component.id).unwrap();
                         mesh.position.assign(&transform_component.position);
                         mesh.scale = transform_component.scale.clone();
                         mesh.orientation = transform_component.orientation.clone();
-
-                        mesh.update(&camera.position).unwrap();
                     }
                 }
             },
@@ -293,11 +286,18 @@ impl RenderingSystem {
 
         // TODO this should clear up meshes that are removed from the ECS completely
         // does it work? maybe
-        let mut locked_map = self.currently_rendered_meshes.try_write().unwrap();
+        // update it turns out to be working
+        let mut locked_map = self.currently_rendered_meshes.write().unwrap();
         let detected_mesh_component_ids = detected_mesh_component_ids.lock().unwrap();
         locked_map.retain(|k, _| detected_mesh_component_ids.contains(k));
         drop(locked_map);
 
+        {
+            let mut locked_map = self.currently_rendered_meshes.write().unwrap();
+            locked_map.par_iter_mut().for_each(|(_, mesh)| {
+                mesh.update(&camera.position).unwrap();
+            });
+        }
         // println!("RenderingSystem / After render");
 
         // println!("RenderingSystem / Draw");
@@ -306,7 +306,7 @@ impl RenderingSystem {
             let render_result = self.renderer.lock().unwrap().draw(
                 &self
                     .currently_rendered_meshes
-                    .try_read()
+                    .read()
                     .unwrap()
                     .values()
                     .collect::<Vec<_>>(),

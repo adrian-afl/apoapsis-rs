@@ -321,18 +321,14 @@ impl Renderer {
                 ],
             );
 
-            // let is_closest = i == 0;
-            // if !is_closest {
-            //     self.mesh_drawer.record(
-            //         &self.mesh_drawer.render_stage,
-            //         &self.command_buffer,
-            //         meshes,
-            //     );
-            // } else {
-            //     // todo temporary just to clear
-            //     self.mesh_drawer
-            //         .record(&self.mesh_drawer.render_stage, &self.command_buffer, &[]);
-            // }
+            let is_closest = i == 0;
+            if !is_closest {
+                self.mesh_drawer.record(
+                    &self.mesh_drawer.render_stage,
+                    &self.command_buffer,
+                    meshes,
+                );
+            }
 
             self.cloud_generator_low_freq.record(&self.command_buffer);
             self.cloud_generator_high_freq.record(&self.command_buffer);
@@ -442,7 +438,7 @@ impl Renderer {
 
         let mut swapchain = self.toolkit.swapchain.lock().unwrap();
 
-        let mut any_updates = false;
+        let mut any_updates = true;
 
         for (i, body) in celestial_bodies.iter_mut().enumerate() {
             let is_closest = i == 0;

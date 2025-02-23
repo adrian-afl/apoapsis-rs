@@ -1,3 +1,4 @@
+use crate::gaming_stage::plugins::debug_box_spawner_plugin::DebugBoxSpawnerPlugin;
 use crate::gaming_stage::plugins::debug_status_plugin::DebugStatusPlugin;
 use common_util::udebug;
 use core::game_context::GameContext;
@@ -22,6 +23,7 @@ pub struct GamingStage {
     player_id: u64,
 
     debug_status_plugin: DebugStatusPlugin,
+    debug_box_spawner_plugin: DebugBoxSpawnerPlugin,
 }
 
 impl GamingStage {
@@ -51,11 +53,13 @@ impl GamingStage {
         let player_id = ecs.add(player_entity);
 
         let debug_status_plugin = DebugStatusPlugin::new(context, &mut ecs);
+        let debug_box_spawner_plugin = DebugBoxSpawnerPlugin::new(context, &mut ecs);
 
         Self {
             ecs,
             player_id,
             debug_status_plugin,
+            debug_box_spawner_plugin,
         }
     }
 }
@@ -108,6 +112,7 @@ impl GameStage for GamingStage {
         simple_physics.angular_velocity += angular_velocity_change;
 
         self.debug_status_plugin.update(context, &mut self.ecs);
+        self.debug_box_spawner_plugin.update(context, &mut self.ecs);
         StageTransition::DoNothing
     }
 

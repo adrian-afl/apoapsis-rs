@@ -35,7 +35,7 @@ impl Mesh {
         geometry: VEVertexBuffer,
         material: Material,
     ) -> Result<Self, RenderingError> {
-        Ok(Self {
+        let mut mesh = Self {
             position: DecimalVector3d::zero(),
             orientation: DQuat::IDENTITY.clone(),
             scale: DVec3::new(1.0, 1.0, 1.0),
@@ -48,9 +48,125 @@ impl Mesh {
                 VESamplerAddressMode::Repeat,
                 VEFiltering::Linear,
                 VEFiltering::Linear,
-                true,
+                false,
             )?,
-        })
+        };
+        {
+            let buf = mesh.mesh_buffer.lock().unwrap();
+            mesh.descriptor_set.bind_buffer(0, &buf.buffer)?;
+        }
+
+        let empty_image = EMPTY_TEXTURES.get_empty_image();
+        let empty_view = EMPTY_TEXTURES.get_empty_view();
+
+        match mesh.material.color {
+            ColorOrTexture::Color(_) => {
+                mesh.descriptor_set.bind_image_sampler(
+                    1,
+                    &empty_image.lock().unwrap().as_ref().unwrap(),
+                    empty_view.lock().unwrap().unwrap(),
+                    &mesh.sampler,
+                )?;
+            }
+            ColorOrTexture::Texture(ref mut texture) => {
+                let view = texture
+                    .texture
+                    .get_view(VEImageViewCreateInfo::simple_2d())?;
+                mesh.descriptor_set
+                    .bind_image_sampler(1, &texture.texture, view, &mesh.sampler)?;
+            }
+        }
+
+        match mesh.material.roughness {
+            ValueOrTexture::Value(_) => {
+                mesh.descriptor_set.bind_image_sampler(
+                    2,
+                    &empty_image.lock().unwrap().as_ref().unwrap(),
+                    empty_view.lock().unwrap().unwrap(),
+                    &mesh.sampler,
+                )?;
+            }
+            ValueOrTexture::Texture(ref mut texture) => {
+                let view = texture
+                    .texture
+                    .get_view(VEImageViewCreateInfo::simple_2d())?;
+                mesh.descriptor_set
+                    .bind_image_sampler(2, &texture.texture, view, &mesh.sampler)?;
+            }
+        }
+
+        match mesh.material.metalness {
+            ValueOrTexture::Value(_) => {
+                mesh.descriptor_set.bind_image_sampler(
+                    3,
+                    &empty_image.lock().unwrap().as_ref().unwrap(),
+                    empty_view.lock().unwrap().unwrap(),
+                    &mesh.sampler,
+                )?;
+            }
+            ValueOrTexture::Texture(ref mut texture) => {
+                let view = texture
+                    .texture
+                    .get_view(VEImageViewCreateInfo::simple_2d())?;
+                mesh.descriptor_set
+                    .bind_image_sampler(3, &texture.texture, view, &mesh.sampler)?;
+            }
+        }
+
+        match mesh.material.emission {
+            ColorOrTexture::Color(_) => {
+                mesh.descriptor_set.bind_image_sampler(
+                    4,
+                    &empty_image.lock().unwrap().as_ref().unwrap(),
+                    empty_view.lock().unwrap().unwrap(),
+                    &mesh.sampler,
+                )?;
+            }
+            ColorOrTexture::Texture(ref mut texture) => {
+                let view = texture
+                    .texture
+                    .get_view(VEImageViewCreateInfo::simple_2d())?;
+                mesh.descriptor_set
+                    .bind_image_sampler(4, &texture.texture, view, &mesh.sampler)?;
+            }
+        }
+
+        match mesh.material.normal {
+            None => {
+                mesh.descriptor_set.bind_image_sampler(
+                    5,
+                    &empty_image.lock().unwrap().as_ref().unwrap(),
+                    empty_view.lock().unwrap().unwrap(),
+                    &mesh.sampler,
+                )?;
+            }
+            Some(ref mut texture) => {
+                let view = texture
+                    .texture
+                    .get_view(VEImageViewCreateInfo::simple_2d())?;
+                mesh.descriptor_set
+                    .bind_image_sampler(5, &texture.texture, view, &mesh.sampler)?;
+            }
+        }
+
+        match mesh.material.bump {
+            None => {
+                mesh.descriptor_set.bind_image_sampler(
+                    6,
+                    &empty_image.lock().unwrap().as_ref().unwrap(),
+                    empty_view.lock().unwrap().unwrap(),
+                    &mesh.sampler,
+                )?;
+            }
+            Some(ref mut texture) => {
+                let view = texture
+                    .texture
+                    .get_view(VEImageViewCreateInfo::simple_2d())?;
+                mesh.descriptor_set
+                    .bind_image_sampler(6, &texture.texture, view, &mesh.sampler)?;
+            }
+        }
+        Ok(mesh)
     }
 
     pub fn update(&mut self, camera_position: &DecimalVector3d) -> Result<(), RenderingError> {
@@ -63,119 +179,6 @@ impl Mesh {
         );
         let mut buf = self.mesh_buffer.lock().unwrap();
         buf.update(self)?;
-
-        self.descriptor_set.bind_buffer(0, &buf.buffer)?;
-
-        let empty_image = EMPTY_TEXTURES.get_empty_image();
-        let empty_view = EMPTY_TEXTURES.get_empty_view();
-
-        match self.material.color {
-            ColorOrTexture::Color(_) => {
-                self.descriptor_set.bind_image_sampler(
-                    1,
-                    &empty_image.lock().unwrap().as_ref().unwrap(),
-                    empty_view.lock().unwrap().unwrap(),
-                    &self.sampler,
-                )?;
-            }
-            ColorOrTexture::Texture(ref mut texture) => {
-                let view = texture
-                    .texture
-                    .get_view(VEImageViewCreateInfo::simple_2d())?;
-                self.descriptor_set
-                    .bind_image_sampler(1, &texture.texture, view, &self.sampler)?;
-            }
-        }
-
-        match self.material.roughness {
-            ValueOrTexture::Value(_) => {
-                self.descriptor_set.bind_image_sampler(
-                    2,
-                    &empty_image.lock().unwrap().as_ref().unwrap(),
-                    empty_view.lock().unwrap().unwrap(),
-                    &self.sampler,
-                )?;
-            }
-            ValueOrTexture::Texture(ref mut texture) => {
-                let view = texture
-                    .texture
-                    .get_view(VEImageViewCreateInfo::simple_2d())?;
-                self.descriptor_set
-                    .bind_image_sampler(2, &texture.texture, view, &self.sampler)?;
-            }
-        }
-
-        match self.material.metalness {
-            ValueOrTexture::Value(_) => {
-                self.descriptor_set.bind_image_sampler(
-                    3,
-                    &empty_image.lock().unwrap().as_ref().unwrap(),
-                    empty_view.lock().unwrap().unwrap(),
-                    &self.sampler,
-                )?;
-            }
-            ValueOrTexture::Texture(ref mut texture) => {
-                let view = texture
-                    .texture
-                    .get_view(VEImageViewCreateInfo::simple_2d())?;
-                self.descriptor_set
-                    .bind_image_sampler(3, &texture.texture, view, &self.sampler)?;
-            }
-        }
-
-        match self.material.emission {
-            ColorOrTexture::Color(_) => {
-                self.descriptor_set.bind_image_sampler(
-                    4,
-                    &empty_image.lock().unwrap().as_ref().unwrap(),
-                    empty_view.lock().unwrap().unwrap(),
-                    &self.sampler,
-                )?;
-            }
-            ColorOrTexture::Texture(ref mut texture) => {
-                let view = texture
-                    .texture
-                    .get_view(VEImageViewCreateInfo::simple_2d())?;
-                self.descriptor_set
-                    .bind_image_sampler(4, &texture.texture, view, &self.sampler)?;
-            }
-        }
-
-        match self.material.normal {
-            None => {
-                self.descriptor_set.bind_image_sampler(
-                    5,
-                    &empty_image.lock().unwrap().as_ref().unwrap(),
-                    empty_view.lock().unwrap().unwrap(),
-                    &self.sampler,
-                )?;
-            }
-            Some(ref mut texture) => {
-                let view = texture
-                    .texture
-                    .get_view(VEImageViewCreateInfo::simple_2d())?;
-                self.descriptor_set
-                    .bind_image_sampler(5, &texture.texture, view, &self.sampler)?;
-            }
-        }
-
-        match self.material.bump {
-            None => {
-                self.descriptor_set.bind_image_sampler(
-                    6,
-                    &empty_image.lock().unwrap().as_ref().unwrap(),
-                    empty_view.lock().unwrap().unwrap(),
-                    &self.sampler,
-                )?;
-            }
-            Some(ref mut texture) => {
-                let view = texture
-                    .texture
-                    .get_view(VEImageViewCreateInfo::simple_2d())?;
-                self.descriptor_set
-                    .bind_image_sampler(6, &texture.texture, view, &self.sampler)?;
-            }
-        }
 
         Ok(())
     }

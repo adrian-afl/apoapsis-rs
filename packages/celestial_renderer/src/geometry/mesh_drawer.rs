@@ -45,8 +45,6 @@ impl MeshDrawer {
         g_buffer: &mut GBuffer,
         common_buffer: &CommonBuffer,
     ) -> Result<MeshDrawer, RenderingError> {
-        // Mesh stage is first and clears the GBuffer, so attachments here should clear
-
         let color_rgb_roughness_a_view = g_buffer
             .color_rgb_roughness_a
             .get_view(VEImageViewCreateInfo::simple_2d())?;
@@ -55,7 +53,7 @@ impl MeshDrawer {
             &g_buffer.color_rgb_roughness_a,
             color_rgb_roughness_a_view,
             None,
-            Some(clear_color_f32([0.0, 0.0, 0.0, 0.0])),
+            None,
         )?;
 
         let emission_rgb_metalness_a_view = g_buffer
@@ -66,7 +64,7 @@ impl MeshDrawer {
             &g_buffer.emission_rgb_metalness_a,
             emission_rgb_metalness_a_view,
             None,
-            Some(clear_color_f32([0.0, 0.0, 0.0, 0.0])),
+            None,
         )?;
 
         let normal_rgb_distance_a_view = g_buffer
@@ -77,7 +75,7 @@ impl MeshDrawer {
             &g_buffer.normal_rgb_distance_a,
             normal_rgb_distance_a_view,
             None,
-            Some(clear_color_f32([0.0, 0.0, 0.0, 0.0])),
+            None,
         )?;
 
         let shared_depth_buffer_view = g_buffer

@@ -201,11 +201,6 @@ impl Game {
 
             let stage_ecs = stage.get_ecs_world();
 
-            profile!("camera_system update", {
-                self.camera_system
-                    .update(&mut self.current_camera, stage_ecs);
-            });
-
             profile!("universe_simulation_updater_system update", {
                 self.universe_simulation_updater_system.update(
                     &mut self.universe_simulation,
@@ -220,6 +215,11 @@ impl Game {
                     &self.universe_simulation,
                     self.time_counter.delta_time,
                 );
+            });
+
+            profile!("camera_system update", {
+                self.camera_system
+                    .update(&mut self.current_camera, stage_ecs);
             });
 
             profile!("ui_system & stuff update", {

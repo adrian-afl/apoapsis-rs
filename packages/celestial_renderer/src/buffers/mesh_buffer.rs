@@ -20,12 +20,12 @@ impl MeshBuffer {
         Ok(MeshBuffer {
             staging_buffer: toolkit.create_buffer(
                 &[VEBufferUsage::Uniform, VEBufferUsage::TransferSource],
-                8 * 1024,
+                256,
                 Some(VEMemoryProperties::HostCoherent),
             )?,
             buffer: toolkit.create_buffer(
                 &[VEBufferUsage::Uniform, VEBufferUsage::TransferDestination],
-                8 * 1024,
+                256,
                 Some(VEMemoryProperties::DeviceLocal),
             )?,
         })
