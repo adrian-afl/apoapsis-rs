@@ -166,7 +166,7 @@ impl WaterIcosphere {
 
         self.data_buffer.update(
             self.loaded_data.water_color,
-            body_center_camera_space.to_dvec3(),
+            body_center_camera_space.to_dvec3_with_precision(6),
             &self.loaded_data.part_matrices,
         )?;
 

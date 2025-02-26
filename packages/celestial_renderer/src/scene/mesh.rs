@@ -1,5 +1,6 @@
 use crate::buffers::mesh_buffer::MeshBuffer;
 use crate::scene::material::{ColorOrTexture, Material, ValueOrTexture};
+use common_util::profile;
 use glam::{DMat4, DQuat, DVec3};
 use math::decimal_vector_3d::DecimalVector3d;
 use renderer_common::empty_textures::EMPTY_TEXTURES;
@@ -170,15 +171,22 @@ impl Mesh {
     }
 
     pub fn update(&mut self, camera_position: &DecimalVector3d) -> Result<(), RenderingError> {
-        let translation_camera_space = &self.position - camera_position;
-        let dvec_translation_camera_space = translation_camera_space.to_dvec3();
-        self.model_matrix = DMat4::from_scale_rotation_translation(
-            self.scale,
-            self.orientation,
-            dvec_translation_camera_space,
-        );
-        let mut buf = self.mesh_buffer.lock().unwrap();
-        buf.update(self)?;
+        let translation_camera_space =
+            profile!("mesh update part 1", { &self.position - camera_position });
+        let dvec_translation_camera_space = profile!("mesh update part 1.5", {
+            translation_camera_space.to_dvec3_with_precision(6)
+        });
+        self.model_matrix = profile!("mesh update part 2", {
+            DMat4::from_scale_rotation_translation(
+                self.scale,
+                self.orientation,
+                dvec_translation_camera_space,
+            )
+        });
+        let mut buf = profile!("mesh update part 3", { self.mesh_buffer.lock().unwrap() });
+        profile!("mesh update part 4", {
+            buf.update(self)?;
+        });
 
         Ok(())
     }

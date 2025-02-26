@@ -104,12 +104,12 @@ impl PhysicsSystem {
                             &decimal_half_delta_time,
                         ),
                         Some(id) => {
-                            let mut relative_position = (&transform.position
+                            let relative_position = (&transform.position
                                 - &self.player_temporary_data.position)
-                                .to_dvec3();
+                                .to_dvec3_with_precision(10);
                             let relative_linear_velocity = (&simple_physics.linear_velocity
                                 - &self.player_temporary_data.linear_velocity)
-                                .to_dvec3();
+                                .to_dvec3_with_precision(10);
 
                             {
                                 let mut map = self.currently_simulated_bodies.write().unwrap();
@@ -118,20 +118,6 @@ impl PhysicsSystem {
                                 simulated_object.phase_1_relative_linear_velocity =
                                     relative_linear_velocity;
                             } // unlocks
-
-                            if simple_physics.mass > DBig::ZERO {
-                                let mut current_linear_velocity =
-                                    DecimalVector3d::from_dvec3(relative_position);
-
-                                let gravity_impulse = universe_simulation
-                                    .calculate_gravity_flux(&transform.position)
-                                    * &decimal_delta_time;
-
-                                current_linear_velocity =
-                                    &current_linear_velocity + &gravity_impulse;
-
-                                relative_position = current_linear_velocity.to_dvec3()
-                            }
 
                             let map = self.currently_simulated_bodies.read().unwrap();
                             let simulated_object = map.get(&id).unwrap();
@@ -282,7 +268,7 @@ impl PhysicsSystem {
         real_physics: &RealPhysicsComponent,
     ) -> Option<u64> {
         let relative_position =
-            (&transform.position - &self.player_temporary_data.position).to_dvec3();
+            (&transform.position - &self.player_temporary_data.position).to_dvec3_with_precision(7);
 
         let should_simulate = relative_position.length() < self.real_simulation_cutoff;
 

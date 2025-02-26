@@ -483,10 +483,6 @@ impl Renderer {
             });
         }
 
-        if any_updates {
-            // should aso check for meshes etc, maybe a trnasient entity to detect this
-            self.record(meshes, ui_items, celestial_hierarchy);
-        }
         {
             let queue = &self
                 .toolkit
@@ -494,6 +490,11 @@ impl Renderer {
                 .lock()
                 .map_err(|_| RenderingError::QueueLockingFailed)?;
             queue.wait_idle().unwrap();
+
+            if any_updates {
+                // should aso check for meshes etc, maybe a trnasient entity to detect this
+                self.record(meshes, ui_items, celestial_hierarchy);
+            }
 
             self.command_buffer
                 .submit(

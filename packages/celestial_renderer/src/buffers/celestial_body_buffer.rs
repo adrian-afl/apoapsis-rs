@@ -76,7 +76,11 @@ impl CelestialBodyBuffer {
 
         let translation_camera_space = &body.position - camera_position;
         // println!("{translation_camera_space}");
-        offset += write_vec3_zero(ptr, offset, translation_camera_space.to_dvec3());
+        offset += write_vec3_zero(
+            ptr,
+            offset,
+            translation_camera_space.to_dvec3_with_precision(6),
+        );
         offset += write_vec3_zero(
             ptr,
             offset,
@@ -196,7 +200,7 @@ impl CelestialBodyBuffer {
             star_vector.normalized()
         };
 
-        offset += write_vec3_zero(ptr, offset, star_direction.to_dvec3());
+        offset += write_vec3_zero(ptr, offset, star_direction.to_dvec3_with_precision(4));
         offset += write_vec3_zero(ptr, offset, star_irradiance);
         offset += write_vec3_zero(ptr, offset, star_radiance);
 

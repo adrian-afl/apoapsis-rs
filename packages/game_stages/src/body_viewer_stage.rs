@@ -20,6 +20,8 @@ pub struct BodyViewerStage {
     target_name: String,
 
     distance: f64,
+    angle_x: f64,
+    angle_y: f64,
     angle_z: f64,
 
     camera_id: u64,
@@ -53,6 +55,8 @@ impl BodyViewerStage {
             target_name: target_name.to_owned(),
             distance: 2.0,
             angle_z: 0.0,
+            angle_x: 0.0,
+            angle_y: 0.0,
             camera_id,
         }
     }
@@ -78,12 +82,16 @@ impl BodyViewerStage {
             f64_to_dbig(self.angle_z),
         );
 
-        let offset = rotmat.apply(&DecimalVector3d::from_f64(0.0, 0.0, self.distance * radius));
+        let real_distance = radius * 1.1 + radius * self.distance;
+
+        let offset = rotmat.apply(&DecimalVector3d::from_f64(0.0, 0.0, real_distance));
 
         let campos = &body.position + offset;
 
         cam_transform.position = campos;
-        cam_transform.orientation = DQuat::from_axis_angle(dvec3(0.0, 1.0, 0.0), -self.angle_z);
+        cam_transform.orientation = DQuat::from_axis_angle(dvec3(0.0, 1.0, 0.0), -self.angle_z)
+            * DQuat::from_axis_angle(dvec3(0.0, 0.0, 1.0), self.angle_x)
+            * DQuat::from_axis_angle(dvec3(1.0, 0.0, 0.0), self.angle_y);
     }
 }
 
@@ -91,26 +99,49 @@ impl GameStage for BodyViewerStage {
     fn update(&mut self, context: &GameContext) -> StageTransition {
         self.set_camera_offset(context.universe);
 
+        self.distance = 0.01 * context.controls.mouse.get_scroll_integrated();
+        println!(
+            "context.controls.mouse.get_scroll_integrated() {}",
+            context.controls.mouse.get_scroll_integrated()
+        );
+
         if context
             .controls
-            .get_control_state(ControlMapItem::WalkForwards)
+            .get_control_state(ControlMapItem::FlightYawLeft)
         {
-            self.distance *= 0.9;
-        }
-        if context
-            .controls
-            .get_control_state(ControlMapItem::WalkBackwards)
-        {
-            self.distance *= 1.1;
-        }
-        if context.controls.get_control_state(ControlMapItem::WalkLeft) {
             self.angle_z -= 0.1;
         }
         if context
             .controls
-            .get_control_state(ControlMapItem::WalkRight)
+            .get_control_state(ControlMapItem::FlightYawRight)
         {
             self.angle_z += 0.1;
+        }
+
+        if context
+            .controls
+            .get_control_state(ControlMapItem::FlightPitchUp)
+        {
+            self.angle_x -= 0.1;
+        }
+        if context
+            .controls
+            .get_control_state(ControlMapItem::FlightPitchDown)
+        {
+            self.angle_x += 0.1;
+        }
+
+        if context
+            .controls
+            .get_control_state(ControlMapItem::FlightRollLeft)
+        {
+            self.angle_y -= 0.1;
+        }
+        if context
+            .controls
+            .get_control_state(ControlMapItem::FlightRollRight)
+        {
+            self.angle_y += 0.1;
         }
 
         StageTransition::DoNothing

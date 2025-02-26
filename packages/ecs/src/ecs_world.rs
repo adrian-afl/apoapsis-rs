@@ -1,5 +1,6 @@
 use crate::component_trait::{ComponentTrait, Components};
 use crate::entity::{Entity, ENTITY_SEQ};
+use rayon::iter::FilterMap;
 use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -213,6 +214,22 @@ impl ECSWorld {
                 processor(entity);
             }
         });
+    }
+
+    pub fn parallel_map_all_by_components<T: Send>(
+        &self,
+        types: &[&Components],
+        processor: impl Fn(&Entity) -> T + Sync + Send,
+    ) -> Vec<T> {
+        self.entities
+            .par_iter()
+            .filter_map(|(_, entity)| {
+                if entity.components.has_all(types) {
+                    return Some(processor(entity));
+                }
+                None
+            })
+            .collect()
     }
 }
 
