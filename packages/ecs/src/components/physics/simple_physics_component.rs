@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 pub struct SimplePhysicsComponent {
     pub id: u64,
     pub mass: DBig,
-    pub linear_velocity: DecimalVector3d,
+    pub linear_velocity: DVec3,
     pub angular_velocity: DVec3,
 }
 
@@ -19,7 +19,7 @@ pub struct SimplePhysicsDescription {
 }
 
 impl SimplePhysicsComponent {
-    pub fn new(mass: DBig, linear_velocity: DecimalVector3d, angular_velocity: DVec3) -> Self {
+    pub fn new(mass: DBig, linear_velocity: DVec3, angular_velocity: DVec3) -> Self {
         Self {
             id: acquire_next_id(),
             mass,
@@ -32,7 +32,7 @@ impl SimplePhysicsComponent {
         Self {
             id: acquire_next_id(),
             mass,
-            linear_velocity: DecimalVector3d::zero(),
+            linear_velocity: DVec3::new(0.0, 0.0, 0.0),
             angular_velocity: DVec3::new(0.0, 0.0, 0.0),
         }
     }

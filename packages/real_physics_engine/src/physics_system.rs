@@ -1,6 +1,5 @@
 use crate::build_collider::build_collider;
 use crate::real_physics_system::{RealPhysicsSystem, SetRealPhysicsBodyKinematics};
-use common_util::udebug;
 use dashu_float::DBig;
 use ecs::component_trait::Components;
 use ecs::components::common::transform_component::TransformComponent;
@@ -9,7 +8,6 @@ use ecs::components::physics::simple_physics_component::SimplePhysicsComponent;
 use ecs::ecs_world::ECSWorld;
 use glam::{DQuat, DVec3};
 use math::decimal_vector_3d::DecimalVector3d;
-use math::sin_cos::f64_to_dbig;
 use rapier3d_f64::prelude::{RigidBodyBuilder, RigidBodyHandle};
 use rayon::iter::IntoParallelRefIterator;
 use rayon::iter::ParallelIterator;
@@ -25,7 +23,7 @@ struct SimulatedBody {
 
 struct PlayerTemporaryData {
     position: DecimalVector3d,
-    linear_velocity: DecimalVector3d,
+    linear_velocity: DVec3,
 }
 
 pub struct PhysicsSystem {
@@ -43,7 +41,7 @@ impl PhysicsSystem {
             real_simulation_cutoff: 100.0,
             player_temporary_data: PlayerTemporaryData {
                 position: DecimalVector3d::zero(),
-                linear_velocity: DecimalVector3d::zero(),
+                linear_velocity: DVec3::new(0.0, 0.0, 0.0),
             },
         }
     }
@@ -64,9 +62,7 @@ impl PhysicsSystem {
             self.player_temporary_data
                 .position
                 .assign(&transform.position);
-            self.player_temporary_data
-                .linear_velocity
-                .assign(&simple_physics.linear_velocity);
+            self.player_temporary_data.linear_velocity = simple_physics.linear_velocity;
             true
         } else {
             // println!("Player entity not found, Relativity can behave weird");
@@ -75,9 +71,6 @@ impl PhysicsSystem {
     }
 
     fn phase1(&mut self, ecs: &mut ECSWorld, universe_simulation: &Simulation, delta_time: f64) {
-        let decimal_delta_time = f64_to_dbig(delta_time);
-        let decimal_half_delta_time = f64_to_dbig(delta_time * 0.5);
-
         ecs.parallel_process_all_by_components_mut(
             &[&Components::SimplePhysics, &Components::Transform],
             |entity| {
@@ -100,16 +93,13 @@ impl PhysicsSystem {
                             simple_physics,
                             transform,
                             delta_time,
-                            &decimal_delta_time,
-                            &decimal_half_delta_time,
                         ),
                         Some(id) => {
                             let relative_position = (&transform.position
                                 - &self.player_temporary_data.position)
                                 .to_dvec3_with_precision(10);
-                            let relative_linear_velocity = (&simple_physics.linear_velocity
-                                - &self.player_temporary_data.linear_velocity)
-                                .to_dvec3_with_precision(10);
+                            let relative_linear_velocity = simple_physics.linear_velocity
+                                - self.player_temporary_data.linear_velocity;
 
                             {
                                 let mut map = self.currently_simulated_bodies.write().unwrap();
@@ -137,7 +127,9 @@ impl PhysicsSystem {
 
                             // this is suspicious
                             transform.position = &transform.position
-                                + &simple_physics.linear_velocity * &decimal_delta_time;
+                                + &DecimalVector3d::from_dvec3(
+                                    simple_physics.linear_velocity * delta_time,
+                                );
                         }
                     }
                 } else {
@@ -146,8 +138,6 @@ impl PhysicsSystem {
                         simple_physics,
                         transform,
                         delta_time,
-                        &decimal_delta_time,
-                        &decimal_half_delta_time,
                     )
                 }
             },
@@ -194,8 +184,7 @@ impl PhysicsSystem {
                             + DecimalVector3d::from_dvec3(diff_relative_position);
                         transform.orientation = kinematics.orientation;
 
-                        simple_physics.linear_velocity = &simple_physics.linear_velocity
-                            + DecimalVector3d::from_dvec3(diff_relative_linear_velocity);
+                        simple_physics.linear_velocity += diff_relative_linear_velocity;
                         simple_physics.angular_velocity = kinematics.angular_velocity;
                     }
                 }
@@ -206,7 +195,7 @@ impl PhysicsSystem {
         // does it work? maybe
         let locked_map = self.currently_simulated_bodies.write().unwrap();
         let detected_mesh_component_ids = detected_element_real_physics_ids.lock().unwrap();
-        let keys: Vec<u64> = locked_map.keys().map(|x| *x).collect();
+        let keys: Vec<u64> = locked_map.keys().copied().collect();
         drop(locked_map);
 
         keys.par_iter().for_each(|key| {
@@ -231,21 +220,22 @@ impl PhysicsSystem {
         simple_physics: &mut SimplePhysicsComponent,
         transform: &mut TransformComponent,
         delta_time: f64,
-        decimal_delta_time: &DBig,
-        decimal_half_delta_time: &DBig,
     ) {
-        transform.position =
-            &transform.position + &simple_physics.linear_velocity * decimal_half_delta_time;
+        let half_delta_time = delta_time * 0.5;
+        transform.position = &transform.position
+            + &DecimalVector3d::from_dvec3(simple_physics.linear_velocity * half_delta_time);
 
         if simple_physics.mass > DBig::ZERO {
-            let gravity_impulse = universe_simulation.calculate_gravity_flux(&transform.position)
-                * decimal_delta_time;
+            let gravity_impulse = universe_simulation
+                .calculate_gravity_flux(&transform.position)
+                .to_dvec3_with_precision(9)
+                * delta_time;
 
-            simple_physics.linear_velocity = &simple_physics.linear_velocity + &gravity_impulse;
+            simple_physics.linear_velocity += gravity_impulse;
         }
 
-        transform.position =
-            &transform.position + &simple_physics.linear_velocity * decimal_half_delta_time;
+        transform.position = &transform.position
+            + &DecimalVector3d::from_dvec3(simple_physics.linear_velocity * half_delta_time);
 
         let rotation_approximation = DQuat::from_axis_angle(
             DVec3::new(1.0, 0.0, 0.0),

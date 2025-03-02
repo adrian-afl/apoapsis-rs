@@ -2,9 +2,6 @@ use core::game_context::GameContext;
 use dashu_float::DBig;
 use ecs::component_trait::Components;
 use ecs::components::common::transform_component::TransformComponent;
-use ecs::components::physics::real_physics_component::{
-    BoxColliderDescription, RealPhysicsComponent, ShapeDescription,
-};
 use ecs::components::physics::simple_physics_component::SimplePhysicsComponent;
 use ecs::components::rendering::mesh_component::{
     MaterialDescription, MeshComponent, MeshDescription,
@@ -19,7 +16,7 @@ use math::get_quat_directions::get_quat_directions;
 pub struct DebugBoxSpawnerPlugin {}
 
 impl DebugBoxSpawnerPlugin {
-    pub fn new(context: &GameContext, ecs: &mut ECSWorld) -> Self {
+    pub fn new(_: &GameContext, _: &mut ECSWorld) -> Self {
         Self {}
     }
 
@@ -49,9 +46,8 @@ impl DebugBoxSpawnerPlugin {
                     ));
                 box_entity.components.simple_physics = Some(SimplePhysicsComponent::new(
                     DBig::ONE,
-                    camera_simple_physics.linear_velocity.clone()
-                        + DecimalVector3d::from_dvec3(forward_vector),
-                    camera_simple_physics.angular_velocity.clone(),
+                    camera_simple_physics.linear_velocity + forward_vector,
+                    camera_simple_physics.angular_velocity,
                 ));
                 // box_entity.components.real_physics = Some(RealPhysicsComponent::new(
                 //     ShapeDescription::Box(BoxColliderDescription {
