@@ -28,7 +28,7 @@ use ui_renderer::ui_system::UISystem;
 use universe_simulation::body_definitions::BodyCelestialBodyDefinition;
 use universe_simulation::simulation::Simulation;
 use vengine_rs::core::command_buffer::VECommandBuffer;
-use vengine_rs::core::memory_barrier::{submit_barriers, VEImageMemoryBarrier};
+use vengine_rs::core::memory_barrier::{VEImageMemoryBarrier, submit_barriers};
 use vengine_rs::core::semaphore::VESemaphore;
 use vengine_rs::core::toolkit::VEToolkit;
 use vengine_rs::graphics::vertex_buffer::VEVertexBuffer;
@@ -446,7 +446,7 @@ impl Renderer {
             profile!("terrain", {
                 match &mut body.terrain_icosphere {
                     None => (),
-                    Some(ref mut icosphere) => {
+                    Some(icosphere) => {
                         let preload_result = if is_closest {
                             icosphere.preload(&self.toolkit)?
                         } else {
@@ -465,7 +465,7 @@ impl Renderer {
             profile!("water", {
                 match &mut body.water_icosphere {
                     None => (),
-                    Some(ref mut icosphere) => {
+                    Some(icosphere) => {
                         let preload_result = if is_closest {
                             icosphere.preload(&self.toolkit)?
                         } else {

@@ -14,5 +14,5 @@ pub fn gaming_initialize_sandbox_in_orbit(context: &GameContext, ecs: &mut ECSWo
         DVec3::new(0.0, 1.0, 0.0),
     ));
     let simple_physics = player_entity.components.simple_physics.as_mut().unwrap();
-    simple_physics.linear_velocity = earth.velocity.clone();
+    simple_physics.linear_velocity = earth.velocity.to_dvec3();
 }

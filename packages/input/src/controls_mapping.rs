@@ -63,6 +63,17 @@ pub enum ControlMapItem {
     // DEBUG
     RecompileShaders,
     DevConsole,
+
+    DebugIncreaseTranslationSpeed,
+    DebugDecreaseTranslationSpeed,
+
+    DebugZoomIn,
+    DebugZoomOut,
+
+    DebugMoreExposure,
+    DebugLessExposure,
+
+    DebugMouseLeft,
 }
 
 #[derive(Debug, Clone, Deserialize)]

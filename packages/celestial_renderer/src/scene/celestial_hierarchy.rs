@@ -10,7 +10,7 @@ use dashu_float::DBig;
 use glam::DVec3;
 use math::decimal_vector_3d::DecimalVector3d;
 use planet_generator_library::generate_icosphere::{
-    generate_base_icosphere, IcosphereSegmentGenerator, Triangle,
+    IcosphereSegmentGenerator, Triangle, generate_base_icosphere,
 };
 use rayon::iter::ParallelIterator;
 use rayon::join;
@@ -166,7 +166,7 @@ impl CelestialHierarchy {
                         join(
                             || {
                                 profile!("update terrain_icosphere", {
-                                    if let Some(ref mut icosphere) = &mut body.terrain_icosphere {
+                                    if let Some(icosphere) = &mut body.terrain_icosphere {
                                         icosphere
                                             .update_buffer(
                                                 &camera_position,
@@ -178,7 +178,7 @@ impl CelestialHierarchy {
                             },
                             || {
                                 profile!("update water_icosphere", {
-                                    if let Some(ref mut icosphere) = &mut body.water_icosphere {
+                                    if let Some(icosphere) = &mut body.water_icosphere {
                                         icosphere
                                             .update_buffer(
                                                 &camera_position,

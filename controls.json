@@ -13,9 +13,23 @@
     "FlightYawRight": "KeyD",
     "FlightRollLeft": "KeyQ",
     "FlightRollRight": "KeyE",
-    "FlightShoot": "Space"
+    "FlightShoot": "Space",
+    "DebugIncreaseTranslationSpeed": "Period",
+    "DebugDecreaseTranslationSpeed": "Comma",
+    "DebugZoomIn": "Equal",
+    "DebugZoomOut": "Minus",
+    "DebugMoreExposure": "BracketRight",
+    "DebugLessExposure": "BracketLeft",
+    "FlightTranslateLeft": "KeyA",
+    "FlightTranslateRight": "KeyD",
+    "FlightTranslateUp": "KeyR",
+    "FlightTranslateDown": "KeyF",
+    "FlightTranslateForwards": "KeyW",
+    "FlightTranslateBackwards": "KeyS"
   },
-  "mouse_buttons": {},
+  "mouse_buttons": {
+    "DebugMouseLeft": "Left"
+  },
   "gamepad_buttons": {
     "Start": "Start",
     "Confirm": "South",

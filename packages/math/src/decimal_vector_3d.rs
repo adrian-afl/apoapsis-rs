@@ -1,6 +1,6 @@
 use crate::sin_cos::f64_to_dbig;
-use dashu_float::ops::SquareRoot;
 use dashu_float::DBig;
+use dashu_float::ops::SquareRoot;
 use glam::DVec3;
 use serde::{Deserialize, Serialize};
 use std::fmt;
@@ -238,6 +238,22 @@ impl std::ops::AddAssign<DBig> for DecimalVector3d {
         self.x += &rhs;
         self.y += &rhs;
         self.z += &rhs;
+    }
+}
+
+impl std::ops::AddAssign<&DecimalVector3d> for DecimalVector3d {
+    fn add_assign(&mut self, rhs: &DecimalVector3d) {
+        self.x += &rhs.x;
+        self.y += &rhs.y;
+        self.z += &rhs.z;
+    }
+}
+
+impl std::ops::AddAssign<DecimalVector3d> for DecimalVector3d {
+    fn add_assign(&mut self, rhs: DecimalVector3d) {
+        self.x += &rhs.x;
+        self.y += &rhs.y;
+        self.z += &rhs.z;
     }
 }
 

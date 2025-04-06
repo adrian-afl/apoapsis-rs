@@ -4,7 +4,7 @@ use ecs::components::ui::ui_color_component::UIColorComponent;
 use ecs::components::ui::ui_text_component::{UIFontSize, UITextComponent};
 use ecs::ecs_world::ECSWorld;
 use ecs::entity::Entity;
-use glam::{dvec4, DVec2};
+use glam::{DVec2, dvec4};
 
 pub struct DebugStatusPlugin {
     fps_id: u64,
@@ -66,10 +66,13 @@ impl DebugStatusPlugin {
             - (&closest_body.velocity
                 + &context
                     .universe
-                    .get_surface_velocity(&closest_body.body.name, player_pos)))
+                    .get_surface_velocity(&closest_body.body.name, player_pos))
+                .to_dvec3_with_precision(7))
+        .length()
+        .round();
+        let ovel = (lin_vel - &closest_body.velocity.to_dvec3())
             .length()
             .round();
-        let ovel = (lin_vel - &closest_body.velocity).length().round();
 
         ecs[self.fps_id]
             .components

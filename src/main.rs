@@ -5,8 +5,8 @@ use common_util::udebug;
 use common_util::udp_debugging::UDP_DEBUGGING;
 use std::fs::File;
 use std::sync::{Arc, Mutex};
-use tracing_subscriber::fmt::format::FmtSpan;
 use tracing_subscriber::FmtSubscriber;
+use tracing_subscriber::fmt::format::FmtSpan;
 use vengine_rs::core::toolkit::{App, VEToolkit};
 use winit::dpi::PhysicalSize;
 use winit::window::{Window, WindowAttributes};
@@ -31,7 +31,7 @@ fn main() {
     tracing::subscriber::set_global_default(subscriber).unwrap();
 
     let window_attributes = WindowAttributes::default()
-        .with_inner_size(PhysicalSize::new(640 * 3, 480 * 3))
+        .with_inner_size(PhysicalSize::new(640 * 2, 480 * 2))
         .with_title("Codename T.S.P.");
 
     VEToolkit::start(

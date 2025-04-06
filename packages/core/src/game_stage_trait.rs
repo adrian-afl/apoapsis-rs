@@ -8,6 +8,6 @@ pub enum StageTransition {
 }
 
 pub trait GameStage {
-    fn update(&mut self, update_data: &GameContext) -> StageTransition;
+    fn update(&mut self, context: &GameContext) -> StageTransition;
     fn get_ecs_world(&mut self) -> &mut ECSWorld;
 }

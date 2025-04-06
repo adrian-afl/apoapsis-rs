@@ -11,7 +11,7 @@ use ecs::components::common::universe_clock_component::UniverseClockComponent;
 use ecs::components::physics::simple_physics_component::SimplePhysicsComponent;
 use ecs::ecs_world::ECSWorld;
 use ecs::entity::Entity;
-use glam::{dvec3, DVec3};
+use glam::{DVec3, dvec3};
 use input::controls_mapping::ControlMapItem;
 use math::decimal_vector_3d::DecimalVector3d;
 use math::get_quat_directions::get_quat_directions;
@@ -44,7 +44,7 @@ impl GamingStage {
 
         player_entity.components.simple_physics = Some(SimplePhysicsComponent::new(
             f64_to_dbig(100.0),
-            DecimalVector3d::zero(),
+            dvec3(0.0, 0.0, 0.0),
             dvec3(0.0, 0.0, 0.0),
         ));
 

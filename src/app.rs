@@ -27,9 +27,10 @@ impl GameWindowApp {
 
         match &cli_args.entry {
             None => {
-                let initial_stage = Box::new(SplashScreenStage::new());
+                // let initial_stage = Box::new(SplashScreenStage::new());
+                let initial_stage = Box::new(BodyViewerStage::new(&game.get_context(), "earth"));
                 game.push_game_stage(initial_stage);
-                game.push_game_stage(Box::new(WarmupStage::new()));
+                // game.push_game_stage(Box::new(WarmupStage::new()));
             }
             Some(entry) => match entry {
                 EntrypointOverride::BodyViewer { name } => {

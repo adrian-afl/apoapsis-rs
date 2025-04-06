@@ -1,6 +1,6 @@
 use crate::body_definitions::{BodyCelestialBodyDefinition, BodyMotion};
-use dashu_float::ops::SquareRoot;
 use dashu_float::DBig;
+use dashu_float::ops::SquareRoot;
 use math::decimal_matrix_3d::DecimalMatrix3d;
 use math::decimal_vector_3d::DecimalVector3d;
 use math::sin_cos::PIMUL2;
@@ -56,7 +56,7 @@ impl Simulation {
         simulated_body.body.dynamics.rotation_axis.normalize();
         match &mut simulated_body.body.dynamics.motion {
             BodyMotion::Static(_) => (),
-            BodyMotion::Orbiting(ref mut data) => data.orbit_plane_normal.normalize(),
+            BodyMotion::Orbiting(data) => data.orbit_plane_normal.normalize(),
         }
         for i in 0..body.dynamics.satellites.len() {
             simulated_body.satellites.push(self.add_hierarchy(

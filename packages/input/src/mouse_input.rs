@@ -1,4 +1,4 @@
-use glam::{dvec2, DVec2};
+use glam::{DVec2, dvec2};
 use std::sync::{Arc, Mutex};
 use winit::dpi::PhysicalPosition;
 use winit::window::{CursorGrabMode, CursorIcon, Window};
@@ -64,7 +64,7 @@ impl MouseInput {
         self.absolute_cursor_pos
     }
 
-    pub fn get_cursor_integraged(&self) -> DVec2 {
+    pub fn get_cursor_integrated(&self) -> DVec2 {
         self.integrated_cursor_pos
     }
 
