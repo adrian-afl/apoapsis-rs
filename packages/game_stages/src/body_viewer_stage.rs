@@ -23,7 +23,7 @@ pub struct BodyViewerStage {
 
     fly_speed: f64,
 
-    initialized: bool,
+    warmupCounter: i32,
 
     mouse_integrated_starting_point: DVec2,
 
@@ -40,7 +40,7 @@ impl BodyViewerStage {
 
         let mut universe_clock = Entity::noname();
         universe_clock.components.universe_clock =
-            Some(UniverseClockComponent::new(DBig::from(100), false));
+            Some(UniverseClockComponent::new(DBig::from(0), false));
         ecs.add(universe_clock);
 
         let mut camera_entity = Entity::noname();
@@ -57,7 +57,7 @@ impl BodyViewerStage {
             target_name: target_name.to_owned(),
             fly_speed: 1.0,
             camera_id,
-            initialized: false,
+            warmupCounter: 10,
             mouse_integrated_starting_point: dvec2(0.0, 0.0),
         }
     }
@@ -140,7 +140,7 @@ impl BodyViewerStage {
         let pitch_quat = DQuat::from_axis_angle(roll_quat * dvec3(1.0, 0.0, 0.0), pitch * 0.01);
         let yaw_quat = DQuat::from_axis_angle(roll_quat * dvec3(0.0, 1.0, 0.0), yaw * 0.01);
 
-        let final_quat = pitch_quat * yaw_quat;
+        let final_quat = yaw_quat * pitch_quat;
 
         cam_transform.orientation *= final_quat;
 
@@ -150,12 +150,14 @@ impl BodyViewerStage {
             .was_control_activated(ControlMapItem::DebugIncreaseTranslationSpeed)
         {
             self.fly_speed *= 10.0;
+            println!("Speed is now {}", self.fly_speed);
         }
         if context
             .controls
             .was_control_activated(ControlMapItem::DebugDecreaseTranslationSpeed)
         {
             self.fly_speed /= 10.0;
+            println!("Speed is now {}", self.fly_speed);
         }
 
         // translation
@@ -222,12 +224,21 @@ impl BodyViewerStage {
 
 impl GameStage for BodyViewerStage {
     fn update(&mut self, context: &GameContext) -> StageTransition {
-        if !self.initialized {
+        if self.warmupCounter > 0 {
             self.set_initial_camera_offset(context.universe);
-            self.initialized = true;
-        }
+            self.warmupCounter -= 1;
+        } else {
+            self.handle_inputs(context);
 
-        self.handle_inputs(context);
+            // let body = context.universe.get_body(&self.target_name);
+            //
+            // let camera = &mut self.ecs[self.camera_id];
+            // let mut cam_transform = camera.components.transform.as_ref().unwrap();
+            // println!(
+            //     "Distance now is {}",
+            //     cam_transform.position.distance_to(&body.position)
+            // );
+        }
 
         StageTransition::DoNothing
     }

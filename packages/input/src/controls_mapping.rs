@@ -117,6 +117,7 @@ impl ControlsMapping {
     }
 
     pub fn map_keyboard_event(&self, key: PhysicalKey, state: bool) -> Vec<ControlEvent> {
+        // println!("{:?}", key);
         let mut result = vec![];
         match key {
             PhysicalKey::Code(key) => {
