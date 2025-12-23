@@ -7,4 +7,5 @@ edition = "2024"
 dashu-float = { workspace = true, features = ["serde"] }
 glam = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
+ts-rs = { workspace = true }
 

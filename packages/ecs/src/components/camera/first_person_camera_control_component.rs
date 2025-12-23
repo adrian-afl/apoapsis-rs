@@ -1,7 +1,8 @@
 use crate::component_trait::acquire_next_id;
 use serde::{Deserialize, Serialize};
+use ts_rs::TS;
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, TS)]
 pub struct FirstPersonCameraControlComponent {
     pub id: u64,
     pub fov: f64,

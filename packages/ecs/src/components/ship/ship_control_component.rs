@@ -1,7 +1,8 @@
 use crate::component_trait::acquire_next_id;
 use serde::{Deserialize, Serialize};
+use ts_rs::TS;
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, TS)]
 pub struct ShipControlComponent {
     pub id: u64,
     pub linear_impulse_strength: f64,

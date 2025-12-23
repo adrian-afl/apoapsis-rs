@@ -4,10 +4,11 @@ use serde::{Deserialize, Serialize};
 use std::any::Any;
 use std::ops::{Deref, Index, IndexMut};
 use std::sync::atomic::{AtomicU64, Ordering};
+use ts_rs::TS;
 
 pub static ENTITY_SEQ: AtomicU64 = AtomicU64::new(1);
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
 pub struct Entity {
     pub id: u64,
     pub name: Option<String>,

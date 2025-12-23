@@ -1,0 +1,20 @@
+[package]
+name = "remote"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+math = { workspace = true }
+ecs = { workspace = true }
+input = { workspace = true }
+core = { workspace = true }
+universe_simulation = { workspace = true }
+common_util = { workspace = true }
+glam = { workspace = true }
+dashu-float = { workspace = true }
+ts-rs = { workspace = true }
+async-nats = "0.45.0"
+tokio = "1.48.0"
+futures-util = { version = "0.3.28", default-features = false, features = ["std", "sink"] }
+serde = { workspace = true }
+serde_json = { workspace = true }

@@ -8,6 +8,7 @@ use game_stages::gaming_stage::gaming_initialize_sandbox_in_orbit::gaming_initia
 use game_stages::gaming_stage::gaming_stage::GamingStage;
 use game_stages::splash_screen_stage::SplashScreenStage;
 use glam::DVec2;
+use remote::remote_controlled_game_stage::RemoteControlledGameStage;
 use std::sync::{Arc, Mutex};
 use vengine_rs::core::toolkit::{App, VEToolkit};
 use winit::event::{DeviceEvent, DeviceId, ElementState, KeyEvent, MouseScrollDelta, WindowEvent};
@@ -28,9 +29,9 @@ impl GameWindowApp {
         match &cli_args.entry {
             None => {
                 // let initial_stage = Box::new(SplashScreenStage::new());
-                let initial_stage = Box::new(BodyViewerStage::new(&game.get_context(), "earth"));
+                let initial_stage = Box::new(RemoteControlledGameStage::new(&game.get_context()));
                 game.push_game_stage(initial_stage);
-                // game.push_game_stage(Box::new(WarmupStage::new()));
+                game.push_game_stage(Box::new(WarmupStage::new()));
             }
             Some(entry) => match entry {
                 EntrypointOverride::BodyViewer { name } => {

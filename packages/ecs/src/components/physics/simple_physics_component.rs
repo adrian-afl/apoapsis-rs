@@ -3,12 +3,16 @@ use dashu_float::DBig;
 use glam::DVec3;
 use math::decimal_vector_3d::DecimalVector3d;
 use serde::{Deserialize, Serialize};
+use ts_rs::TS;
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, TS)]
 pub struct SimplePhysicsComponent {
     pub id: u64,
+    #[ts(type = "string")]
     pub mass: DBig,
+    #[ts(type = "[number, number, number]")]
     pub linear_velocity: DVec3,
+    #[ts(type = "[number, number, number]")]
     pub angular_velocity: DVec3,
 }
 

@@ -5,11 +5,15 @@ use glam::DVec3;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::str::FromStr;
+use ts_rs::TS;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
 pub struct DecimalVector3d {
+    #[ts(type = "string")]
     pub x: DBig,
+    #[ts(type = "string")]
     pub y: DBig,
+    #[ts(type = "string")]
     pub z: DBig,
 }
 

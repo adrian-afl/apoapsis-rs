@@ -2,12 +2,15 @@ use crate::component_trait::acquire_next_id;
 use glam::{DQuat, DVec3};
 use math::decimal_vector_3d::DecimalVector3d;
 use serde::{Deserialize, Serialize};
+use ts_rs::TS;
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, TS)]
 pub struct TransformComponent {
     pub id: u64,
     pub position: DecimalVector3d,
+    #[ts(type = "[number, number, number, number]")]
     pub orientation: DQuat,
+    #[ts(type = "[number, number, number]")]
     pub scale: DVec3,
 }
 

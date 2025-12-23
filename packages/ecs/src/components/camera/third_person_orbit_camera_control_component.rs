@@ -1,19 +1,22 @@
 use crate::component_trait::acquire_next_id;
 use glam::{DQuat, DVec3};
 use serde::{Deserialize, Serialize};
+use ts_rs::TS;
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, TS)]
 pub enum OrbitCameraStyle {
     Absolute,
     RelativeToEntity,
     RelativeToSurface,
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, TS)]
 pub struct ThirdPersonOrbitCameraControlComponent {
     pub id: u64,
     pub fov: f64,
+    #[ts(type = "[number, number, number]")]
     pub initial_offset: DVec3,
+    #[ts(type = "[number, number, number, number]")]
     pub initial_orientation: DQuat,
     pub style: OrbitCameraStyle,
 }

@@ -10,6 +10,7 @@ serde = { workspace = true, features = ["derive"] }
 rayon = { workspace = true }
 glam = { workspace = true, features = ["serde"] }
 dashu-float = { workspace = true, features = ["serde"] }
+ts-rs = { workspace = true }
 
 
 

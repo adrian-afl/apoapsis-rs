@@ -22,6 +22,7 @@ use crate::components::ui::ui_text_component::UITextComponent;
 use crate::components::ui::ui_texture_component::UITextureComponent;
 use serde::{Deserialize, Serialize};
 use std::sync::atomic::{AtomicU64, Ordering};
+use ts_rs::TS;
 
 static COMPONENT_SEQ: AtomicU64 = AtomicU64::new(1);
 
@@ -87,7 +88,7 @@ macro_rules! impl_component {
 #[macro_export]
 macro_rules! impl_marker_component {
     ($type:ident) => {
-        #[derive(Clone, Debug, Serialize, Deserialize)]
+        #[derive(Clone, Debug, Serialize, Deserialize, TS)]
         pub struct $type {
             pub id: u64,
         }
@@ -104,14 +105,14 @@ macro_rules! impl_marker_component {
 
 macro_rules! create_component_types_enum {
     ($(($component_snake:ident, $component_short:ident, $component:ident, $component_multiple:ident)),+) => {
-        #[derive(Debug, Clone, Serialize, Deserialize)]
+        #[derive(Debug, Clone, Serialize, Deserialize, TS)]
         pub enum Components {
             $(
                 $component_short,
             )*
         }
 
-        #[derive(Debug, Clone, Serialize, Deserialize)]
+        #[derive(Debug, Clone, Serialize, Deserialize, TS)]
         pub struct AttachedComponents {
             $(
                 pub $component_snake: vector_or_option_type!($component, $component_multiple),

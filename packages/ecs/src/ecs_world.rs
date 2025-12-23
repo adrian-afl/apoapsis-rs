@@ -1,11 +1,12 @@
 use crate::component_trait::{ComponentTrait, Components};
-use crate::entity::{Entity, ENTITY_SEQ};
+use crate::entity::{ENTITY_SEQ, Entity};
 use rayon::iter::FilterMap;
 use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::ops::{Index, IndexMut};
 use std::sync::atomic::Ordering;
+use ts_rs::TS;
 
 pub struct ECSWorld {
     entities: HashMap<u64, Entity>,
@@ -39,7 +40,7 @@ impl IndexMut<&str> for ECSWorld {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
 pub struct ECSWorldSerializedRepresentation {
     pub entities: Vec<Entity>,
 }
@@ -69,6 +70,16 @@ impl ECSWorld {
         }
 
         world
+    }
+
+    pub fn deserialize_into(&mut self, repr: ECSWorldSerializedRepresentation) {
+        for entity in repr.entities {
+            self.add(entity);
+        }
+    }
+
+    pub fn clear(&mut self) {
+        self.entities.clear();
     }
 
     pub fn add(&mut self, entity: Entity) -> u64 {

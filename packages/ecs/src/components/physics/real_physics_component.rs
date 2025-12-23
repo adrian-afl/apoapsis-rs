@@ -1,13 +1,14 @@
 use crate::component_trait::acquire_next_id;
 use serde::{Deserialize, Serialize};
+use ts_rs::TS;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
 pub struct BallColliderDescription {
     pub radius: f64,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
 pub struct BoxColliderDescription {
     pub size_x: f64,
@@ -15,21 +16,21 @@ pub struct BoxColliderDescription {
     pub size_z: f64,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
 pub struct CylinderColliderDescription {
     pub height: f64,
     pub radius: f64,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
 pub struct ConeColliderDescription {
     pub height: f64,
     pub radius: f64,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
 pub enum ShapeDescription {
     Ball(BallColliderDescription),
@@ -38,13 +39,13 @@ pub enum ShapeDescription {
     Cone(ConeColliderDescription),
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, TS)]
 pub struct RealPhysicsComponent {
     pub id: u64,
     pub shape_description: ShapeDescription,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
 pub struct RealPhysicsDescription {
     pub shape: ShapeDescription,

@@ -18,6 +18,7 @@ members = [
     "packages/renderer_common",
     "packages/ui_renderer",
     "packages/universe_simulation",
+    "packages/remote",
 ]
 
 [workspace.dependencies]
@@ -41,6 +42,7 @@ thiserror = "2.0.11"
 rapier3d-f64 = { version = "0.23.0", features = ["simd-stable"] }
 fontdue = "0.9.2"
 embedded-graphics = "0.8.1"
+ts-rs = "11.1"
 
 vengine-rs = { path = "packages/vengine" }
 celestial_renderer = { path = "packages/celestial_renderer" }
@@ -55,6 +57,7 @@ real_physics_engine = { path = "packages/real_physics_engine" }
 renderer_common = { path = "packages/renderer_common" }
 ui_renderer = { path = "packages/ui_renderer" }
 universe_simulation = { path = "packages/universe_simulation" }
+remote = { path = "packages/remote" }
 
 [dependencies]
 
@@ -67,4 +70,5 @@ game_stages = { path = "packages/game_stages" }
 core = { path = "packages/core" }
 common_util = { path = "packages/common_util" }
 clap = { workspace = true }
+remote = { workspace = true }
 
