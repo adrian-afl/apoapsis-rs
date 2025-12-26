@@ -1,3 +1,5 @@
+import * as crypto from "crypto";
+
 export interface GameApiIncomingMessage {
   name: string;
   payload: unknown;
@@ -7,11 +9,10 @@ export interface GameApiIncomingMessage {
 export interface GameApiOutgoingMessage {
   name: string;
   payload: unknown;
-  replyTo: string;
 }
 
 export type GameApiTransmitter = (
-  message: GameApiOutgoingMessage,
+  message: GameApiOutgoingMessage & { replyTo: string },
 ) => Promise<void>;
 
 export class GameApi {
@@ -37,7 +38,7 @@ export class GameApi {
 
   public receive(message: GameApiIncomingMessage): void {
     if (this.waitingForReply.has(message.name)) {
-      const handlers = this.waitingForReply.get(message.name);
+      const handlers = this.waitingForReply.get(message.name)!;
       this.waitingForReply.delete(message.name);
       if (message.success) {
         handlers.resolve(message.payload);
@@ -49,9 +50,10 @@ export class GameApi {
   }
 
   public send(message: GameApiOutgoingMessage): Promise<unknown> {
+    const replyTo = `replyTo/${crypto.randomUUID()}`;
     return new Promise<unknown>((resolve, reject) => {
-      this.waitingForReply.set(message.replyTo, { resolve, reject });
-      void this.transmitter(message).catch(console.error);
+      this.waitingForReply.set(replyTo, { resolve, reject });
+      void this.transmitter({ ...message, replyTo }).catch(console.error);
     });
   }
 }

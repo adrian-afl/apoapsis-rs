@@ -89,6 +89,7 @@ macro_rules! impl_component {
 macro_rules! impl_marker_component {
     ($type:ident) => {
         #[derive(Clone, Debug, Serialize, Deserialize, TS)]
+        #[ts(export)]
         pub struct $type {
             pub id: u64,
         }

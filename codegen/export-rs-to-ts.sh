@@ -17,4 +17,8 @@ cd ../remote
 cargo test export_bindings
 
 cd ../../codegen/generate_ts_api
+npx tsx generate_rs.ts > ../../packages/remote/src/api/generated.rs
+npx tsx generate_ts.ts > ./generated_ts_client.ts
+
 npx prettier --write types
+npx prettier --write *.ts
