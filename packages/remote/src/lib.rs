@@ -1,18 +1,23 @@
 mod api;
 pub mod remote_controlled_game_stage;
 
+use async_nats::client::traits::Publisher;
+use async_nats::message::OutboundMessage;
 use futures_util::{FutureExt, StreamExt};
 use std::collections::VecDeque;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use std::thread;
+use uuid::Uuid;
 
-pub static MESSAGE_SEQ: AtomicU64 = AtomicU64::new(1);
+pub fn create_message_id() -> String {
+    Uuid::new_v4().to_string()
+}
 
 pub struct RemoteIOMessage {
-    pub id: u64,
     pub name: String,
     pub payload: String,
+    pub reply_to: Option<String>,
 }
 
 pub fn connect_nats(
@@ -45,8 +50,13 @@ pub fn connect_nats(
                 while !outbox.is_empty() {
                     let message = outbox.pop_back().unwrap();
                     println!("B");
-                    rt.block_on(client.publish(message.name, message.payload.into()))
-                        .unwrap();
+                    rt.block_on(client.publish_message(OutboundMessage {
+                        subject: message.name.into(),
+                        reply: None, // server doesn't expect responses from the client
+                        payload: message.payload.into(),
+                        headers: None,
+                    }))
+                    .unwrap();
                 }
             }
         });
@@ -60,10 +70,10 @@ pub fn connect_nats(
                     let mut inbox = inbox.lock().unwrap();
                     println!("X {}", message.subject.as_str());
                     inbox.push_front(RemoteIOMessage {
-                        id: MESSAGE_SEQ.fetch_add(1, Ordering::SeqCst),
                         name: message.subject.into_string(),
                         payload: String::from_utf8(Vec::from(message.payload))
                             .expect("utf8 parse failed"),
+                        reply_to: message.reply.map(|x| x.to_string()),
                     })
                 }
             }

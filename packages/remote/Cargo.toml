@@ -18,3 +18,4 @@ tokio = "1.48.0"
 futures-util = { version = "0.3.28", default-features = false, features = ["std", "sink"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
+uuid = { version = "1.19.0", features = ["v4"] }

@@ -41,6 +41,8 @@ impl IndexMut<&str> for ECSWorld {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
 pub struct ECSWorldSerializedRepresentation {
     pub entities: Vec<Entity>,
 }

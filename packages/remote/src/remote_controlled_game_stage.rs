@@ -3,7 +3,7 @@ use crate::api::deserialize_world::deserialize_world;
 use crate::api::generated::handle_message_components_api;
 use crate::api::reset_world::reset_world;
 use crate::api::serialize_world::serialize_world;
-use crate::{MESSAGE_SEQ, RemoteIOMessage, connect_nats};
+use crate::{RemoteIOMessage, connect_nats, create_message_id};
 use core::game_context::GameContext;
 use core::game_stage_trait::GameStage;
 use core::game_stage_trait::StageTransition;
@@ -26,9 +26,9 @@ impl RemoteControlledGameStage {
         let inbox: Arc<Mutex<VecDeque<RemoteIOMessage>>> = Arc::new(Mutex::new(VecDeque::new()));
 
         outbox.lock().unwrap().push_front(RemoteIOMessage {
-            id: MESSAGE_SEQ.fetch_add(1, Ordering::SeqCst),
             name: "event.game-ready".to_string(),
             payload: "void".to_string(),
+            reply_to: None,
         });
 
         connect_nats(outbox.clone(), inbox.clone());
@@ -59,20 +59,25 @@ impl GameStage for RemoteControlledGameStage {
             while let Some(message) = inbox.pop_back() {
                 println!("Message processing {}, {}", message.name, message.payload);
 
-                let res = handle_message(&message.name, &message.payload, &mut self.ecs, context);
+                let (name, id) = match message.name.rfind('.') {
+                    Some(pos) => (&message.name[..pos], &message.name[pos + 1..]),
+                    None => continue, // No dot found: everything is the "before" part
+                };
+
+                let res = handle_message(&name, &message.payload, &mut self.ecs, context);
 
                 match res {
                     Ok(result) => self.outbox.lock().unwrap().push_front(RemoteIOMessage {
-                        id: MESSAGE_SEQ.fetch_add(1, Ordering::SeqCst),
-                        name: format!("event.command-succeeded.{}", message.id),
+                        name: message.reply_to.expect("No reply-to set"),
                         payload: result,
+                        reply_to: None,
                     }),
                     Err(error) => {
                         eprintln!("Error while processing a message: {error}");
                         self.outbox.lock().unwrap().push_front(RemoteIOMessage {
-                            id: MESSAGE_SEQ.fetch_add(1, Ordering::SeqCst),
-                            name: format!("event.command-failed.{}", message.id),
+                            name: message.reply_to.expect("No reply-to set"),
                             payload: error,
+                            reply_to: None,
                         })
                     }
                 }

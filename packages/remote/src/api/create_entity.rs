@@ -7,7 +7,6 @@ use ts_rs::TS;
 
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
-#[ts(export)]
 struct CreateEntityInput {
     name: Option<String>,
     components: AttachedComponents,

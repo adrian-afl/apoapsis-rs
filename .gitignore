@@ -4,4 +4,4 @@ log.txt
 
 shaders/tmp-preparsed
 shaders/node_modules
-/packages/remote/generate_ts_api/node_modules
+/codegen/generate_ts_api/node_modules

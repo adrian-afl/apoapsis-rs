@@ -106,6 +106,7 @@ macro_rules! impl_marker_component {
 macro_rules! create_component_types_enum {
     ($(($component_snake:ident, $component_short:ident, $component:ident, $component_multiple:ident)),+) => {
         #[derive(Debug, Clone, Serialize, Deserialize, TS)]
+        #[ts(export)]
         pub enum Components {
             $(
                 $component_short,
@@ -113,6 +114,7 @@ macro_rules! create_component_types_enum {
         }
 
         #[derive(Debug, Clone, Serialize, Deserialize, TS)]
+        #[ts(export)]
         pub struct AttachedComponents {
             $(
                 pub $component_snake: vector_or_option_type!($component, $component_multiple),
