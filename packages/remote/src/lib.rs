@@ -1,28 +1,29 @@
 mod api;
 pub mod remote_controlled_game_stage;
 
+use async_nats::HeaderMap;
 use async_nats::client::traits::Publisher;
 use async_nats::message::OutboundMessage;
 use futures_util::{FutureExt, StreamExt};
 use std::collections::VecDeque;
-use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use std::thread;
-use uuid::Uuid;
 
-pub fn create_message_id() -> String {
-    Uuid::new_v4().to_string()
-}
-
-pub struct RemoteIOMessage {
+pub struct IncomingRemoteIOMessage {
     pub name: String,
     pub payload: String,
     pub reply_to: Option<String>,
 }
 
+pub struct OutgoingRemoteIOMessage {
+    pub name: String,
+    pub payload: String,
+    pub success: bool,
+}
+
 pub fn connect_nats(
-    outbox: Arc<Mutex<VecDeque<RemoteIOMessage>>>,
-    inbox: Arc<Mutex<VecDeque<RemoteIOMessage>>>,
+    outbox: Arc<Mutex<VecDeque<OutgoingRemoteIOMessage>>>,
+    inbox: Arc<Mutex<VecDeque<IncomingRemoteIOMessage>>>,
 ) {
     println!("Connecting to NATS...");
     println!("Connecting from a new thread...");
@@ -50,6 +51,8 @@ pub fn connect_nats(
                 while !outbox.is_empty() {
                     let message = outbox.pop_back().unwrap();
                     println!("B");
+                    let mut headers = HeaderMap::new();
+                    headers.insert("status", if message.success { "ok" } else { "error" });
                     rt.block_on(client.publish_message(OutboundMessage {
                         subject: message.name.into(),
                         reply: None, // server doesn't expect responses from the client
@@ -69,7 +72,7 @@ pub fn connect_nats(
                 if let Some(message) = rt.block_on(subscription.next()) {
                     let mut inbox = inbox.lock().unwrap();
                     println!("X {}", message.subject.as_str());
-                    inbox.push_front(RemoteIOMessage {
+                    inbox.push_front(IncomingRemoteIOMessage {
                         name: message.subject.into_string(),
                         payload: String::from_utf8(Vec::from(message.payload))
                             .expect("utf8 parse failed"),

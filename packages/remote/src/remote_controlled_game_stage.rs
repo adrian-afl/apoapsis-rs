@@ -3,7 +3,7 @@ use crate::api::deserialize_world::deserialize_world;
 use crate::api::generated::handle_message_components_api;
 use crate::api::reset_world::reset_world;
 use crate::api::serialize_world::serialize_world;
-use crate::{RemoteIOMessage, connect_nats, create_message_id};
+use crate::{IncomingRemoteIOMessage, OutgoingRemoteIOMessage, connect_nats};
 use core::game_context::GameContext;
 use core::game_stage_trait::GameStage;
 use core::game_stage_trait::StageTransition;
@@ -15,20 +15,22 @@ use std::sync::{Arc, Mutex};
 
 pub struct RemoteControlledGameStage {
     ecs: ECSWorld,
-    outbox: Arc<Mutex<VecDeque<RemoteIOMessage>>>,
-    inbox: Arc<Mutex<VecDeque<RemoteIOMessage>>>,
+    outbox: Arc<Mutex<VecDeque<OutgoingRemoteIOMessage>>>,
+    inbox: Arc<Mutex<VecDeque<IncomingRemoteIOMessage>>>,
 }
 
 impl RemoteControlledGameStage {
     pub fn new(context: &GameContext) -> Self {
         let mut ecs = ECSWorld::new();
-        let outbox: Arc<Mutex<VecDeque<RemoteIOMessage>>> = Arc::new(Mutex::new(VecDeque::new()));
-        let inbox: Arc<Mutex<VecDeque<RemoteIOMessage>>> = Arc::new(Mutex::new(VecDeque::new()));
+        let outbox: Arc<Mutex<VecDeque<OutgoingRemoteIOMessage>>> =
+            Arc::new(Mutex::new(VecDeque::new()));
+        let inbox: Arc<Mutex<VecDeque<IncomingRemoteIOMessage>>> =
+            Arc::new(Mutex::new(VecDeque::new()));
 
-        outbox.lock().unwrap().push_front(RemoteIOMessage {
+        outbox.lock().unwrap().push_front(OutgoingRemoteIOMessage {
             name: "event.game-ready".to_string(),
             payload: "void".to_string(),
-            reply_to: None,
+            success: true,
         });
 
         connect_nats(outbox.clone(), inbox.clone());
@@ -67,18 +69,25 @@ impl GameStage for RemoteControlledGameStage {
                 let res = handle_message(&name, &message.payload, &mut self.ecs, context);
 
                 match res {
-                    Ok(result) => self.outbox.lock().unwrap().push_front(RemoteIOMessage {
-                        name: message.reply_to.expect("No reply-to set"),
-                        payload: result,
-                        reply_to: None,
-                    }),
+                    Ok(result) => self
+                        .outbox
+                        .lock()
+                        .unwrap()
+                        .push_front(OutgoingRemoteIOMessage {
+                            name: message.reply_to.expect("No reply-to set"),
+                            payload: result,
+                            success: true,
+                        }),
                     Err(error) => {
                         eprintln!("Error while processing a message: {error}");
-                        self.outbox.lock().unwrap().push_front(RemoteIOMessage {
-                            name: message.reply_to.expect("No reply-to set"),
-                            payload: error,
-                            reply_to: None,
-                        })
+                        self.outbox
+                            .lock()
+                            .unwrap()
+                            .push_front(OutgoingRemoteIOMessage {
+                                name: message.reply_to.expect("No reply-to set"),
+                                payload: error,
+                                success: false,
+                            })
                     }
                 }
             }
