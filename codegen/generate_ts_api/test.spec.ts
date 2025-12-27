@@ -1,5 +1,5 @@
 import { describe, it } from "node:test";
-import assert = require("node:assert");
+import * as assert from "node:assert";
 import { NATSTransport } from "./natsTransport.js";
 import { GameApi } from "./GameApi.js";
 import { GameComponentsApi } from "./generated_ts_client.js";
@@ -16,6 +16,8 @@ describe("test", () => {
     const entityApi = new GameEntityApi(gameApi);
 
     nats.setOnReceive((message) => gameApi.receive(message));
+
+    await nats.connect();
 
     await ecsWorldApi.resetWorld();
 

@@ -13,12 +13,19 @@ export class NATSTransport {
   }
 
   public async connect(): Promise<void> {
-    this.connection = await connect({ servers: this.host });
+    this.connection = await connect({ servers: this.host, noEcho: true });
     this.connection.subscribe("*", {
       callback: (_, x) => {
+        console.log(
+          "X",
+          x.subject,
+          x.headers,
+          Buffer.from(x.data).toString("utf-8"),
+        );
         const name = x.subject;
         const payload = JSON.parse(Buffer.from(x.data).toString("utf-8"));
         const success = x.headers?.get("status") === "ok";
+        console.log({ x: { name, payload, success } });
         this.onReceive?.({ name, payload, success });
       },
     });

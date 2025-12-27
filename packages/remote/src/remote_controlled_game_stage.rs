@@ -61,12 +61,7 @@ impl GameStage for RemoteControlledGameStage {
             while let Some(message) = inbox.pop_back() {
                 println!("Message processing {}, {}", message.name, message.payload);
 
-                let (name, id) = match message.name.rfind('.') {
-                    Some(pos) => (&message.name[..pos], &message.name[pos + 1..]),
-                    None => continue, // No dot found: everything is the "before" part
-                };
-
-                let res = handle_message(&name, &message.payload, &mut self.ecs, context);
+                let res = handle_message(&message.name, &message.payload, &mut self.ecs, context);
 
                 match res {
                     Ok(result) => self

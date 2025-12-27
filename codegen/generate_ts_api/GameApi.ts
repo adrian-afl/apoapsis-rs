@@ -40,6 +40,7 @@ export class GameApi {
     if (this.waitingForReply.has(message.name)) {
       const handlers = this.waitingForReply.get(message.name)!;
       this.waitingForReply.delete(message.name);
+      console.log({ message });
       if (message.success) {
         handlers.resolve(message.payload);
       } else {

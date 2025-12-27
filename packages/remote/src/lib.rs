@@ -1,9 +1,9 @@
 mod api;
 pub mod remote_controlled_game_stage;
 
-use async_nats::HeaderMap;
 use async_nats::client::traits::Publisher;
 use async_nats::message::OutboundMessage;
+use async_nats::{ConnectOptions, HeaderMap};
 use futures_util::{FutureExt, StreamExt};
 use std::collections::VecDeque;
 use std::sync::{Arc, Mutex};
@@ -35,7 +35,10 @@ pub fn connect_nats(
     );
 
     let client = rt
-        .block_on(async_nats::connect("nats://localhost:4222"))
+        .block_on(async_nats::connect_with_options(
+            "nats://localhost:4222",
+            ConnectOptions::new().no_echo(),
+        ))
         .unwrap();
 
     println!("Connected to NATS, subscribing to all...");
@@ -57,7 +60,7 @@ pub fn connect_nats(
                         subject: message.name.into(),
                         reply: None, // server doesn't expect responses from the client
                         payload: message.payload.into(),
-                        headers: None,
+                        headers: Some(headers),
                     }))
                     .unwrap();
                 }
