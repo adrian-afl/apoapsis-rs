@@ -9,7 +9,6 @@ use ts_rs::TS;
 #[serde(rename_all = "camelCase")]
 struct CreateEntityInput {
     name: Option<String>,
-    components: AttachedComponents,
 }
 
 pub fn create_entity(payload: &str, ecs: &mut ECSWorld) -> String {
@@ -20,7 +19,7 @@ pub fn create_entity(payload: &str, ecs: &mut ECSWorld) -> String {
 
     json!({
         "success": true,
-        "id": id.to_string()
+        "id": id
     })
     .to_string()
 }

@@ -13,7 +13,7 @@ export interface GameApiOutgoingMessage {
 
 export type GameApiTransmitter = (
   message: GameApiOutgoingMessage & { replyTo: string },
-) => Promise<void>;
+) => void;
 
 export class GameApi {
   private readonly waitingForReply: Map<
@@ -53,7 +53,7 @@ export class GameApi {
     const replyTo = `replyTo/${crypto.randomUUID()}`;
     return new Promise<unknown>((resolve, reject) => {
       this.waitingForReply.set(replyTo, { resolve, reject });
-      void this.transmitter({ ...message, replyTo }).catch(console.error);
+      this.transmitter({ ...message, replyTo });
     });
   }
 }
