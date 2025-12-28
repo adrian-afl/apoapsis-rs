@@ -2,13 +2,11 @@ use crate::window::window::VEWindow;
 use ash::ext::debug_utils;
 use ash::khr::{surface, swapchain};
 use ash::vk::{
-    make_api_version, ApplicationInfo, DebugUtilsMessageSeverityFlagsEXT,
-    DebugUtilsMessageTypeFlagsEXT, DebugUtilsMessengerCreateInfoEXT, InstanceCreateFlags,
-    InstanceCreateInfo, MemoryPropertyFlags, PhysicalDevice, PhysicalDeviceMemoryProperties,
-    SurfaceKHR,
+    ApplicationInfo, DebugUtilsMessageSeverityFlagsEXT, DebugUtilsMessageTypeFlagsEXT,
+    DebugUtilsMessengerCreateInfoEXT, InstanceCreateFlags, InstanceCreateInfo, MemoryPropertyFlags,
+    PhysicalDevice, PhysicalDeviceMemoryProperties, SurfaceKHR, make_api_version,
 };
-use ash::{vk, Device, Instance};
-use common_util::udebug;
+use ash::{Device, Instance, vk};
 use std::borrow::Cow;
 use std::ffi;
 use std::fmt::{Debug, Formatter};
@@ -92,10 +90,6 @@ unsafe extern "system" fn vulkan_debug_callback(
     };
 
     eprintln!(
-        "VALIDATION {message_severity:?}: {message_type:?} [{message_id_name} ({message_id_number})] : {message}",
-    );
-
-    udebug!(
         "VALIDATION {message_severity:?}: {message_type:?} [{message_id_name} ({message_id_number})] : {message}",
     );
 

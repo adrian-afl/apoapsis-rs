@@ -5,7 +5,7 @@ use crate::geometry::common_icosphere::ICO_LEVEL_SUBDIVISIONS;
 use crate::geometry::icosphere_drawer::IcosphereDrawer;
 use crate::geometry::terrain_icosphere::{TerrainData, TerrainIcosphere};
 use crate::geometry::water_icosphere::{WaterData, WaterIcosphere};
-use common_util::{profile, udebug};
+use common_util::profile;
 use dashu_float::DBig;
 use glam::DVec3;
 use math::decimal_vector_3d::DecimalVector3d;
@@ -73,10 +73,6 @@ impl CelestialHierarchy {
                 .rendered_bodies
                 .contains_key(&closest_hierarchy_body.body.name);
             if !exists {
-                udebug!(
-                    "Adding body {} because it didnt exist in rendered bodies",
-                    &closest_hierarchy_body.body.name
-                );
                 let terrain_icosphere = match &closest_hierarchy_body.body.terrain {
                     None => None,
                     Some(terrain) => Some(
@@ -133,7 +129,6 @@ impl CelestialHierarchy {
             }
 
             if exists {
-                udebug!("Updating body {}", &closest_hierarchy_body.body.name);
                 let body = self
                     .rendered_bodies
                     .get_mut(&closest_hierarchy_body.body.name)

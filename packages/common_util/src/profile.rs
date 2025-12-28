@@ -9,14 +9,14 @@ macro_rules! profile {
         #[cfg(debug_assertions)]
         let __internal__elapsed = __internal__now.elapsed();
         #[cfg(debug_assertions)]
-        $crate::udp_debugging::UDP_DEBUGGING.send(&format!(
+        println!(
             "{}:{}:{}: {} ms, {} ns",
             file!(),
             line!(),
             $tag,
             __internal__elapsed.as_millis(),
             __internal__elapsed.as_nanos()
-        ));
+        );
 
         __internal__result
     }};

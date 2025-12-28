@@ -3,8 +3,9 @@ use async_nats::message::OutboundMessage;
 use async_nats::{ConnectOptions, HeaderMap};
 use futures_util::{FutureExt, StreamExt};
 use std::collections::VecDeque;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, LazyLock, Mutex};
 use std::thread;
+use std::time::Duration;
 
 pub struct IncomingRemoteIOMessage {
     pub name: String,
@@ -17,11 +18,55 @@ pub struct OutgoingRemoteIOMessage {
     pub payload: String,
     pub success: bool,
 }
+pub struct NATSConnection {
+    pub outbox: Arc<Mutex<VecDeque<OutgoingRemoteIOMessage>>>,
+    pub inbox: Arc<Mutex<VecDeque<IncomingRemoteIOMessage>>>,
+}
 
-pub fn connect_nats(
-    outbox: Arc<Mutex<VecDeque<OutgoingRemoteIOMessage>>>,
-    inbox: Arc<Mutex<VecDeque<IncomingRemoteIOMessage>>>,
-) {
+pub static NATS_CONNECTION: LazyLock<NATSConnection> = LazyLock::new(|| {
+    let outbox: Arc<Mutex<VecDeque<OutgoingRemoteIOMessage>>> =
+        Arc::new(Mutex::new(VecDeque::new()));
+    let inbox: Arc<Mutex<VecDeque<IncomingRemoteIOMessage>>> =
+        Arc::new(Mutex::new(VecDeque::new()));
+
+    connect_nats();
+
+    send_event!("on_nats_connected");
+
+    NATSConnection { inbox, outbox }
+});
+
+// @api_event on_nats_connected(null)
+
+#[macro_export]
+macro_rules! send_event {
+    ($name:expr) => {{
+        #[cfg(debug_assertions)]
+        $crate::NATS_CONNECTION
+            .outbox
+            .lock()
+            .unwrap()
+            .push_front(OutgoingRemoteIOMessage {
+                name: format!("event.{}", $name),
+                payload: "null".to_string(),
+                success: true,
+            })
+    }};
+    ($name:expr, $payload:expr) => {{
+        #[cfg(debug_assertions)]
+        $crate::NATS_CONNECTION
+            .outbox
+            .lock()
+            .unwrap()
+            .push_front(OutgoingRemoteIOMessage {
+                name: format!("event.{}", $name),
+                payload: serde_json::to_string(&$payload).unwrap(),
+                success: true,
+            })
+    }};
+}
+
+fn connect_nats() {
     println!("Connecting to NATS...");
     println!("Connecting from a new thread...");
     let rt = Arc::new(
@@ -47,10 +92,9 @@ pub fn connect_nats(
         thread::spawn(move || {
             println!("NATS transmit loop starting...");
             loop {
-                let mut outbox = outbox.lock().unwrap();
+                let mut outbox = NATS_CONNECTION.outbox.lock().unwrap();
                 while !outbox.is_empty() {
                     let message = outbox.pop_back().unwrap();
-                    println!("B");
                     let mut headers = HeaderMap::new();
                     headers.insert("status", if message.success { "ok" } else { "error" });
                     rt.block_on(client.publish_message(OutboundMessage {
@@ -61,6 +105,7 @@ pub fn connect_nats(
                     }))
                     .unwrap();
                 }
+                thread::sleep(Duration::from_millis(10));
             }
         });
     }
@@ -70,8 +115,7 @@ pub fn connect_nats(
             println!("NATS receive loop starting...");
             loop {
                 if let Some(message) = rt.block_on(subscription.next()) {
-                    let mut inbox = inbox.lock().unwrap();
-                    println!("X {}", message.subject.as_str());
+                    let mut inbox = NATS_CONNECTION.inbox.lock().unwrap();
                     inbox.push_front(IncomingRemoteIOMessage {
                         name: message.subject.into_string(),
                         payload: String::from_utf8(Vec::from(message.payload))
@@ -79,6 +123,7 @@ pub fn connect_nats(
                         reply_to: message.reply.map(|x| x.to_string()),
                     })
                 }
+                thread::sleep(Duration::from_millis(10));
             }
         });
     }

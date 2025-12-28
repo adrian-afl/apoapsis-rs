@@ -17,7 +17,7 @@ members = [
     "packages/real_physics_engine",
     "packages/renderer_common",
     "packages/ui_renderer",
-    "packages/universe_simulation",
+    "packages/universe_simulation", "packages/nats",
 ]
 
 [workspace.dependencies]
@@ -56,6 +56,7 @@ real_physics_engine = { path = "packages/real_physics_engine" }
 renderer_common = { path = "packages/renderer_common" }
 ui_renderer = { path = "packages/ui_renderer" }
 universe_simulation = { path = "packages/universe_simulation" }
+nats = { path = "packages/nats" }
 
 [dependencies]
 
@@ -68,4 +69,5 @@ game_stages = { path = "packages/game_stages" }
 core = { path = "packages/core" }
 common_util = { path = "packages/common_util" }
 clap = { workspace = true }
+nats = { workspace = true }
 
