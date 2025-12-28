@@ -5,6 +5,7 @@ import { GameApi } from "./GameApi.js";
 import { GameComponentsApi } from "./generated_ts_client.js";
 import { GameECSWorldApi } from "./GameECSWorldApi.js";
 import { GameEntityApi } from "./GameEntityApi.js";
+import { setTimeout } from "node:timers/promises";
 
 describe("test", () => {
   it("has comms two sides", async () => {
@@ -19,6 +20,9 @@ describe("test", () => {
 
     await nats.connect();
 
+    await setTimeout(1000);
+
+    console.time("timer");
     await ecsWorldApi.resetWorld();
 
     const serializedBefore = await ecsWorldApi.serializeWorld();
@@ -30,5 +34,7 @@ describe("test", () => {
     const serializedAfter = await ecsWorldApi.serializeWorld();
     assert.strictEqual(serializedAfter.entities.length, 1);
     assert.strictEqual(await componentsApi.isPlayer.get(entityId), true);
+
+    console.timeEnd("timer");
   });
 });
