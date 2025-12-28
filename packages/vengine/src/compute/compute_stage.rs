@@ -1,12 +1,10 @@
 use crate::compute::compute_pipeline::{VEComputePipeline, VEComputePipelineError};
 use crate::core::command_buffer::{VECommandBuffer, VECommandBufferError};
-use crate::core::command_pool::VECommandPool;
 use crate::core::descriptor_set::VEDescriptorSet;
 use crate::core::descriptor_set_layout::VEDescriptorSetLayout;
 use crate::core::device::VEDevice;
 use crate::core::shader_module::VEShaderModule;
 use ash::vk;
-use ash::vk::CommandBufferUsageFlags;
 use std::sync::Arc;
 use thiserror::Error;
 

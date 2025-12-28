@@ -1,9 +1,5 @@
 use crate::camera_system::CameraSystem;
-use crate::game_context::GameContext;
-use crate::game_stage_trait::{GameStage, StageTransition};
 use crate::remote_api::remote_game_mode::RemoteGameMode;
-use crate::stages::stages_stack::StageStack;
-use crate::time_counter::TimeCounter;
 use celestial_renderer::renderer::Renderer;
 use celestial_renderer::rendering_system::RenderingSystem;
 use common_util::profile;
@@ -33,7 +29,6 @@ pub struct Game {
     pub config: ResolutionConfig,
 
     universe_simulation: Simulation,
-    time_counter: TimeCounter,
 
     pub controls: Option<Controls>,
 
@@ -81,8 +76,6 @@ impl Game {
         let physics_system = PhysicsSystem::new();
         let rendering_system = RenderingSystem::new(toolkit.clone(), renderer);
 
-        let time_counter = TimeCounter::new();
-
         let remote_game_mode = RemoteGameMode::new();
 
         Self {
@@ -94,8 +87,6 @@ impl Game {
             universe_simulation,
 
             controls: Some(controls),
-
-            time_counter,
 
             ui_system: Some(ui_system),
             camera_system,
@@ -110,6 +101,7 @@ impl Game {
             current_camera: Camera::new(),
         }
     }
+
     pub fn new_headless() -> Self {
         let config = ResolutionConfig {
             width: 640,
@@ -131,8 +123,6 @@ impl Game {
         let camera_system = CameraSystem::new();
         let physics_system = PhysicsSystem::new();
 
-        let time_counter = TimeCounter::new();
-
         let remote_game_mode = RemoteGameMode::new();
 
         Self {
@@ -144,8 +134,6 @@ impl Game {
             universe_simulation,
 
             controls: None,
-
-            time_counter,
 
             ui_system: None,
             camera_system,
@@ -174,7 +162,7 @@ impl Game {
 
     pub fn update(&mut self) {
         profile!("before update", {
-            self.time_counter.update_time();
+            &mut self.remote_game_mode.ecs.time_counter.update_time();
             if let Some(ref mut controls) = self.controls {
                 controls.update_gamepad_helper();
 
@@ -183,10 +171,9 @@ impl Game {
                     .contains(&ControlEvent::ControlActivate(
                         ControlMapItem::RecompileShaders,
                     ))
+                    && let Some(ref mut rendering_system) = self.rendering_system
                 {
-                    if let Some(ref mut rendering_system) = self.rendering_system {
-                        rendering_system.recreate_stages().unwrap();
-                    }
+                    rendering_system.recreate_stages().unwrap();
                 }
             }
         });
@@ -203,7 +190,7 @@ impl Game {
             self.universe_simulation_updater_system.update(
                 &mut self.universe_simulation,
                 stage_ecs,
-                self.time_counter.delta_time,
+                stage_ecs.time_counter.delta_time,
             );
         });
 
@@ -211,7 +198,7 @@ impl Game {
             self.physics_system.update(
                 stage_ecs,
                 &self.universe_simulation,
-                self.time_counter.delta_time,
+                stage_ecs.time_counter.delta_time,
             );
         });
 
@@ -281,8 +268,8 @@ impl Game {
                     &self.universe_simulation,
                     &self.current_camera,
                     &ui_system,
-                    self.time_counter.total_time,
-                    self.time_counter.delta_time,
+                    stage_ecs.time_counter.total_time,
+                    stage_ecs.time_counter.delta_time,
                 );
             });
         }

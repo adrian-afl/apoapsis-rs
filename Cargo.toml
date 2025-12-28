@@ -9,7 +9,6 @@ members = [
     "packages/common_util",
     "packages/core",
     "packages/ecs",
-    "packages/game_stages",
     "packages/input",
     "packages/math",
     "packages/planet_generator/library",
@@ -48,7 +47,6 @@ celestial_renderer = { path = "packages/celestial_renderer" }
 common_util = { path = "packages/common_util" }
 core = { path = "packages/core" }
 ecs = { path = "packages/ecs" }
-game_stages = { path = "packages/game_stages" }
 input = { path = "packages/input" }
 math = { path = "packages/math" }
 planet_generator_library = { path = "packages/planet_generator/library" }
@@ -65,7 +63,6 @@ tracing-subscriber = { workspace = true }
 glam = { workspace = true, features = ["serde"] }
 vengine-rs = { workspace = true }
 winit = { workspace = true, features = ["rwh_06", "serde"] }
-game_stages = { path = "packages/game_stages" }
 core = { path = "packages/core" }
 common_util = { path = "packages/common_util" }
 clap = { workspace = true }

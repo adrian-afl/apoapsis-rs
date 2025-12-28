@@ -41,7 +41,7 @@ impl fmt::Display for CubeMapFace {
 
 fn create_projection(face: &CubeMapFace) -> DMat4 {
     let perspective = DMat4::perspective_rh_gl(PI / 2.0, 1.0, 0.01, 10.0);
-    let view = match (face) {
+    let view = match face {
         CubeMapFace::PX => DMat4::look_to_rh(
             DVec3::new(0.0, 0.0, 0.0),
             DVec3::new(1.0, 0.0, 0.0),
@@ -83,11 +83,11 @@ fn project_direction(face: &CubeMapFace, coord: DVec3) -> Option<DVec2> {
 
     let tolerance = 0.000000000000002;
 
-    if (res.x < -1.0 - tolerance
+    if res.x < -1.0 - tolerance
         || res.x > 1.0 + tolerance
         || res.y < -1.0 - tolerance
         || res.y > 1.0 + tolerance
-        || res.z > 1.0 + tolerance)
+        || res.z > 1.0 + tolerance
     {
         return None;
     }
@@ -288,9 +288,9 @@ impl<Data: Clone> CubeMapDataLayer<Data> {
     pub fn get(&self, coord: DVec3) -> Data {
         let face = get_face(coord);
         let uv01 = project_direction(&face, coord).unwrap();
-        let uv = (uv01 * (self.res as f64));
+        let uv = uv01 * (self.res as f64);
         let mut pixel = uv.floor();
-        if (pixel.x < 0.0) {
+        if pixel.x < 0.0 {
             pixel.x = 0.0;
         }
         if (pixel.x >= (self.res - 1) as f64) {

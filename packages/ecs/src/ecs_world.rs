@@ -1,6 +1,6 @@
 use crate::component_trait::{ComponentTrait, Components};
 use crate::entity::{ENTITY_SEQ, Entity};
-use rayon::iter::FilterMap;
+use crate::time_counter::TimeCounter;
 use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -10,6 +10,7 @@ use ts_rs::TS;
 
 pub struct ECSWorld {
     entities: HashMap<u64, Entity>,
+    pub time_counter: TimeCounter,
 }
 
 impl Index<u64> for ECSWorld {
@@ -45,43 +46,55 @@ impl IndexMut<&str> for ECSWorld {
 #[ts(export)]
 pub struct ECSWorldSerializedRepresentation {
     pub entities: Vec<Entity>,
+    pub time_counter: TimeCounter,
 }
 
 impl ECSWorld {
     pub fn new() -> ECSWorld {
         ECSWorld {
             entities: HashMap::new(),
+            time_counter: TimeCounter::new(),
         }
     }
 
     pub fn serialize(&self) -> ECSWorldSerializedRepresentation {
         let mut entities = vec![];
-        ENTITY_SEQ.store(1, Ordering::SeqCst);
         for entity in self.entities.values() {
             entities.push(entity.clone());
         }
 
-        ECSWorldSerializedRepresentation { entities }
+        ECSWorldSerializedRepresentation {
+            entities,
+            time_counter: self.time_counter.clone(),
+        }
     }
 
     pub fn deserialize(repr: ECSWorldSerializedRepresentation) -> ECSWorld {
         let mut world = ECSWorld::new();
 
         for entity in repr.entities {
+            ENTITY_SEQ.fetch_max(entity.id, Ordering::SeqCst);
             world.add(entity);
         }
+
+        world.time_counter = repr.time_counter;
 
         world
     }
 
     pub fn deserialize_into(&mut self, repr: ECSWorldSerializedRepresentation) {
         for entity in repr.entities {
+            ENTITY_SEQ.fetch_max(entity.id, Ordering::SeqCst);
             self.add(entity);
         }
+
+        self.time_counter = repr.time_counter;
     }
 
     pub fn clear(&mut self) {
         self.entities.clear();
+        self.time_counter.reset();
+        ENTITY_SEQ.store(1, Ordering::SeqCst);
     }
 
     pub fn add(&mut self, entity: Entity) -> u64 {

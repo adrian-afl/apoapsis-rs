@@ -1154,20 +1154,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "game_stages"
-version = "0.1.0"
-dependencies = [
- "common_util",
- "core",
- "dashu-float",
- "ecs",
- "glam",
- "input",
- "math",
- "universe_simulation",
-]
-
-[[package]]
 name = "generic-array"
 version = "0.14.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2406,7 +2392,6 @@ dependencies = [
  "clap",
  "common_util",
  "core",
- "game_stages",
  "glam",
  "nats",
  "tracing",

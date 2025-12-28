@@ -1,8 +1,11 @@
 use crate::app::GameWindowApp;
 use crate::global_config::GLOBAL_CONFIG;
 use clap::Parser;
+use core::game::Game;
 use std::fs::File;
 use std::sync::{Arc, Mutex};
+use std::thread;
+use std::time::Duration;
 use tracing_subscriber::FmtSubscriber;
 use tracing_subscriber::fmt::format::FmtSpan;
 use vengine_rs::core::toolkit::{App, VEToolkit};
@@ -22,16 +25,25 @@ fn main() {
 
     tracing::subscriber::set_global_default(subscriber).unwrap();
 
-    let window_attributes = WindowAttributes::default()
-        .with_inner_size(PhysicalSize::new(640 * 2, 480 * 2))
-        .with_title("Codename T.S.P.");
+    if GLOBAL_CONFIG.headless {
+        let mut game = Game::new_headless();
+        println!("Headless loop starting...");
+        loop {
+            game.update();
+            thread::sleep(Duration::from_millis(10));
+        }
+    } else {
+        let window_attributes = WindowAttributes::default()
+            .with_inner_size(PhysicalSize::new(640 * 2, 480 * 2))
+            .with_title("Codename T.S.P.");
 
-    VEToolkit::start(
-        Box::from(move |toolkit: Arc<VEToolkit>, window: Arc<Mutex<Window>>| {
-            let app = GameWindowApp::new(toolkit, window);
-            Arc::new(Mutex::from(app)) as Arc<Mutex<dyn App>>
-        }),
-        window_attributes,
-    )
-    .unwrap()
+        VEToolkit::start(
+            Box::from(move |toolkit: Arc<VEToolkit>, window: Arc<Mutex<Window>>| {
+                let app = GameWindowApp::new(toolkit, window);
+                Arc::new(Mutex::from(app)) as Arc<Mutex<dyn App>>
+            }),
+            window_attributes,
+        )
+        .unwrap()
+    }
 }

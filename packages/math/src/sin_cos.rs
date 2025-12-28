@@ -1,13 +1,13 @@
-use dashu_float::ops::Abs;
 use dashu_float::DBig;
+use dashu_float::ops::Abs;
 use std::ops::Deref;
 use std::str::FromStr;
 use std::sync::LazyLock;
 
-static PI: LazyLock<DBig> = LazyLock::new(|| {
-    DBig::from_str("3.141592653589793238462643383279502884197169399375105820974944592307816406286")
-        .unwrap()
-});
+// static PI: LazyLock<DBig> = LazyLock::new(|| {
+//     DBig::from_str("3.141592653589793238462643383279502884197169399375105820974944592307816406286")
+//         .unwrap()
+// });
 
 pub static PIMUL2: LazyLock<DBig> = LazyLock::new(|| {
     DBig::from_str("3.141592653589793238462643383279502884197169399375105820974944592307816406286")
