@@ -7,6 +7,7 @@ use crate::remote_api::api::reset_world::reset_world;
 use crate::remote_api::api::serialize_world::serialize_world;
 use crate::remote_api::nats::{IncomingRemoteIOMessage, OutgoingRemoteIOMessage, connect_nats};
 use ecs::ecs_world::ECSWorld;
+use serde_json::json;
 use std::collections::VecDeque;
 use std::string::ToString;
 use std::sync::{Arc, Mutex};
@@ -72,7 +73,7 @@ impl RemoteGameMode {
                         .unwrap()
                         .push_front(OutgoingRemoteIOMessage {
                             name: message.reply_to.expect("No reply-to set"),
-                            payload: error,
+                            payload: json!({ "error": error }).to_string(),
                             success: false,
                         })
                 }

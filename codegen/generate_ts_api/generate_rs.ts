@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 use ts_rs::TS;
 use ecs::component_trait::acquire_next_id;
+use crate::remote_api::util::serde_err_map;
 
 
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
@@ -22,7 +23,7 @@ struct GetComponentInput {
 #[ts(export)]
 struct RemoveComponentInput {
     entity_id: u64,
-    component_id: String,
+    component_id: u64,
 }
 
 `);
@@ -38,18 +39,20 @@ struct Set${component.short}Input {
 }
 
 pub fn get_${component.snake}(payload: &str, ecs: &mut ECSWorld) -> Result<Option<String>, String> {
-    let input: GetComponentInput = serde_json::from_str(payload).unwrap();
+    let input: GetComponentInput = serde_json::from_str(payload).map_err(serde_err_map)?;
     
-    Ok(Some(serde_json::to_string(&ecs[input.entity_id].components.${component.snake}).unwrap()))
+    Ok(Some(serde_json::to_string(
+        &ecs.find_by_id(input.entity_id).ok_or("Entity not found")?.components.${component.snake}).map_err(|_| "Cannot serialize")?
+    ))
 }
 
 pub fn set_${component.snake}(payload: &str, ecs: &mut ECSWorld) -> Result<Option<String>, String> {
-    let mut input: Set${component.short}Input = serde_json::from_str(payload).unwrap();
+    let mut input: Set${component.short}Input = serde_json::from_str(payload).map_err(serde_err_map)?;
 
     let new_id = acquire_next_id();
     input.component.id = new_id;
     
-    ecs[input.entity_id].components.${component.snake} = Some(input.component);
+    ecs.find_by_id_mut(input.entity_id).ok_or("Entity not found")?.components.${component.snake} = Some(input.component);
 
     Ok(Some(json!({
         "id": new_id,
@@ -58,9 +61,9 @@ pub fn set_${component.snake}(payload: &str, ecs: &mut ECSWorld) -> Result<Optio
 }
 
 pub fn clear_${component.snake}(payload: &str, ecs: &mut ECSWorld) -> Result<Option<String>, String> {
-    let input: GetComponentInput = serde_json::from_str(payload).unwrap();
+    let input: GetComponentInput = serde_json::from_str(payload).map_err(serde_err_map)?;
     
-    ecs[input.entity_id].components.${component.snake} = None;
+    ecs.find_by_id_mut(input.entity_id).ok_or("Entity not found")?.components.${component.snake} = None;
 
     Ok(None)
 }
@@ -78,18 +81,18 @@ struct Add${component.short}Input {
 }
 
 pub fn get_${component.snake}(payload: &str, ecs: &mut ECSWorld) -> Result<Option<String>, String> {
-    let input: GetComponentInput = serde_json::from_str(payload).unwrap();
+    let input: GetComponentInput = serde_json::from_str(payload).map_err(serde_err_map)?;
     
-    Ok(Some(serde_json::to_string(&ecs[input.entity_id].components.${component.snake}).unwrap()))
+    Ok(Some(serde_json::to_string(&ecs.find_by_id(input.entity_id).ok_or("Entity not found")?.components.${component.snake}).map_err(|_| "Cannot serialize")?))
 }
 
 pub fn add_${component.snake}(payload: &str, ecs: &mut ECSWorld) -> Result<Option<String>, String> {
-    let mut input: Add${component.short}Input = serde_json::from_str(payload).unwrap();
+    let mut input: Add${component.short}Input = serde_json::from_str(payload).map_err(serde_err_map)?;
     
     let new_id = acquire_next_id();
     input.component.id = new_id;
 
-    ecs[input.entity_id].components.${component.snake}.push(input.component);
+    ecs.find_by_id_mut(input.entity_id).ok_or("Entity not found")?.components.${component.snake}.push(input.component);
 
     Ok(Some(json!({
         "id": new_id,
@@ -98,9 +101,9 @@ pub fn add_${component.snake}(payload: &str, ecs: &mut ECSWorld) -> Result<Optio
 }
 
 pub fn remove_${component.snake}(payload: &str, ecs: &mut ECSWorld) -> Result<Option<String>, String> {
-    let input: RemoveComponentInput = serde_json::from_str(payload).unwrap();
+    let input: RemoveComponentInput = serde_json::from_str(payload).map_err(serde_err_map)?;
     
-    ecs[input.entity_id].components.${component.snake}.retain(|x| x.id != input.component_id.parse::<u64>().unwrap());
+    ecs.find_by_id_mut(input.entity_id).ok_or("Entity not found")?.components.${component.snake}.retain(|x| x.id != input.component_id);
 
     Ok(None)
 }
@@ -118,15 +121,15 @@ struct SetBooleanComponentInput {
 for (const component of componentsMetadata.filter((x) => x.type === "Marker")) {
   console.log(`
 pub fn get_${component.snake}(payload: &str, ecs: &mut ECSWorld) -> Result<Option<String>, String> {
-    let input: GetComponentInput = serde_json::from_str(payload).unwrap();
+    let input: GetComponentInput = serde_json::from_str(payload).map_err(serde_err_map)?;
     
-    Ok(Some(serde_json::to_string(&ecs[input.entity_id].components.${component.snake}).unwrap()))
+    Ok(Some(serde_json::to_string(&ecs.find_by_id(input.entity_id).ok_or("Entity not found")?.components.${component.snake}).map_err(|_| "Cannot serialize")?))
 }
 
 pub fn set_${component.snake}(payload: &str, ecs: &mut ECSWorld) -> Result<Option<String>, String> {
-    let input: SetBooleanComponentInput = serde_json::from_str(payload).unwrap();
+    let input: SetBooleanComponentInput = serde_json::from_str(payload).map_err(serde_err_map)?;
     
-    ecs[input.entity_id].components.${component.snake} = input.value;
+    ecs.find_by_id_mut(input.entity_id).ok_or("Entity not found")?.components.${component.snake} = input.value;
 
     Ok(None)
 }
