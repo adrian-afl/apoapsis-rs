@@ -49,7 +49,7 @@ impl CloudGeneratorLowFreqBuffer {
             offset,
             (fbm(DVec3::new(elapsed, seed.x, seed.y), 6, 2.0, 0.5) * 2.0 - 1.0) * 100.0,
         );
-        offset += write_float(ptr, offset, frequency);
+        write_float(ptr, offset, frequency);
 
         Ok(())
     }

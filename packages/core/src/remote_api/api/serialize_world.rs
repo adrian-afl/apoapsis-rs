@@ -1,5 +1,4 @@
 use ecs::ecs_world::ECSWorld;
-use serde::Serialize;
 
 // @api_command serialize_world(null): string
 pub fn serialize_world(_payload: &str, ecs: &mut ECSWorld) -> Result<Option<String>, String> {

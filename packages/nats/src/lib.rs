@@ -1,7 +1,7 @@
 use async_nats::client::traits::Publisher;
 use async_nats::message::OutboundMessage;
 use async_nats::{ConnectOptions, HeaderMap};
-use futures_util::{FutureExt, StreamExt};
+use futures_util::StreamExt;
 use std::collections::VecDeque;
 use std::sync::{Arc, LazyLock, Mutex};
 use std::thread;
@@ -41,7 +41,6 @@ pub static NATS_CONNECTION: LazyLock<NATSConnection> = LazyLock::new(|| {
 #[macro_export]
 macro_rules! send_event {
     ($name:expr) => {{
-        #[cfg(debug_assertions)]
         $crate::NATS_CONNECTION
             .outbox
             .lock()
@@ -53,7 +52,6 @@ macro_rules! send_event {
             })
     }};
     ($name:expr, $payload:expr) => {{
-        #[cfg(debug_assertions)]
         $crate::NATS_CONNECTION
             .outbox
             .lock()

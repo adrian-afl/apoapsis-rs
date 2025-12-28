@@ -78,7 +78,7 @@ pub enum ControlMapItem {
 
 #[derive(Debug, Clone, Deserialize)]
 // #[serde(rename_all = "camelCase")] // probably not a good idea
-struct ControlMap {
+pub struct ControlMap {
     pub keys: HashMap<ControlMapItem, KeyCode>,
     pub mouse_buttons: HashMap<ControlMapItem, MouseButton>,
     pub gamepad_buttons: HashMap<ControlMapItem, Button>,
@@ -102,8 +102,8 @@ impl ControlsMapping {
     }
 
     pub fn load(file: &str) -> ControlMap {
-        let input_json =
-            fs::read_to_string(file).unwrap_or_else(|_| panic!("Failed to to read the {file} file"));
+        let input_json = fs::read_to_string(file)
+            .unwrap_or_else(|_| panic!("Failed to to read the {file} file"));
         serde_json::from_str(&strip_json_line_comments(&input_json)).unwrap()
     }
 

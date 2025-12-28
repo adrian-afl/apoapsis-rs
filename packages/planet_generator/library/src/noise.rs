@@ -1,7 +1,6 @@
 use crate::math_util::map;
 use crate::random::random_3d_to_1d;
 use glam::DVec3;
-use rayon::prelude::*;
 
 fn mix(a: f64, b: f64, m: f64) -> f64 {
     a * (1.0 - m) + b * m
@@ -47,8 +46,6 @@ pub fn value_noise(x: DVec3) -> f64 {
 
     let l2candidate1 = mix(l1candidate1, l1candidate2, fr.y);
     let l2candidate2 = mix(l1candidate3, l1candidate4, fr.y);
-
-    
 
     mix(l2candidate1, l2candidate2, fr.z)
 }

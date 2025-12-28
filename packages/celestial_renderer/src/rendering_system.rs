@@ -55,16 +55,23 @@ impl RenderingSystem {
         match rendered_body {
             None => None,
             Some(rendered_body) => {
-                let mut normal = point - &closest_body.position ;
+                let mut normal = point - &closest_body.position;
                 let distance_center = normal.length();
                 normal.normalize();
                 let mut normal = normal.to_dvec3_with_precision(6);
-                normal = closest_body.orientation.as_dquat() * normal;
-                normal.normalize();
+                normal = (closest_body.orientation.as_dquat() * normal).normalize();
 
-                let terrain_altitude = rendered_body.terrain_icosphere.as_ref().map(|terrain| distance_center.to_f64().value() - terrain.get_radius_at_normal(normal));
-                let water_altitude = rendered_body.water_icosphere.as_ref().map(|water| distance_center.to_f64().value() - water.get_radius_at_normal(normal));
-                let atmosphere_altitude = closest_body.body.atmosphere.as_ref().map(|atmo| distance_center.to_f64().value() - atmo.start);
+                let terrain_altitude = rendered_body.terrain_icosphere.as_ref().map(|terrain| {
+                    distance_center.to_f64().value() - terrain.get_radius_at_normal(normal)
+                });
+                let water_altitude = rendered_body.water_icosphere.as_ref().map(|water| {
+                    distance_center.to_f64().value() - water.get_radius_at_normal(normal)
+                });
+                let atmosphere_altitude = closest_body
+                    .body
+                    .atmosphere
+                    .as_ref()
+                    .map(|atmo| distance_center.to_f64().value() - atmo.start);
                 if terrain_altitude.is_none()
                     && water_altitude.is_none()
                     && atmosphere_altitude.is_none()
@@ -100,7 +107,10 @@ impl RenderingSystem {
         let rendered_body = self.celestial_hierarchy.get_rendered_body(&body.body.name);
         match rendered_body {
             None => None,
-            Some(rendered_body) => rendered_body.terrain_icosphere.as_ref().map(|terrain| terrain.get_radius_at_normal(normal)),
+            Some(rendered_body) => rendered_body
+                .terrain_icosphere
+                .as_ref()
+                .map(|terrain| terrain.get_radius_at_normal(normal)),
         }
     }
 
@@ -114,7 +124,10 @@ impl RenderingSystem {
         let rendered_body = self.celestial_hierarchy.get_rendered_body(&body.body.name);
         match rendered_body {
             None => None,
-            Some(rendered_body) => rendered_body.water_icosphere.as_ref().map(|water| water.get_radius_at_normal(normal)),
+            Some(rendered_body) => rendered_body
+                .water_icosphere
+                .as_ref()
+                .map(|water| water.get_radius_at_normal(normal)),
         }
     }
 
@@ -207,8 +220,6 @@ impl RenderingSystem {
         universe_simulation: &Simulation,
         camera: &Camera,
         ui_system: &UISystem,
-        total_time: f64,
-        delta_time: f64,
     ) {
         // println!("RenderingSystem / update");
 
@@ -348,8 +359,7 @@ impl RenderingSystem {
                 universe_simulation,
                 &mut self.celestial_hierarchy,
                 camera,
-                total_time,
-                delta_time,
+                &ecs.time_counter,
             );
 
             // println!("RenderingSystem / End");

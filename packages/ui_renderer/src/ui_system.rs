@@ -3,7 +3,6 @@ use crate::ui_rendered_item::UIRenderedItem;
 use ecs::component_trait::Components;
 use ecs::ecs_world::ECSWorld;
 use glam::{DVec2, DVec4};
-use rayon::iter::ParallelIterator;
 use renderer_common::errors::RenderingError;
 use renderer_common::resolution_config::ResolutionConfig;
 use std::collections::HashMap;
@@ -13,8 +12,6 @@ use vengine_rs::core::toolkit::VEToolkit;
 use vengine_rs::image::image::VEImageUsage;
 
 pub struct UISystem {
-    config: ResolutionConfig,
-
     toolkit: Arc<VEToolkit>,
 
     pub ui_drawer: Arc<Mutex<UIDrawer>>,
@@ -32,7 +29,6 @@ impl UISystem {
         let mut ui_drawer = UIDrawer::new(config, &toolkit).expect("Failed to create UIDrawer");
         ui_drawer.update_buffer().unwrap();
         Self {
-            config: config.clone(),
             toolkit: toolkit.clone(),
             ui_drawer: Arc::new(Mutex::from(ui_drawer)),
             currently_rendered_items: RwLock::new(HashMap::new()),
@@ -99,12 +95,12 @@ impl UISystem {
 
             if let Some(color) = &entity.components.ui_hover_color
                 && cursor_pos.x >= uibox.position.x
-                    && cursor_pos.y >= uibox.position.y
-                    && cursor_pos.x <= uibox.position.x + uibox.size.x
-                    && cursor_pos.y <= uibox.position.y + uibox.size.y
-                {
-                    item.color = color.color;
-                }
+                && cursor_pos.y >= uibox.position.y
+                && cursor_pos.x <= uibox.position.x + uibox.size.x
+                && cursor_pos.y <= uibox.position.y + uibox.size.y
+            {
+                item.color = color.color;
+            }
 
             if let Some(text) = &entity.components.ui_text {
                 item.text = text.content.clone();

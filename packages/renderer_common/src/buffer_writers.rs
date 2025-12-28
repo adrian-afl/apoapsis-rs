@@ -26,7 +26,6 @@ pub fn write_vec2(ptr: *mut f32, base_offset: isize, data: DVec2) -> isize {
         ptr.offset(offset).write(data.x as f32);
         offset += 1;
         ptr.offset(offset).write(data.y as f32);
-        offset += 1;
     }
     2
 }
@@ -41,7 +40,6 @@ pub fn write_vec3_zero(ptr: *mut f32, base_offset: isize, data: DVec3) -> isize 
         ptr.offset(offset).write(data.z as f32);
         offset += 1;
         ptr.offset(offset).write(0.0_f32);
-        offset += 1;
     }
     4
 }
@@ -61,7 +59,6 @@ pub fn write_vec3_with_float(
         ptr.offset(offset).write(data_a.z as f32);
         offset += 1;
         ptr.offset(offset).write(data_b as f32);
-        offset += 1;
     }
     4
 }
@@ -76,7 +73,6 @@ pub fn write_vec4(ptr: *mut f32, base_offset: isize, data: DVec4) -> isize {
         ptr.offset(offset).write(data.z as f32);
         offset += 1;
         ptr.offset(offset).write(data.w as f32);
-        offset += 1;
     }
     4
 }

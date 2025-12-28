@@ -21,7 +21,6 @@ impl VEImage {
     ) -> Result<VEImage, VEImageError> {
         let mut image = VEImage {
             device: device.clone(),
-            queue: queue.clone(),
 
             allocation: None,
 

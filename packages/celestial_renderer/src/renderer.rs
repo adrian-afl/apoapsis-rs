@@ -14,6 +14,7 @@ use crate::scene::mesh::Mesh;
 use ash::vk;
 use ash::vk::{AccessFlags, ImageAspectFlags, ImageLayout, PipelineStageFlags};
 use common_util::profile;
+use ecs::time_counter::TimeCounter;
 use renderer_common::camera::Camera;
 use renderer_common::empty_textures::EMPTY_TEXTURES;
 use renderer_common::errors::RenderingError;
@@ -47,16 +48,7 @@ pub struct Renderer {
     multi_merger: MultiMerger,
     output: Output,
 
-    mesh_drawing_semaphore: Arc<Mutex<VESemaphore>>,
-    clouds_generation_low_freq_semaphore: Arc<Mutex<VESemaphore>>,
-    clouds_generation_high_freq_semaphore: Arc<Mutex<VESemaphore>>,
-    atmosphere_drawing_semaphore: Arc<Mutex<VESemaphore>>,
-    multi_merging_semaphore: Arc<Mutex<VESemaphore>>,
-    ui_drawing_semaphore: Arc<Mutex<VESemaphore>>,
     outputting_semaphore: Arc<Mutex<VESemaphore>>,
-    terrain_drawing_semaphore: Arc<Mutex<VESemaphore>>,
-    water_drawing_semaphore: Arc<Mutex<VESemaphore>>,
-
     command_buffer: VECommandBuffer,
 }
 
@@ -123,21 +115,7 @@ impl Renderer {
             g_buffer,
             common_buffer,
 
-            mesh_drawing_semaphore: Arc::new(Mutex::from(toolkit.create_semaphore().unwrap())),
-            clouds_generation_low_freq_semaphore: Arc::new(Mutex::from(
-                toolkit.create_semaphore().unwrap(),
-            )),
-            clouds_generation_high_freq_semaphore: Arc::new(Mutex::from(
-                toolkit.create_semaphore().unwrap(),
-            )),
-            atmosphere_drawing_semaphore: Arc::new(Mutex::from(
-                toolkit.create_semaphore().unwrap(),
-            )),
-            multi_merging_semaphore: Arc::new(Mutex::from(toolkit.create_semaphore().unwrap())),
-            ui_drawing_semaphore: Arc::new(Mutex::from(toolkit.create_semaphore().unwrap())),
             outputting_semaphore: Arc::new(Mutex::from(toolkit.create_semaphore().unwrap())),
-            terrain_drawing_semaphore: Arc::new(Mutex::from(toolkit.create_semaphore().unwrap())),
-            water_drawing_semaphore: Arc::new(Mutex::from(toolkit.create_semaphore().unwrap())),
 
             command_buffer: toolkit.create_command_buffer().unwrap(),
         }
@@ -408,12 +386,11 @@ impl Renderer {
         universe_simulation: &Simulation,
         celestial_hierarchy: &mut CelestialHierarchy,
         camera: &Camera,
-        total_time: f64,
-        _delta_time: f64,
+        time_counter: &TimeCounter,
     ) -> Result<(), RenderingError> {
         profile!("common_buffer update", {
             self.common_buffer
-                .update(camera, total_time)
+                .update(camera, time_counter.total_time)
                 .expect("Failed to update common_buffer");
         });
 

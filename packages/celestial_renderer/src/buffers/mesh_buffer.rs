@@ -117,18 +117,10 @@ impl MeshBuffer {
         );
 
         //uint useNormalTexture;
-        offset += write_bool_as_uint(
-            ptr,
-            offset,
-            mesh.material.normal.is_some(),
-        );
+        offset += write_bool_as_uint(ptr, offset, mesh.material.normal.is_some());
 
         //uint useBumpTexture;
-        offset += write_bool_as_uint(
-            ptr,
-            offset,
-            mesh.material.bump.is_some(),
-        );
+        offset += write_bool_as_uint(ptr, offset, mesh.material.bump.is_some());
 
         /////////////////////
 
@@ -213,7 +205,7 @@ impl MeshBuffer {
         );
 
         //float bumpTextureScale;
-        offset += write_float(
+        write_float(
             ptr,
             offset,
             match &mesh.material.bump {

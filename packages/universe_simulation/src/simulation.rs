@@ -297,7 +297,7 @@ impl Simulation {
             let length_squared = relative.length_squared();
             let length = length_squared.sqrt();
             let strength = &*G_CONSTANT * &body.body.dynamics.mass / length_squared;
-            flux += (relative * (&DBig::ONE / length * strength));
+            flux += relative * (&DBig::ONE / length * strength);
         }
         flux
     }

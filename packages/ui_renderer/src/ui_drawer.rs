@@ -21,7 +21,7 @@ use vengine_rs::graphics::vertex_buffer::VEVertexBuffer;
 use vengine_rs::image::filtering::VEFiltering;
 use vengine_rs::image::image::{VEImage, VEImageUsage, VEImageViewCreateInfo};
 use vengine_rs::image::image_format::VEImageFormat;
-use vengine_rs::image::sampler::{VESampler, VESamplerAddressMode};
+use vengine_rs::image::sampler::VESamplerAddressMode;
 
 pub struct UIDrawer {
     pub render_stage: VERenderStage,
@@ -36,7 +36,6 @@ pub struct UIDrawer {
     pub font_atlas_large: FontAtlas,
 
     pub out_color: VEImage,
-    sampler: VESampler,
     config: ResolutionConfig,
 }
 
@@ -222,7 +221,6 @@ impl UIDrawer {
             font_atlas_medium,
             font_atlas_large,
             out_color,
-            sampler,
             config: config.clone(),
         })
     }

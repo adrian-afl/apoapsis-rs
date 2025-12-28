@@ -1,20 +1,19 @@
 use crate::buffers::terrain_icosphere_data_buffer::TerrainIcosphereDataBuffer;
 use crate::geometry::common_icosphere::{
-    update_icosphere_matrices, which_part_to_preload, IcosphereLoadedGeometry,
-    PreloadDetectionResultAction, PreloadResult, ICO_LEVEL_SUBDIVISIONS,
+    ICO_LEVEL_SUBDIVISIONS, IcosphereLoadedGeometry, PreloadDetectionResultAction, PreloadResult,
+    update_icosphere_matrices, which_part_to_preload,
 };
 use crate::geometry::icosphere_drawer::TERRAIN_ICOSPHERE_VERTEX_ATTRIBUTES;
 use glam::{DMat4, DVec3};
 use math::decimal_vector_3d::DecimalVector3d;
 use planet_generator_library::cubemap_data::CubeMapDataLayer;
 use planet_generator_library::generate_icosphere::{
-    generate_icosphere_metadata, IcosphereMetadataItem, IcosphereSegmentGenerator, Triangle,
+    IcosphereMetadataItem, IcosphereSegmentGenerator, Triangle, generate_icosphere_metadata,
 };
 use planet_generator_library::interpolated_biome_data::LoadedBiomeData;
 use planet_generator_library::load_binary_maps::{
     get_terrain_maps_resolution, load_binary_biome_map, load_binary_terrain_map,
 };
-use rayon::iter::IndexedParallelIterator;
 use rayon::iter::ParallelIterator;
 use rayon::prelude::IntoParallelRefIterator;
 use renderer_common::errors::RenderingError;
@@ -37,7 +36,6 @@ struct LoadedTerrainData {
 
 pub struct TerrainIcosphere {
     generator: Arc<IcosphereSegmentGenerator>,
-    base_icosphere: Arc<Vec<Triangle>>,
     currently_loaded: Mutex<HashMap<u16, IcosphereLoadedGeometry>>,
 
     loaded_data: LoadedTerrainData,
@@ -81,7 +79,6 @@ impl TerrainIcosphere {
         Ok(TerrainIcosphere {
             generator,
             loaded_data,
-            base_icosphere,
 
             currently_loaded: Mutex::new(HashMap::new()),
             data_buffer,

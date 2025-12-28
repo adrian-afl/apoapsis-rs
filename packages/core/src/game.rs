@@ -267,8 +267,6 @@ impl Game {
                     &self.universe_simulation,
                     &self.current_camera,
                     ui_system,
-                    stage_ecs.time_counter.total_time,
-                    stage_ecs.time_counter.delta_time,
                 );
             });
         }

@@ -33,9 +33,7 @@ impl OutputBuffer {
     pub fn update(&mut self, exposure: f64) -> Result<(), RenderingError> {
         let ptr = self.staging_buffer.map()? as *mut f32;
 
-        let mut offset = 0;
-
-        offset += write_float(ptr, offset, exposure);
+        write_float(ptr, 0, exposure);
 
         Ok(())
     }

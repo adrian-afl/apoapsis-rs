@@ -5,7 +5,7 @@ use renderer_common::buffer_writers::{
     write_float, write_mat4, write_vec3_with_float, write_vec3_zero,
 };
 use renderer_common::errors::RenderingError;
-use std::fmt::{Debug, Formatter, Write};
+use std::fmt::{Debug, Formatter};
 use universe_simulation::simulation::SimulatedBody;
 use vengine_rs::buffer::buffer::{VEBuffer, VEBufferUsage};
 use vengine_rs::core::command_buffer::VECommandBuffer;
@@ -202,7 +202,7 @@ impl CelestialBodyBuffer {
 
         offset += write_vec3_zero(ptr, offset, star_direction.to_dvec3_with_precision(4));
         offset += write_vec3_zero(ptr, offset, star_irradiance);
-        offset += write_vec3_zero(ptr, offset, star_radiance);
+        write_vec3_zero(ptr, offset, star_radiance);
 
         Ok(())
     }

@@ -1,4 +1,4 @@
-use crate::component_trait::{AttachedComponents, ComponentTrait};
+use crate::component_trait::AttachedComponents;
 use serde::{Deserialize, Serialize};
 use std::sync::atomic::{AtomicU64, Ordering};
 use ts_rs::TS;

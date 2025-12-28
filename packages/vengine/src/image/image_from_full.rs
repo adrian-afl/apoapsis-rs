@@ -2,10 +2,10 @@ use crate::core::command_buffer::VECommandBuffer;
 use crate::core::command_pool::VECommandPool;
 use crate::core::device::VEDevice;
 use crate::core::main_device_queue::VEMainDeviceQueue;
-use crate::core::memory_properties::{get_memory_properties_flags, VEMemoryProperties};
+use crate::core::memory_properties::{VEMemoryProperties, get_memory_properties_flags};
 use crate::image::aspect_from_format::aspect_from_format;
 use crate::image::image::{VEImage, VEImageError, VEImageUsage};
-use crate::image::image_format::{get_image_format, VEImageFormat};
+use crate::image::image_format::{VEImageFormat, get_image_format};
 use crate::memory::memory_manager::VEMemoryManager;
 use ash::vk;
 use std::collections::HashMap;
@@ -16,9 +16,7 @@ fn get_image_usage_flags(usages: &[VEImageUsage]) -> vk::ImageUsageFlags {
     for usage in usages {
         match usage {
             VEImageUsage::ColorAttachment => flags |= vk::ImageUsageFlags::COLOR_ATTACHMENT,
-            VEImageUsage::DepthAttachment => {
-                flags |= vk::ImageUsageFlags::DEPTH_STENCIL_ATTACHMENT
-            }
+            VEImageUsage::DepthAttachment => flags |= vk::ImageUsageFlags::DEPTH_STENCIL_ATTACHMENT,
             VEImageUsage::Sampled => flags |= vk::ImageUsageFlags::SAMPLED,
             VEImageUsage::Storage => flags |= vk::ImageUsageFlags::STORAGE,
             VEImageUsage::TransferDestination => flags |= vk::ImageUsageFlags::TRANSFER_DST,
@@ -93,7 +91,6 @@ impl VEImage {
 
         let mut image = VEImage {
             device: device.clone(),
-            queue: queue.clone(),
 
             allocation: Some(allocation),
 

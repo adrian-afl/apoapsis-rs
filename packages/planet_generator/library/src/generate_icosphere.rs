@@ -2,7 +2,6 @@ use crate::base_icosphere::get_base_icosphere;
 use crate::cubemap_data::CubeMapDataLayer;
 use crate::interpolated_biome_data::LoadedBiomeData;
 use glam::DVec3;
-use rayon::iter::IndexedParallelIterator;
 use rayon::iter::ParallelIterator;
 use rayon::prelude::IntoParallelRefIterator;
 use std::collections::HashMap;
@@ -117,9 +116,7 @@ fn write_vector_terrain(
     stream
         .write_all(&((n.z * 127.0) as i8).to_le_bytes())
         .expect("Write failed");
-    stream
-        .write_all(&0_u8.to_le_bytes())
-        .expect("Write failed");
+    stream.write_all(&0_u8.to_le_bytes()).expect("Write failed");
 
     stream
         .write_all(&(loaded_biome_data.color_r).to_le_bytes())

@@ -54,7 +54,7 @@ impl CommonBuffer {
         offset += write_vec3_zero(ptr, offset, frustum_cone.top_right);
         offset += write_vec3_zero(ptr, offset, frustum_cone.bottom_right);
 
-        offset += write_float(ptr, offset, elapsed);
+        write_float(ptr, offset, elapsed);
 
         Ok(())
     }

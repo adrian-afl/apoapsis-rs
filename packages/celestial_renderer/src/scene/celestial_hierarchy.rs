@@ -11,7 +11,6 @@ use math::decimal_vector_3d::DecimalVector3d;
 use planet_generator_library::generate_icosphere::{
     IcosphereSegmentGenerator, Triangle, generate_base_icosphere,
 };
-use rayon::iter::ParallelIterator;
 use rayon::join;
 use renderer_common::errors::RenderingError;
 use std::collections::HashMap;
@@ -160,10 +159,7 @@ impl CelestialHierarchy {
                                 profile!("update terrain_icosphere", {
                                     if let Some(icosphere) = &mut body.terrain_icosphere {
                                         icosphere
-                                            .update_buffer(
-                                                camera_position,
-                                                closest_hierarchy_body,
-                                            )
+                                            .update_buffer(camera_position, closest_hierarchy_body)
                                             .unwrap();
                                     }
                                 });
@@ -172,10 +168,7 @@ impl CelestialHierarchy {
                                 profile!("update water_icosphere", {
                                     if let Some(icosphere) = &mut body.water_icosphere {
                                         icosphere
-                                            .update_buffer(
-                                                camera_position,
-                                                closest_hierarchy_body,
-                                            )
+                                            .update_buffer(camera_position, closest_hierarchy_body)
                                             .unwrap();
                                     }
                                 });

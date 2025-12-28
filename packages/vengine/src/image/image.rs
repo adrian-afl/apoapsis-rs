@@ -1,7 +1,7 @@
 use crate::buffer::buffer::VEBufferError;
 use crate::core::command_buffer::{VECommandBuffer, VECommandBufferError};
 use crate::core::device::VEDevice;
-use crate::core::main_device_queue::{VEMainDeviceQueue, VEMainDeviceQueueError};
+use crate::core::main_device_queue::VEMainDeviceQueueError;
 use crate::image::transition_image_layout::transition_image_layout;
 use crate::memory::memory_chunk::{VEMemoryChunkError, VESingleAllocation};
 use crate::memory::memory_manager::VEMemoryManagerError;
@@ -10,7 +10,7 @@ use image::ImageError;
 use std::collections::HashMap;
 use std::fmt::{Debug, Formatter};
 use std::io;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use thiserror::Error;
 
 #[path = "./image_from_data.rs"]
@@ -119,8 +119,7 @@ impl VEImageViewCreateInfo {
 #[derive(Clone)]
 pub struct VEImage {
     device: Arc<VEDevice>,
-    queue: Arc<Mutex<VEMainDeviceQueue>>,
-
+    //queue: Arc<Mutex<VEMainDeviceQueue>>,
     pub width: u32,
     pub height: u32,
     pub depth: u32,

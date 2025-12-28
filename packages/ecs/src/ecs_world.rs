@@ -1,4 +1,4 @@
-use crate::component_trait::{ComponentTrait, Components};
+use crate::component_trait::Components;
 use crate::entity::{ENTITY_SEQ, Entity};
 use crate::time_counter::TimeCounter;
 use rayon::prelude::*;
