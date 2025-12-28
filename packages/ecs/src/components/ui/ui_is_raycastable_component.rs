@@ -1,4 +1,3 @@
-use crate::component_trait::Components;
 use crate::component_trait::{ComponentTrait, acquire_next_id};
 use crate::impl_marker_component;
 use serde::{Deserialize, Serialize};

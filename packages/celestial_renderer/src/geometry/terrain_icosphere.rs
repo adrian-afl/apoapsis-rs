@@ -60,7 +60,7 @@ impl TerrainIcosphere {
         data_set_layout: &mut VEDescriptorSetLayout,
     ) -> Result<TerrainIcosphere, RenderingError> {
         let metadata = generate_icosphere_metadata(&base_icosphere, terrain_data.radius);
-        let part_matrices = vec![DMat4::IDENTITY.clone(); metadata.len()];
+        let part_matrices = vec![DMat4::IDENTITY; metadata.len()];
         let maps_resolutions = get_terrain_maps_resolution(&terrain_data.dir_path);
         let loaded_data = LoadedTerrainData {
             radius: terrain_data.radius,
@@ -74,7 +74,7 @@ impl TerrainIcosphere {
             loaded_biome: load_binary_biome_map(&terrain_data.dir_path, maps_resolutions),
         };
 
-        let data_buffer = TerrainIcosphereDataBuffer::new(&toolkit)?;
+        let data_buffer = TerrainIcosphereDataBuffer::new(toolkit)?;
         let data_set = data_set_layout.create_descriptor_set()?;
         data_set.bind_buffer(0, &data_buffer.buffer)?;
 
@@ -102,7 +102,7 @@ impl TerrainIcosphere {
 
         which_to_preload.par_iter().for_each(|x| {
             let geometry = self
-                .load_geometry(&toolkit, x.base_segment, x.level)
+                .load_geometry(toolkit, x.base_segment, x.level)
                 .unwrap();
 
             match x.action {
@@ -121,7 +121,7 @@ impl TerrainIcosphere {
             }
         });
 
-        Ok(if which_to_preload.len() > 0 {
+        Ok(if !which_to_preload.is_empty() {
             PreloadResult::ChangesMade
         } else {
             PreloadResult::NotChanged

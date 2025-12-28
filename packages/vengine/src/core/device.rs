@@ -73,7 +73,7 @@ unsafe extern "system" fn vulkan_debug_callback(
     message_type: DebugUtilsMessageTypeFlagsEXT,
     p_callback_data: *const vk::DebugUtilsMessengerCallbackDataEXT<'_>,
     _user_data: *mut std::os::raw::c_void,
-) -> vk::Bool32 {
+) -> vk::Bool32 { unsafe {
     let callback_data = *p_callback_data;
     let message_id_number = callback_data.message_id_number;
 
@@ -94,7 +94,7 @@ unsafe extern "system" fn vulkan_debug_callback(
     );
 
     vk::FALSE
-}
+}}
 
 impl VEDevice {
     pub fn new(window: &VEWindow) -> Result<VEDevice, VEDeviceError> {

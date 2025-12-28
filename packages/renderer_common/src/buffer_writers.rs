@@ -40,7 +40,7 @@ pub fn write_vec3_zero(ptr: *mut f32, base_offset: isize, data: DVec3) -> isize 
         offset += 1;
         ptr.offset(offset).write(data.z as f32);
         offset += 1;
-        ptr.offset(offset).write(0.0 as f32);
+        ptr.offset(offset).write(0.0_f32);
         offset += 1;
     }
     4

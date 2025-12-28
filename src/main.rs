@@ -1,6 +1,5 @@
 use crate::app::GameWindowApp;
 use crate::global_config::GLOBAL_CONFIG;
-use clap::Parser;
 use core::game::Game;
 use std::fs::File;
 use std::sync::{Arc, Mutex};

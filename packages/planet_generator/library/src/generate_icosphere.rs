@@ -25,7 +25,7 @@ fn subdivide_triangle(tri: &Triangle) -> [Triangle; 4] {
 
 fn subdivide_triangle_multiple(tri: Triangle, count: u8) -> Vec<Triangle> {
     let mut triangles = vec![tri];
-    for i in 0..count {
+    for _i in 0..count {
         let mut tmp: Vec<Triangle> = vec![];
         for t in 0..triangles.len() {
             let cur = subdivide_triangle(&triangles[t]);
@@ -118,7 +118,7 @@ fn write_vector_terrain(
         .write_all(&((n.z * 127.0) as i8).to_le_bytes())
         .expect("Write failed");
     stream
-        .write_all(&((0) as u8).to_le_bytes())
+        .write_all(&0_u8.to_le_bytes())
         .expect("Write failed");
 
     stream
@@ -138,7 +138,7 @@ fn write_vector_terrain(
         .write_all(&(global_index as u16).to_le_bytes())
         .expect("Write failed");
     stream
-        .write_all(&((0) as u16).to_le_bytes())
+        .write_all(&0_u16.to_le_bytes())
         .expect("Write failed");
 }
 
@@ -202,7 +202,7 @@ fn write_vector_water(stream: &mut dyn Write, v: DVec3, global_index: u32) {
         .write_all(&(global_index as u16).to_le_bytes())
         .expect("Write failed");
     stream
-        .write_all(&((0) as u16).to_le_bytes())
+        .write_all(&0_u16.to_le_bytes())
         .expect("Write failed");
 }
 
@@ -293,7 +293,7 @@ impl IcosphereSegmentGenerator {
         let mut vertex_buffer: Cursor<Vec<u8>> = Cursor::new(Vec::new());
 
         for t in subdivided {
-            let t = normalize_triangle(&t);
+            let t = normalize_triangle(t);
             let vec0dir = t[0].normalize();
             let vec1dir = t[1].normalize();
             let vec2dir = t[2].normalize();
@@ -302,8 +302,8 @@ impl IcosphereSegmentGenerator {
             let t_terrain = scale_triangle(&t, height_data);
             let t_terrain = translate_triangle(&t_terrain, -center);
             write_triangle_terrain(
-                &height_data,
-                &biome_data,
+                height_data,
+                biome_data,
                 &mut vertex_buffer,
                 &t_terrain,
                 &directions_triangle,
@@ -331,7 +331,7 @@ impl IcosphereSegmentGenerator {
         let mut vertex_buffer: Cursor<Vec<u8>> = Cursor::new(Vec::new());
 
         for t in subdivided {
-            let t = normalize_triangle(&t);
+            let t = normalize_triangle(t);
             let t_water = scale_triangle(&t, height_data);
             let t_water = translate_triangle(&t_water, -center);
             write_triangle_water(&mut vertex_buffer, &t_water, base_segment as u32);

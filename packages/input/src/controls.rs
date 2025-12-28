@@ -94,7 +94,7 @@ impl Controls {
         }
     }
 
-    pub fn get_active_gamepad(&self) -> Option<Gamepad> {
+    pub fn get_active_gamepad(&self) -> Option<Gamepad<'_>> {
         self.active_gamepad
             .map(|id| self.gamepad_helper.gamepad(id))
     }
@@ -104,7 +104,7 @@ impl Controls {
             ControlEvent::ControlActivate(item) => (item, true),
             ControlEvent::ControlRelease(item) => (item, false),
         };
-        match self.controls_state.get_mut(&item) {
+        match self.controls_state.get_mut(item) {
             None => {
                 self.controls_state.insert(item.clone(), state);
             }

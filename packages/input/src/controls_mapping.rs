@@ -88,6 +88,12 @@ pub struct ControlsMapping {
     control_map: ControlMap,
 }
 
+impl Default for ControlsMapping {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ControlsMapping {
     pub fn new() -> Self {
         Self {
@@ -97,7 +103,7 @@ impl ControlsMapping {
 
     pub fn load(file: &str) -> ControlMap {
         let input_json =
-            fs::read_to_string(file).expect(format!("Failed to to read the {file} file").as_str());
+            fs::read_to_string(file).unwrap_or_else(|_| panic!("Failed to to read the {file} file"));
         serde_json::from_str(&strip_json_line_comments(&input_json)).unwrap()
     }
 

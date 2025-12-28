@@ -62,9 +62,9 @@ fn generate_biomes(
             face.0, cube_map_res
         );
         let mut face_data = face.1.lock().unwrap();
-        let mut height_face_data = face.2.lock().unwrap();
-        for y in (0..cube_map_res) {
-            for x in (0..cube_map_res) {
+        let height_face_data = face.2.lock().unwrap();
+        for y in 0..cube_map_res  {
+            for x in 0..cube_map_res  {
                 let dir = cube_map_biome.pixel_coords_to_direction(&face.0, x as usize, y as usize);
                 let index = (y as usize) * (cube_map_res as usize) + (x as usize);
 
@@ -131,14 +131,14 @@ fn generate_biomes(
 
                 if sum > 0.0 {
                     //  result.dominating_id = (result.dominating_id as f64 / sum) as u32;
-                    result.color = result.color / sum;
-                    result.roughness = result.roughness / sum;
-                    result.erosion_strength = result.erosion_strength / sum;
-                    result.deposition_strength = result.deposition_strength / sum;
+                    result.color /= sum;
+                    result.roughness /= sum;
+                    result.erosion_strength /= sum;
+                    result.deposition_strength /= sum;
 
-                    result.craters_probability = result.craters_probability / sum;
-                    result.min_crater_size = result.min_crater_size / sum;
-                    result.max_crater_size = result.max_crater_size / sum;
+                    result.craters_probability /= sum;
+                    result.min_crater_size /= sum;
+                    result.max_crater_size /= sum;
                 }
 
                 face_data[index] = result;
@@ -187,8 +187,8 @@ fn generate_height(
             face.0, cube_map_res
         );
         let mut face_data = face.1.lock().unwrap();
-        for y in (0..cube_map_res) {
-            for x in (0..cube_map_res) {
+        for y in 0..cube_map_res  {
+            for x in 0..cube_map_res  {
                 let dir =
                     cube_map_height.pixel_coords_to_direction(&face.0, x as usize, y as usize);
                 let value = if terrain.terrain_generation.fbm_iterations == 0 {
@@ -213,7 +213,7 @@ fn generate_height(
 
 pub fn generate_terrain(out_dir: &str, input: &BodyCelestialBodyDefinition) {
     let out_dir = Path::new(out_dir);
-    match fs::remove_dir_all(&out_dir) {
+    match fs::remove_dir_all(out_dir) {
         Ok(_) => {}
         Err(e) => match e.kind() {
             ErrorKind::NotFound => (), // this is fine
@@ -221,15 +221,15 @@ pub fn generate_terrain(out_dir: &str, input: &BodyCelestialBodyDefinition) {
         },
     }
 
-    fs::create_dir_all(&out_dir).unwrap();
+    fs::create_dir_all(out_dir).unwrap();
 
     let terrain = &input.terrain;
-    if (terrain.is_none()) {
+    if terrain.is_none()  {
         return;
     }
     let terrain = terrain.as_ref().unwrap();
 
-    let faces = [
+    let _faces = [
         CubeMapFace::PX,
         CubeMapFace::PY,
         CubeMapFace::PZ,
@@ -256,8 +256,8 @@ pub fn generate_terrain(out_dir: &str, input: &BodyCelestialBodyDefinition) {
         },
     );
 
-    generate_height(&input, &terrain, &cube_map_height);
-    generate_biomes(&input, &terrain, &cube_map_height, &cube_map_biome);
+    generate_height(input, terrain, &cube_map_height);
+    generate_biomes(input, terrain, &cube_map_height, &cube_map_biome);
 
     add_craters(
         &mut cube_map_height,
@@ -278,7 +278,7 @@ pub fn generate_terrain(out_dir: &str, input: &BodyCelestialBodyDefinition) {
     );
 
     // remap biomes after erosion for some more realistic effect
-    generate_biomes(&input, &terrain, &cube_map_height, &cube_map_biome);
+    generate_biomes(input, terrain, &cube_map_height, &cube_map_biome);
 
     // faces.clone().into_par_iter().for_each(|face| {
     //     println!("Saving height face {}, res: {}", face, cube_map_res);
@@ -353,7 +353,7 @@ pub fn generate_water(out_dir: &str, input: &BodyCelestialBodyDefinition) {
     let cube_map_res = generator_config.cube_map_resolution;
 
     let water = &input.water;
-    if (water.is_none()) {
+    if water.is_none()  {
         return;
     }
     let water = water.as_ref().unwrap();

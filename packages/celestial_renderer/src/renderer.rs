@@ -14,17 +14,13 @@ use crate::scene::mesh::Mesh;
 use ash::vk;
 use ash::vk::{AccessFlags, ImageAspectFlags, ImageLayout, PipelineStageFlags};
 use common_util::profile;
-use glam::DVec4;
-use math::decimal_vector_3d::DecimalVector3d;
 use renderer_common::camera::Camera;
 use renderer_common::empty_textures::EMPTY_TEXTURES;
 use renderer_common::errors::RenderingError;
 use renderer_common::resolution_config::ResolutionConfig;
 use std::sync::{Arc, Mutex};
-use std::time::SystemTime;
 use ui_renderer::ui_drawer::UIDrawer;
 use ui_renderer::ui_rendered_item::UIRenderedItem;
-use ui_renderer::ui_system::UISystem;
 use universe_simulation::body_definitions::BodyCelestialBodyDefinition;
 use universe_simulation::simulation::Simulation;
 use vengine_rs::core::command_buffer::VECommandBuffer;
@@ -74,12 +70,12 @@ impl Renderer {
 
         let common_buffer = CommonBuffer::new(&toolkit).expect("Failed to create CommonBuffer");
 
-        let mut g_buffer = GBuffer::new(&config, &toolkit).expect("Failed to create G-Buffer");
-        let mesh_drawer = MeshDrawer::new(&config, &toolkit, &mut g_buffer, &common_buffer)
+        let mut g_buffer = GBuffer::new(config, &toolkit).expect("Failed to create G-Buffer");
+        let mesh_drawer = MeshDrawer::new(config, &toolkit, &mut g_buffer, &common_buffer)
             .expect("Failed to create MeshDrawer");
 
         let icosphere_drawer =
-            IcosphereDrawer::new(&toolkit, &config, &mut g_buffer, &common_buffer)
+            IcosphereDrawer::new(&toolkit, config, &mut g_buffer, &common_buffer)
                 .expect("Failed to create TerrainIcosphereDrawer");
 
         let mut cloud_generator_low_freq =
@@ -88,7 +84,7 @@ impl Renderer {
             CloudGeneratorHighFreq::new(&toolkit).expect("Failed to create CloudGeneratorHighFreq");
 
         let mut atmosphere_drawer = AtmosphereDrawer::new(
-            &config,
+            config,
             &toolkit,
             &common_buffer,
             &mut cloud_generator_low_freq.low_freq_data_r,
@@ -98,7 +94,7 @@ impl Renderer {
         .expect("Failed to create AtmosphereDrawer");
 
         let mut multi_merger = MultiMerger::new(
-            &config,
+            config,
             &toolkit,
             &mut atmosphere_drawer.out_additive_rgb,
             &mut atmosphere_drawer.out_alpha_rgba,
@@ -106,7 +102,7 @@ impl Renderer {
         .expect("Failed to create MultiMerger");
 
         let output = Output::new(
-            &config,
+            config,
             &mut multi_merger,
             &mut ui_drawer.lock().unwrap(),
             &toolkit,
@@ -413,7 +409,7 @@ impl Renderer {
         celestial_hierarchy: &mut CelestialHierarchy,
         camera: &Camera,
         total_time: f64,
-        delta_time: f64,
+        _delta_time: f64,
     ) -> Result<(), RenderingError> {
         profile!("common_buffer update", {
             self.common_buffer
@@ -518,12 +514,12 @@ impl Renderer {
         geometry: VEVertexBuffer,
         material: Material,
     ) -> Result<Mesh, RenderingError> {
-        Ok(Mesh::new(
+        Mesh::new(
             &self.toolkit,
             &mut self.mesh_drawer.mesh_set_layout,
             geometry,
             material,
-        )?)
+        )
     }
 
     pub fn add_hierarchy_to_universe_simulation(
@@ -531,6 +527,6 @@ impl Renderer {
         simulation: &mut Simulation,
         body: &BodyCelestialBodyDefinition,
     ) -> Result<i32, RenderingError> {
-        Ok(simulation.add_hierarchy(&self.config, body, None)?)
+        simulation.add_hierarchy(&self.config, body, None)
     }
 }

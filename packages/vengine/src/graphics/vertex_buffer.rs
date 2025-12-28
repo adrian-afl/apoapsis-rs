@@ -56,12 +56,12 @@ impl VEVertexBuffer {
     ) -> Result<VEVertexBuffer, VEVertexBufferError> {
         let vertex_size_bytes: u32 = vertex_attributes
             .iter()
-            .map(|a| get_vertex_attribute_type_byte_size(a))
+            .map(get_vertex_attribute_type_byte_size)
             .sum();
 
         let input_size = data.len() as u32;
 
-        if input_size % vertex_size_bytes != 0 {
+        if !input_size.is_multiple_of(vertex_size_bytes) {
             return Err(VEVertexBufferError::VertexSizeMismatch);
         }
 
@@ -109,7 +109,7 @@ impl VEVertexBuffer {
     ) -> Result<VEVertexBuffer, VEVertexBufferError> {
         let vertex_size_bytes: u32 = vertex_attributes
             .iter()
-            .map(|a| get_vertex_attribute_type_byte_size(a))
+            .map(get_vertex_attribute_type_byte_size)
             .sum();
 
         let mut file = File::open(path).map_err(VEVertexBufferError::OpeningFileFailed)?;
@@ -118,7 +118,7 @@ impl VEVertexBuffer {
             .map_err(VEVertexBufferError::GettingFileMetadataFailed)?;
         let file_size = metadata.len() as u32;
 
-        if file_size % vertex_size_bytes != 0 {
+        if !file_size.is_multiple_of(vertex_size_bytes) {
             return Err(VEVertexBufferError::VertexSizeMismatch);
         }
 
@@ -146,8 +146,8 @@ impl VEVertexBuffer {
 
         unsafe {
             let mem = staging_buffer.map()? as *mut u8;
-            let mut slice = std::slice::from_raw_parts_mut(mem, file_size as usize);
-            file.read_exact(&mut slice)
+            let slice = std::slice::from_raw_parts_mut(mem, file_size as usize);
+            file.read_exact(slice)
                 .map_err(VEVertexBufferError::ReadingFileFailed)?;
             // staging_buffer.unmap()?;
         }

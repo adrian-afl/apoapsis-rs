@@ -1,5 +1,4 @@
-use glam::DVec4;
-use renderer_common::buffer_writers::{write_float, write_int, write_vec4};
+use renderer_common::buffer_writers::write_float;
 use renderer_common::errors::RenderingError;
 use vengine_rs::buffer::buffer::{VEBuffer, VEBufferUsage};
 use vengine_rs::core::command_buffer::VECommandBuffer;

@@ -48,12 +48,13 @@ impl VEDescriptorSet {
             .image_view(view)
             .sampler(sampler.handle)
             .image_layout(image.current_layout)];
-        Ok(self.write(
+        self.write(
             vk::WriteDescriptorSet::default()
                 .dst_binding(binding)
                 .descriptor_type(vk::DescriptorType::COMBINED_IMAGE_SAMPLER)
                 .image_info(&infos),
-        ))
+        );
+        Ok(())
     }
 
     pub fn bind_image_storage(
@@ -65,12 +66,13 @@ impl VEDescriptorSet {
         let infos = [vk::DescriptorImageInfo::default()
             .image_view(view)
             .image_layout(image.current_layout)];
-        Ok(self.write(
+        self.write(
             vk::WriteDescriptorSet::default()
                 .dst_binding(binding)
                 .descriptor_type(vk::DescriptorType::STORAGE_IMAGE)
                 .image_info(&infos),
-        ))
+        );
+        Ok(())
     }
 
     pub fn bind_buffer(&self, binding: u32, buffer: &VEBuffer) -> Result<(), VEDescriptorSetError> {
@@ -87,12 +89,13 @@ impl VEDescriptorSet {
         } else {
             Err(VEDescriptorSetError::InvalidBufferType)
         }?;
-        Ok(self.write(
+        self.write(
             vk::WriteDescriptorSet::default()
                 .dst_binding(binding)
                 .descriptor_type(typ)
                 .buffer_info(&infos),
-        ))
+        );
+        Ok(())
     }
 
     fn write(&self, write: vk::WriteDescriptorSet) {

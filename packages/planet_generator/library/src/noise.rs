@@ -2,7 +2,6 @@ use crate::math_util::map;
 use crate::random::random_3d_to_1d;
 use glam::DVec3;
 use rayon::prelude::*;
-use std::sync::atomic::{AtomicI64, Ordering};
 
 fn mix(a: f64, b: f64, m: f64) -> f64 {
     a * (1.0 - m) + b * m
@@ -49,9 +48,9 @@ pub fn value_noise(x: DVec3) -> f64 {
     let l2candidate1 = mix(l1candidate1, l1candidate2, fr.y);
     let l2candidate2 = mix(l1candidate3, l1candidate4, fr.y);
 
-    let l3candidate1 = mix(l2candidate1, l2candidate2, fr.z);
+    
 
-    l3candidate1
+    mix(l2candidate1, l2candidate2, fr.z)
 }
 
 pub fn super_value_noise(x: DVec3) -> f64 {
@@ -63,7 +62,7 @@ pub fn fbm(pos: DVec3, iterations: u8, scaler: f64, weighter: f64) -> f64 {
     let mut w = 1.0;
     let mut ws = 0.0;
     let mut s = 1.0;
-    for i in 0..iterations {
+    for _i in 0..iterations {
         res += super_value_noise((pos + 2.0) * s) * w;
         ws += w;
         s *= scaler;

@@ -52,11 +52,11 @@ impl App for GameWindowApp {
                 WindowEvent::CursorEntered { .. } => {}
                 WindowEvent::CursorLeft { .. } => {}
                 WindowEvent::MouseWheel { delta, .. } => match delta {
-                    MouseScrollDelta::LineDelta(x, y) => {
+                    MouseScrollDelta::LineDelta(_x, y) => {
                         // println!("Ecentr 1, x{}, y{}", x, y);
                         controls.mouse.on_mouse_scroll(y as f64)
                     }
-                    MouseScrollDelta::PixelDelta(delta) => {
+                    MouseScrollDelta::PixelDelta(_delta) => {
                         // println!("Ecentr 2, x{}, y{}", delta.x, delta.y);
                     }
                 },
@@ -81,10 +81,10 @@ impl App for GameWindowApp {
                     .mouse
                     .on_mouse_move_anywhere(DVec2::new(delta.0, delta.1)),
                 DeviceEvent::MouseWheel { delta, .. } => match delta {
-                    MouseScrollDelta::LineDelta(x, y) => {
+                    MouseScrollDelta::LineDelta(_x, _y) => {
                         // println!("Ecentr 3, x{}, y{}", x, y);
                     }
-                    MouseScrollDelta::PixelDelta(px) => {
+                    MouseScrollDelta::PixelDelta(_px) => {
                         // println!("Ecentr 4, x{}, y{}", px.x, px.y);
                     }
                 },

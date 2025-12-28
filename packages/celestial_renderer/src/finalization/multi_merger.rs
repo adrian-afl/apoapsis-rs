@@ -9,7 +9,7 @@ use vengine_rs::core::descriptor_set_layout::{
     VEDescriptorSetLayoutField,
 };
 use vengine_rs::core::device::VEDevice;
-use vengine_rs::core::memory_barrier::{submit_barriers, VEImageMemoryBarrier, VEMemoryBarrier};
+use vengine_rs::core::memory_barrier::{submit_barriers, VEImageMemoryBarrier};
 use vengine_rs::core::shader_module::VEShaderModuleType;
 use vengine_rs::core::toolkit::VEToolkit;
 use vengine_rs::image::image::{VEImage, VEImageUsage, VEImageViewCreateInfo};
@@ -112,9 +112,9 @@ impl MultiMerger {
     ) {
         self.compute_stage.bind(command_buffer);
         self.compute_stage
-            .set_descriptor_set(&command_buffer, 0, &self.data_set);
+            .set_descriptor_set(command_buffer, 0, &self.data_set);
         self.compute_stage.dispatch(
-            &command_buffer,
+            command_buffer,
             config.width / WORKGROUP_SIZE,
             config.height / WORKGROUP_SIZE,
             1,
@@ -131,7 +131,7 @@ impl MultiMerger {
 
         submit_barriers(
             device,
-            &command_buffer,
+            command_buffer,
             PipelineStageFlags::COMPUTE_SHADER,
             PipelineStageFlags::COMPUTE_SHADER,
             &[],

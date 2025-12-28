@@ -8,8 +8,6 @@ mod save_binary_maps;
 use crate::cli_args::CLIArgs;
 use crate::generate_terrain::{generate_terrain, generate_water};
 use clap::Parser;
-use std::hash::{Hash, Hasher};
-use std::ops::Deref;
 use std::path::PathBuf;
 use std::time::Instant;
 use universe_simulation::body_definitions::load_body_data;

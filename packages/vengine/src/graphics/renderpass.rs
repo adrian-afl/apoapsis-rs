@@ -20,7 +20,7 @@ impl VERenderPass {
         attachments: &[&VEAttachment],
     ) -> Result<VERenderPass, VERenderPassError> {
         let color_attas: Vec<&&VEAttachment> = attachments.iter().filter(|x| !x.is_depth).collect();
-        let depth_atta = attachments.iter().filter(|x| x.is_depth).last();
+        let depth_atta = attachments.iter().rfind(|x| x.is_depth);
 
         let color_references: Vec<vk::AttachmentReference> = (0..color_attas.len())
             .map(|i| Self::create_subpass_attachment_reference(i as i32, false))
@@ -28,10 +28,7 @@ impl VERenderPass {
 
         let depth_reference_maybe =
             Self::create_subpass_attachment_reference(color_attas.len() as i32, true);
-        let depth_reference = match depth_atta {
-            None => None,
-            Some(_) => Some(&depth_reference_maybe), // depth last
-        };
+        let depth_reference = depth_atta.map(|_| &depth_reference_maybe);
 
         let subpass = Self::create_subpass(&color_references, depth_reference);
         let subpasses = [subpass];
@@ -53,7 +50,7 @@ impl VERenderPass {
         depth_reference: Option<&'a vk::AttachmentReference>,
     ) -> vk::SubpassDescription<'a> {
         let mut description =
-            vk::SubpassDescription::default().color_attachments(&color_references);
+            vk::SubpassDescription::default().color_attachments(color_references);
         match depth_reference {
             None => (),
             Some(reference) => description = description.depth_stencil_attachment(reference),

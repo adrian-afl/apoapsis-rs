@@ -24,7 +24,7 @@ pub struct OnRemoteGameModeInitializedEvent {
 
 impl RemoteGameMode {
     pub fn new() -> Self {
-        let mut ecs = ECSWorld::new();
+        let ecs = ECSWorld::new();
 
         send_event!(
             "on_remote_game_mode_initialized",

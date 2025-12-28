@@ -7,7 +7,7 @@ use vengine_rs::image::image::VEImageUsage;
 use vengine_rs::image::image_format::VEImageFormat;
 
 use ecs::components::ui::ui_text_component::UIFontSize;
-use embedded_graphics::mono_font::ascii::{FONT_10X20, FONT_4X6, FONT_5X7, FONT_6X10, FONT_7X14};
+use embedded_graphics::mono_font::ascii::{FONT_10X20, FONT_5X7, FONT_6X10};
 
 impl FontAtlas {
     pub fn new_pixel_perfect(
@@ -23,7 +23,7 @@ impl FontAtlas {
 
         let mut generated = vec![];
         for c in supported_chars.chars() {
-            generated.push(GeneratedChar::generate_pixel_perfect(&font, c));
+            generated.push(GeneratedChar::generate_pixel_perfect(font, c));
         }
         let width_sum: usize = generated.iter().map(|e| e.metrics.width + 5).sum();
         let height_max = generated.iter().map(|e| e.metrics.height).max().unwrap();

@@ -46,7 +46,7 @@ pub fn add_craters(
         };
 
         (0..distance_steps).into_par_iter().for_each(|d_step| {
-            let d = (d_step as f64) * pixel_size;
+            let _d = (d_step as f64) * pixel_size;
             let percentage = d_step as f64 / distance_steps as f64;
 
             let depth = if percentage > 0.6 {

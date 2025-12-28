@@ -1,8 +1,5 @@
 use crate::component_trait::{AttachedComponents, ComponentTrait};
-use crate::ecs_world::ECSWorld;
 use serde::{Deserialize, Serialize};
-use std::any::Any;
-use std::ops::{Deref, Index, IndexMut};
 use std::sync::atomic::{AtomicU64, Ordering};
 use ts_rs::TS;
 

@@ -15,14 +15,14 @@ fn get_image_usage_flags(usages: &[VEImageUsage]) -> vk::ImageUsageFlags {
     let mut flags = vk::ImageUsageFlags::empty();
     for usage in usages {
         match usage {
-            VEImageUsage::ColorAttachment => flags = flags | vk::ImageUsageFlags::COLOR_ATTACHMENT,
+            VEImageUsage::ColorAttachment => flags |= vk::ImageUsageFlags::COLOR_ATTACHMENT,
             VEImageUsage::DepthAttachment => {
-                flags = flags | vk::ImageUsageFlags::DEPTH_STENCIL_ATTACHMENT
+                flags |= vk::ImageUsageFlags::DEPTH_STENCIL_ATTACHMENT
             }
-            VEImageUsage::Sampled => flags = flags | vk::ImageUsageFlags::SAMPLED,
-            VEImageUsage::Storage => flags = flags | vk::ImageUsageFlags::STORAGE,
-            VEImageUsage::TransferDestination => flags = flags | vk::ImageUsageFlags::TRANSFER_DST,
-            VEImageUsage::TransferSource => flags = flags | vk::ImageUsageFlags::TRANSFER_SRC,
+            VEImageUsage::Sampled => flags |= vk::ImageUsageFlags::SAMPLED,
+            VEImageUsage::Storage => flags |= vk::ImageUsageFlags::STORAGE,
+            VEImageUsage::TransferDestination => flags |= vk::ImageUsageFlags::TRANSFER_DST,
+            VEImageUsage::TransferSource => flags |= vk::ImageUsageFlags::TRANSFER_SRC,
         }
     }
     flags

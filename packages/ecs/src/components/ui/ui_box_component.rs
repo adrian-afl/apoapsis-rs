@@ -1,6 +1,5 @@
 use crate::component_trait::acquire_next_id;
-use glam::{DQuat, DVec2, DVec3};
-use math::decimal_vector_3d::DecimalVector3d;
+use glam::DVec2;
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 

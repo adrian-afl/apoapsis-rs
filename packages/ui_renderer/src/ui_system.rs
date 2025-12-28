@@ -1,18 +1,14 @@
 use crate::ui_drawer::UIDrawer;
 use crate::ui_rendered_item::UIRenderedItem;
 use ecs::component_trait::Components;
-use ecs::components::ui::cursor_type::UICursorType;
-use ecs::components::ui::ui_text_component::UIFontSize;
 use ecs::ecs_world::ECSWorld;
 use glam::{DVec2, DVec4};
-use rayon::iter::IntoParallelRefIterator;
 use rayon::iter::ParallelIterator;
 use renderer_common::errors::RenderingError;
 use renderer_common::resolution_config::ResolutionConfig;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, RwLock};
 use thiserror::Error;
-use vengine_rs::core::command_buffer::VECommandBuffer;
 use vengine_rs::core::toolkit::VEToolkit;
 use vengine_rs::image::image::VEImageUsage;
 
@@ -33,7 +29,7 @@ pub enum UIRendererError {
 
 impl UISystem {
     pub fn new(toolkit: Arc<VEToolkit>, config: &ResolutionConfig) -> Self {
-        let mut ui_drawer = UIDrawer::new(&config, &toolkit).expect("Failed to create UIDrawer");
+        let mut ui_drawer = UIDrawer::new(config, &toolkit).expect("Failed to create UIDrawer");
         ui_drawer.update_buffer().unwrap();
         Self {
             config: config.clone(),
@@ -101,15 +97,14 @@ impl UISystem {
                 item.color = DVec4::new(1.0, 1.0, 1.0, 1.0);
             }
 
-            if let Some(color) = &entity.components.ui_hover_color {
-                if cursor_pos.x >= uibox.position.x
+            if let Some(color) = &entity.components.ui_hover_color
+                && cursor_pos.x >= uibox.position.x
                     && cursor_pos.y >= uibox.position.y
                     && cursor_pos.x <= uibox.position.x + uibox.size.x
                     && cursor_pos.y <= uibox.position.y + uibox.size.y
                 {
                     item.color = color.color;
                 }
-            }
 
             if let Some(text) = &entity.components.ui_text {
                 item.text = text.content.clone();

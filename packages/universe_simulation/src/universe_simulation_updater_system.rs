@@ -4,6 +4,12 @@ use ecs::ecs_world::ECSWorld;
 
 pub struct UniverseSimulationUpdaterSystem {}
 
+impl Default for UniverseSimulationUpdaterSystem {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl UniverseSimulationUpdaterSystem {
     pub fn new() -> Self {
         Self {}
@@ -35,7 +41,7 @@ impl UniverseSimulationUpdaterSystem {
 
         let clock = clock_entity.components.universe_clock.as_mut().unwrap();
 
-        simulation.update(&camera_position, &clock.time);
+        simulation.update(camera_position, &clock.time);
 
         clock.advance(delta_time);
     }

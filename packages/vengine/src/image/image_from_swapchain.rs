@@ -3,7 +3,6 @@ use crate::core::command_pool::VECommandPool;
 use crate::core::device::VEDevice;
 use crate::core::main_device_queue::VEMainDeviceQueue;
 use crate::image::image::{VEImage, VEImageError};
-use crate::window::swapchain::VESwapchainError::ImageError;
 use ash::vk;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};

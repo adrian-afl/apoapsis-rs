@@ -1,7 +1,6 @@
 use crate::component_trait::acquire_next_id;
 use dashu_float::DBig;
 use glam::DVec3;
-use math::decimal_vector_3d::DecimalVector3d;
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 

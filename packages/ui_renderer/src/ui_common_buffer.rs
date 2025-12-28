@@ -1,5 +1,5 @@
 use crate::font_atlas_generator::common::{CharPositionArrayItem, FontAtlas};
-use renderer_common::buffer_writers::{write_float, write_mat4, write_vec2, write_vec3_zero};
+use renderer_common::buffer_writers::write_float;
 use renderer_common::errors::RenderingError;
 use renderer_common::resolution_config::ResolutionConfig;
 use vengine_rs::buffer::buffer::{VEBuffer, VEBufferUsage};
@@ -58,7 +58,7 @@ impl UICommonBuffer {
         for atlas in atlases {
             for i in 0..255 {
                 let c = atlas.letters_array.get(i);
-                let c = c.unwrap_or_else(|| &CharPositionArrayItem {
+                let c = c.unwrap_or(&CharPositionArrayItem {
                     c: ' ', // in vec4:
                     x: 0,   // x
                     y: 0,   // y

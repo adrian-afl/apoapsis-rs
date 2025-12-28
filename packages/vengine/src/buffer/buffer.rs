@@ -61,13 +61,13 @@ fn get_buffer_usage_flags(usages: &[VEBufferUsage]) -> vk::BufferUsageFlags {
     let mut flags = vk::BufferUsageFlags::empty();
     for usage in usages {
         match usage {
-            VEBufferUsage::Uniform => flags = flags | vk::BufferUsageFlags::UNIFORM_BUFFER,
-            VEBufferUsage::Storage => flags = flags | vk::BufferUsageFlags::STORAGE_BUFFER,
-            VEBufferUsage::TransferSource => flags = flags | vk::BufferUsageFlags::TRANSFER_SRC,
+            VEBufferUsage::Uniform => flags |= vk::BufferUsageFlags::UNIFORM_BUFFER,
+            VEBufferUsage::Storage => flags |= vk::BufferUsageFlags::STORAGE_BUFFER,
+            VEBufferUsage::TransferSource => flags |= vk::BufferUsageFlags::TRANSFER_SRC,
             VEBufferUsage::TransferDestination => {
-                flags = flags | vk::BufferUsageFlags::TRANSFER_DST
+                flags |= vk::BufferUsageFlags::TRANSFER_DST
             }
-            VEBufferUsage::Vertex => flags = flags | vk::BufferUsageFlags::VERTEX_BUFFER,
+            VEBufferUsage::Vertex => flags |= vk::BufferUsageFlags::VERTEX_BUFFER,
         }
     }
     flags
@@ -191,10 +191,7 @@ impl Drop for VEBuffer {
     fn drop(&mut self) {
         let locking_result = self.memory_manager.lock();
         match locking_result {
-            Ok(mut mem) => match { mem.free_allocation(&self.allocation) } {
-                Ok(_) => (),
-                Err(_) => {}
-            },
+            Ok(mut mem) => if { mem.free_allocation(&self.allocation) }.is_ok() {  },
             Err(_) => {
                 panic!("Locking memory manager failed")
             }

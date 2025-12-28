@@ -157,7 +157,7 @@ pub fn create_vertex_input_state_descriptions(
 > {
     let stride: u32 = attribs
         .iter()
-        .map(|a| get_vertex_attribute_type_byte_size(a))
+        .map(get_vertex_attribute_type_byte_size)
         .sum();
 
     // if (stride % 4 != 0) {

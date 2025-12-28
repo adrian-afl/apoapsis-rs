@@ -20,13 +20,19 @@ pub struct Camera {
     pub directions: QuatDirections,
 }
 
+impl Default for Camera {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Camera {
     pub fn new() -> Camera {
         Camera {
-            projection_matrix: DMat4::IDENTITY.clone(),
-            view_matrix: DMat4::IDENTITY.clone(),
+            projection_matrix: DMat4::IDENTITY,
+            view_matrix: DMat4::IDENTITY,
             position: DecimalVector3d::zero(),
-            orientation: DQuat::IDENTITY.clone(),
+            orientation: DQuat::IDENTITY,
             frustum_cone: FrustumCone {
                 bottom_left: DVec3::new(0.0, 0.0, -1.0),
                 bottom_right: DVec3::new(0.0, 0.0, -1.0),
@@ -87,7 +93,7 @@ impl Camera {
     }
 
     fn get_directions(&self) -> QuatDirections {
-        let inverse = self.orientation.clone().inverse();
+        let inverse = self.orientation.inverse();
         get_quat_directions(inverse)
     }
 }

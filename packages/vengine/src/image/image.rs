@@ -170,7 +170,7 @@ impl VEImage {
     pub fn get_view(&mut self, info: VEImageViewCreateInfo) -> Result<vk::ImageView, VEImageError> {
         let existing = self.views.get(&info);
         match existing {
-            Some(view) => Ok(view.clone()),
+            Some(view) => Ok(*view),
             None => {
                 let image_view_create_info = vk::ImageViewCreateInfo::default()
                     .image(self.handle)
@@ -206,7 +206,7 @@ impl VEImage {
                         .map_err(VEImageError::ImageViewCreationFailed)?
                 };
 
-                self.views.insert(info, image_view_handle.clone());
+                self.views.insert(info, image_view_handle);
                 Ok(image_view_handle)
             }
         }
@@ -215,7 +215,7 @@ impl VEImage {
 
 impl Drop for VEImage {
     fn drop(&mut self) {
-        if let Some(_) = self.allocation {
+        if self.allocation.is_some() {
             // only free the ones that app allocated, not swapchain, for example
             // probably this should be handled differently
             unsafe {

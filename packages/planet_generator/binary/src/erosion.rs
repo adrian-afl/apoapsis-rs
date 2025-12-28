@@ -85,7 +85,7 @@ pub fn erosion_run(
     );
     let finished_iters = Arc::new(Mutex::from(0_i32));
     (0..iterations).into_par_iter().for_each(|iteration| {
-        for droplet_num in (0..droplets_per_iteration) {
+        for droplet_num in 0..droplets_per_iteration  {
             let mut droplet = ErosionDroplet {
                 position: sphere_radius
                     * (random_2d_to_3d(DVec2::new(iteration as f64, droplet_num as f64)) * 2.0
@@ -97,8 +97,8 @@ pub fn erosion_run(
             };
 
             while droplet.water_left > 0.0 {
-                let smooth_normal = droplet.position.clone().normalize();
-                let surface_normal = get_surface_normal(&cube_map_height, smooth_normal);
+                let smooth_normal = droplet.position.normalize();
+                let surface_normal = get_surface_normal(cube_map_height, smooth_normal);
 
                 let slope = 1.0 - surface_normal.dot(smooth_normal).max(0.0).powf(88.0);
 
@@ -136,7 +136,7 @@ pub fn erosion_run(
 
                 evaporate_droplet(&mut droplet, erosion_droplet_evaporation_coefficient);
 
-                if (droplet.velocity.length() < 0.01) {
+                if droplet.velocity.length() < 0.01  {
                     cube_map_height.add(smooth_normal, droplet.accumulation);
                     break;
                 }

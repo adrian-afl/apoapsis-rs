@@ -5,7 +5,6 @@ use celestial_renderer::rendering_system::RenderingSystem;
 use common_util::profile;
 use ecs::components::ui::cursor_type::UICursorType;
 use ecs::components::ui::ui_text_component::UIFontSize;
-use ecs::ecs_world::ECSWorld;
 use glam::DVec2;
 use input::controls::{ControlEvent, Controls};
 use input::controls_mapping::ControlMapItem;
@@ -162,7 +161,7 @@ impl Game {
 
     pub fn update(&mut self) {
         profile!("before update", {
-            &mut self.remote_game_mode.ecs.time_counter.update_time();
+            self.remote_game_mode.ecs.time_counter.update_time();
             if let Some(ref mut controls) = self.controls {
                 controls.update_gamepad_helper();
 
@@ -267,7 +266,7 @@ impl Game {
                     stage_ecs,
                     &self.universe_simulation,
                     &self.current_camera,
-                    &ui_system,
+                    ui_system,
                     stage_ecs.time_counter.total_time,
                     stage_ecs.time_counter.delta_time,
                 );

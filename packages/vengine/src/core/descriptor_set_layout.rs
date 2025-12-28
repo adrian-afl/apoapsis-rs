@@ -96,7 +96,7 @@ impl VEDescriptorSetLayout {
     }
 
     pub fn create_descriptor_set(&mut self) -> Result<VEDescriptorSet, VEDescriptorSetLayoutError> {
-        if self.pools.len() == 0 {
+        if self.pools.is_empty() {
             self.generate_new_set_pool()?;
         } else {
             self.allocation_counter += 1;
@@ -108,7 +108,7 @@ impl VEDescriptorSetLayout {
         let pool = self
             .pools
             .last()
-            .ok_or_else(|| VEDescriptorSetLayoutError::NoPoolFound)?;
+            .ok_or(VEDescriptorSetLayoutError::NoPoolFound)?;
         VEDescriptorSet::new(self.device.clone(), self.layout, pool)
             .map_err(VEDescriptorSetLayoutError::DescriptorSetCreationFailed)
     }

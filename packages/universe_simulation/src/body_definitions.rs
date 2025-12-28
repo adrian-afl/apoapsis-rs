@@ -187,7 +187,7 @@ fn parse_body_data(str: &str) -> BodyCelestialBodyDefinition {
 pub fn load_body_data(path: &str) -> BodyCelestialBodyDefinition {
     println!("Loading body from path {}", path);
     let input_json =
-        fs::read_to_string(path).expect(&format!("Failed to to read the input file {}", path));
+        fs::read_to_string(path).unwrap_or_else(|_| panic!("Failed to to read the input file {}", path));
     let mut data = parse_body_data(&input_json);
     for path in &data.dynamics.satellite_paths {
         data.dynamics.satellites.push(load_body_data(path.as_str()));

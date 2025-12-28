@@ -30,7 +30,7 @@ impl VEComputeStage {
         set_layouts: &[&VEDescriptorSetLayout],
         shader: &VEShaderModule,
     ) -> Result<VEComputeStage, VEComputeStageError> {
-        let pipeline = VEComputePipeline::new(device.clone(), set_layouts, &shader)?;
+        let pipeline = VEComputePipeline::new(device.clone(), set_layouts, shader)?;
         Ok(VEComputeStage {
             device: device.clone(),
             pipeline: Arc::new(pipeline),

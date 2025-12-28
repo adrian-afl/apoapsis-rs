@@ -1,6 +1,5 @@
 use crate::atmosphere::atmosphere_drawer::AtmosphereDrawer;
 use crate::buffers::celestial_body_buffer::CelestialBodyBuffer;
-use crate::buffers::terrain_icosphere_data_buffer::TerrainIcosphereDataBuffer;
 use crate::geometry::common_icosphere::ICO_LEVEL_SUBDIVISIONS;
 use crate::geometry::icosphere_drawer::IcosphereDrawer;
 use crate::geometry::terrain_icosphere::{TerrainData, TerrainIcosphere};
@@ -14,14 +13,12 @@ use planet_generator_library::generate_icosphere::{
 };
 use rayon::iter::ParallelIterator;
 use rayon::join;
-use rayon::prelude::{IntoParallelRefIterator, IntoParallelRefMutIterator};
 use renderer_common::errors::RenderingError;
 use std::collections::HashMap;
-use std::sync::{Arc, RwLock};
+use std::sync::Arc;
 use universe_simulation::body_definitions::BodyCelestialBodyDefinition;
 use universe_simulation::simulation::Simulation;
 use vengine_rs::core::descriptor_set::VEDescriptorSet;
-use vengine_rs::core::descriptor_set_layout::VEDescriptorSetLayout;
 use vengine_rs::core::toolkit::VEToolkit;
 
 pub struct RenderedBody {
@@ -62,9 +59,9 @@ impl CelestialHierarchy {
         icosphere_drawer: &mut IcosphereDrawer,
         atmosphere_drawer: &mut AtmosphereDrawer,
     ) -> Result<(), RenderingError> {
-        let mut closest_hierarchy = universe_simulation.find_closest_hierarchy(&camera_position);
+        let closest_hierarchy = universe_simulation.find_closest_hierarchy(camera_position);
 
-        let closest_star = universe_simulation.find_closest_static(&camera_position);
+        let closest_star = universe_simulation.find_closest_static(camera_position);
 
         let mut found_names = vec![];
         for closest_hierarchy_body in closest_hierarchy {
@@ -142,7 +139,7 @@ impl CelestialHierarchy {
                             // println!("{:?}", closest_star.body);
                             body.celestial_body_buffer
                                 .update(
-                                    &camera_position,
+                                    camera_position,
                                     &closest_star.position,
                                     match &closest_star.body.star_emission {
                                         None => DVec3::new(0.0, 0.0, 0.0),
@@ -152,7 +149,7 @@ impl CelestialHierarchy {
                                         None => DVec3::new(0.0, 0.0, 0.0),
                                         Some(radiance) => radiance.radiance,
                                     },
-                                    &closest_hierarchy_body,
+                                    closest_hierarchy_body,
                                 )
                                 .unwrap();
                         });
@@ -164,8 +161,8 @@ impl CelestialHierarchy {
                                     if let Some(icosphere) = &mut body.terrain_icosphere {
                                         icosphere
                                             .update_buffer(
-                                                &camera_position,
-                                                &closest_hierarchy_body,
+                                                camera_position,
+                                                closest_hierarchy_body,
                                             )
                                             .unwrap();
                                     }
@@ -176,8 +173,8 @@ impl CelestialHierarchy {
                                     if let Some(icosphere) = &mut body.water_icosphere {
                                         icosphere
                                             .update_buffer(
-                                                &camera_position,
-                                                &closest_hierarchy_body,
+                                                camera_position,
+                                                closest_hierarchy_body,
                                             )
                                             .unwrap();
                                     }
@@ -190,7 +187,7 @@ impl CelestialHierarchy {
         }
 
         // AMAZING finally it looks better, hope it works
-        self.rendered_bodies.retain(|k, _| found_names.contains(&k));
+        self.rendered_bodies.retain(|k, _| found_names.contains(k));
 
         Ok(())
     }

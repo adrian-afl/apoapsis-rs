@@ -107,7 +107,7 @@ impl IcosphereDrawer {
             None,
         )?;
 
-        let mut data_set_layout =
+        let data_set_layout =
             toolkit.create_descriptor_set_layout(&[VEDescriptorSetLayoutField {
                 // data buffer
                 binding: 0,

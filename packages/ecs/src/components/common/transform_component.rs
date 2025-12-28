@@ -14,12 +14,18 @@ pub struct TransformComponent {
     pub scale: DVec3,
 }
 
+impl Default for TransformComponent {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl TransformComponent {
     pub fn new() -> TransformComponent {
         TransformComponent {
             id: acquire_next_id(),
             position: DecimalVector3d::zero(),
-            orientation: DQuat::IDENTITY.clone(),
+            orientation: DQuat::IDENTITY,
             scale: DVec3::new(1.0, 1.0, 1.0),
         }
     }
@@ -28,7 +34,7 @@ impl TransformComponent {
         TransformComponent {
             id: acquire_next_id(),
             position,
-            orientation: DQuat::IDENTITY.clone(),
+            orientation: DQuat::IDENTITY,
             scale: DVec3::new(1.0, 1.0, 1.0),
         }
     }

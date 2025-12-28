@@ -60,7 +60,7 @@ impl WaterIcosphere {
         data_set_layout: &mut VEDescriptorSetLayout,
     ) -> Result<WaterIcosphere, RenderingError> {
         let metadata = generate_icosphere_metadata(&base_icosphere, water_data.radius);
-        let part_matrices = vec![DMat4::IDENTITY.clone(); metadata.len()];
+        let part_matrices = vec![DMat4::IDENTITY; metadata.len()];
         let maps_resolutions = get_water_maps_resolution(&water_data.dir_path);
         let loaded_data = LoadedWaterData {
             radius: water_data.radius,
@@ -74,7 +74,7 @@ impl WaterIcosphere {
             ),
         };
 
-        let data_buffer = WaterIcosphereDataBuffer::new(&toolkit)?;
+        let data_buffer = WaterIcosphereDataBuffer::new(toolkit)?;
         let data_set = data_set_layout.create_descriptor_set()?;
         data_set.bind_buffer(0, &data_buffer.buffer)?;
 
@@ -102,7 +102,7 @@ impl WaterIcosphere {
 
         which_to_preload.par_iter().for_each(|x| {
             let geometry = self
-                .load_geometry(&toolkit, x.base_segment, x.level)
+                .load_geometry(toolkit, x.base_segment, x.level)
                 .unwrap();
 
             match x.action {
@@ -121,7 +121,7 @@ impl WaterIcosphere {
             }
         });
 
-        Ok(if which_to_preload.len() > 0 {
+        Ok(if !which_to_preload.is_empty() {
             PreloadResult::ChangesMade
         } else {
             PreloadResult::NotChanged

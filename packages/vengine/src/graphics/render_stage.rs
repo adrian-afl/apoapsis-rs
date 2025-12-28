@@ -111,7 +111,7 @@ impl VERenderStage {
 
         let clear_values = attachments
             .iter()
-            .map(|a| a.clear.unwrap_or_else(|| vk::ClearValue::default()))
+            .map(|a| a.clear.unwrap_or_else(vk::ClearValue::default))
             .collect();
 
         Ok(VERenderStage {

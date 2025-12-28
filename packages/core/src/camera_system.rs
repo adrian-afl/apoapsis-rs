@@ -26,7 +26,7 @@ impl CameraSystem {
                         .as_ref()
                         .unwrap();
                     camera.position.assign(&transform.position);
-                    camera.orientation = transform.orientation.clone().inverse();
+                    camera.orientation = transform.orientation.inverse();
                     camera.set_perspective(
                         first_person_component.fov * (PI / 180.0),
                         4.0 / 3.0,

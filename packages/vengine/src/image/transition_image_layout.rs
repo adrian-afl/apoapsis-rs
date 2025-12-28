@@ -1,11 +1,8 @@
 use crate::core::command_buffer::VECommandBuffer;
-use crate::core::command_pool::VECommandPool;
 use crate::core::device::VEDevice;
-use crate::core::main_device_queue::VEMainDeviceQueue;
 use crate::image::image::VEImageError;
 use ash::vk;
-use ash::vk::CommandBufferUsageFlags;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
 pub fn transition_image_layout(
     device: Arc<VEDevice>,
@@ -67,7 +64,7 @@ pub fn transition_image_layout(
             }
 
             vk::ImageLayout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL => {
-                dst_access = dst_access | vk::AccessFlags::DEPTH_STENCIL_ATTACHMENT_WRITE
+                dst_access |= vk::AccessFlags::DEPTH_STENCIL_ATTACHMENT_WRITE
             }
 
             vk::ImageLayout::SHADER_READ_ONLY_OPTIMAL => {
@@ -85,7 +82,7 @@ pub fn transition_image_layout(
 
     image_memory_barrier(
         device,
-        &command_buffer,
+        command_buffer,
         image_handle,
         aspect,
         current_layout,

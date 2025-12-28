@@ -38,9 +38,9 @@ impl Mesh {
     ) -> Result<Self, RenderingError> {
         let mut mesh = Self {
             position: DecimalVector3d::zero(),
-            orientation: DQuat::IDENTITY.clone(),
+            orientation: DQuat::IDENTITY,
             scale: DVec3::new(1.0, 1.0, 1.0),
-            model_matrix: DMat4::IDENTITY.clone(),
+            model_matrix: DMat4::IDENTITY,
             geometry,
             material,
             descriptor_set: layout.create_descriptor_set()?,
@@ -64,7 +64,7 @@ impl Mesh {
             ColorOrTexture::Color(_) => {
                 mesh.descriptor_set.bind_image_sampler(
                     1,
-                    &empty_image.lock().unwrap().as_ref().unwrap(),
+                    empty_image.lock().unwrap().as_ref().unwrap(),
                     empty_view.lock().unwrap().unwrap(),
                     &mesh.sampler,
                 )?;
@@ -82,7 +82,7 @@ impl Mesh {
             ValueOrTexture::Value(_) => {
                 mesh.descriptor_set.bind_image_sampler(
                     2,
-                    &empty_image.lock().unwrap().as_ref().unwrap(),
+                    empty_image.lock().unwrap().as_ref().unwrap(),
                     empty_view.lock().unwrap().unwrap(),
                     &mesh.sampler,
                 )?;
@@ -100,7 +100,7 @@ impl Mesh {
             ValueOrTexture::Value(_) => {
                 mesh.descriptor_set.bind_image_sampler(
                     3,
-                    &empty_image.lock().unwrap().as_ref().unwrap(),
+                    empty_image.lock().unwrap().as_ref().unwrap(),
                     empty_view.lock().unwrap().unwrap(),
                     &mesh.sampler,
                 )?;
@@ -118,7 +118,7 @@ impl Mesh {
             ColorOrTexture::Color(_) => {
                 mesh.descriptor_set.bind_image_sampler(
                     4,
-                    &empty_image.lock().unwrap().as_ref().unwrap(),
+                    empty_image.lock().unwrap().as_ref().unwrap(),
                     empty_view.lock().unwrap().unwrap(),
                     &mesh.sampler,
                 )?;
@@ -136,7 +136,7 @@ impl Mesh {
             None => {
                 mesh.descriptor_set.bind_image_sampler(
                     5,
-                    &empty_image.lock().unwrap().as_ref().unwrap(),
+                    empty_image.lock().unwrap().as_ref().unwrap(),
                     empty_view.lock().unwrap().unwrap(),
                     &mesh.sampler,
                 )?;
@@ -154,7 +154,7 @@ impl Mesh {
             None => {
                 mesh.descriptor_set.bind_image_sampler(
                     6,
-                    &empty_image.lock().unwrap().as_ref().unwrap(),
+                    empty_image.lock().unwrap().as_ref().unwrap(),
                     empty_view.lock().unwrap().unwrap(),
                     &mesh.sampler,
                 )?;

@@ -1,5 +1,5 @@
-use glam::{DMat4, DVec3};
-use renderer_common::buffer_writers::{write_mat4, write_vec3_zero};
+use glam::DMat4;
+use renderer_common::buffer_writers::write_mat4;
 use renderer_common::errors::RenderingError;
 use vengine_rs::buffer::buffer::{VEBuffer, VEBufferUsage};
 use vengine_rs::core::command_buffer::VECommandBuffer;

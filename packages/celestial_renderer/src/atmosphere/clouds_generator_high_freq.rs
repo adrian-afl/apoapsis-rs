@@ -1,7 +1,6 @@
 use crate::buffers::cloud_generator_high_freq_buffer::CloudGeneratorHighFreqBuffer;
 use glam::DVec4;
 use renderer_common::errors::RenderingError;
-use renderer_common::resolution_config::ResolutionConfig;
 use vengine_rs::compute::compute_stage::VEComputeStage;
 use vengine_rs::core::command_buffer::VECommandBuffer;
 use vengine_rs::core::descriptor_set::VEDescriptorSet;
@@ -79,11 +78,11 @@ impl CloudGeneratorHighFreq {
     }
 
     pub fn record(&self, command_buffer: &VECommandBuffer) {
-        self.compute_stage.bind(&command_buffer);
+        self.compute_stage.bind(command_buffer);
         self.compute_stage
-            .set_descriptor_set(&command_buffer, 0, &self.data_set);
+            .set_descriptor_set(command_buffer, 0, &self.data_set);
         self.compute_stage.dispatch(
-            &command_buffer,
+            command_buffer,
             HI_FREQ_RES / WORKGROUP_SIZE,
             HI_FREQ_RES / WORKGROUP_SIZE,
             HI_FREQ_RES / WORKGROUP_SIZE,

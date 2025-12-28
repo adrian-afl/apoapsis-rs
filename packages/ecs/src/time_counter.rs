@@ -11,6 +11,12 @@ pub struct TimeCounter {
     pub delta_time: f64,
 }
 
+impl Default for TimeCounter {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl TimeCounter {
     pub fn new() -> Self {
         Self {

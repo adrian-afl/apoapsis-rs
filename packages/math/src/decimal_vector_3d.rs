@@ -124,9 +124,9 @@ impl fmt::Display for DecimalVector3d {
         write!(
             f,
             "{{ x: {}, y: {}, z: {} }}",
-            self.x.to_string(),
-            self.y.to_string(),
-            self.z.to_string()
+            self.x,
+            self.y,
+            self.z
         )
     }
 }

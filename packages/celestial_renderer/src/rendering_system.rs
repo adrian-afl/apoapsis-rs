@@ -17,7 +17,6 @@ use renderer_common::camera::Camera;
 use renderer_common::errors::RenderingError;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, RwLock};
-use std::vec;
 use ui_renderer::ui_system::UISystem;
 use universe_simulation::simulation::Simulation;
 use vengine_rs::core::toolkit::VEToolkit;
@@ -49,36 +48,23 @@ impl RenderingSystem {
     }
 
     pub fn get_altitude(&self, universe: &Simulation, point: &DecimalVector3d) -> Option<f64> {
-        let closest_body = universe.find_closest_body(&point);
+        let closest_body = universe.find_closest_body(point);
         let rendered_body = self
             .celestial_hierarchy
             .get_rendered_body(&closest_body.body.name);
         match rendered_body {
             None => None,
             Some(rendered_body) => {
-                let mut normal = (point - &closest_body.position);
+                let mut normal = point - &closest_body.position ;
                 let distance_center = normal.length();
                 normal.normalize();
                 let mut normal = normal.to_dvec3_with_precision(6);
                 normal = closest_body.orientation.as_dquat() * normal;
                 normal.normalize();
 
-                let terrain_altitude = match &rendered_body.terrain_icosphere {
-                    None => None,
-                    Some(terrain) => Some(
-                        distance_center.to_f64().value() - terrain.get_radius_at_normal(normal),
-                    ),
-                };
-                let water_altitude = match &rendered_body.water_icosphere {
-                    None => None,
-                    Some(water) => {
-                        Some(distance_center.to_f64().value() - water.get_radius_at_normal(normal))
-                    }
-                };
-                let atmosphere_altitude = match &closest_body.body.atmosphere {
-                    None => None,
-                    Some(atmo) => Some(distance_center.to_f64().value() - atmo.start),
-                };
+                let terrain_altitude = rendered_body.terrain_icosphere.as_ref().map(|terrain| distance_center.to_f64().value() - terrain.get_radius_at_normal(normal));
+                let water_altitude = rendered_body.water_icosphere.as_ref().map(|water| distance_center.to_f64().value() - water.get_radius_at_normal(normal));
+                let atmosphere_altitude = closest_body.body.atmosphere.as_ref().map(|atmo| distance_center.to_f64().value() - atmo.start);
                 if terrain_altitude.is_none()
                     && water_altitude.is_none()
                     && atmosphere_altitude.is_none()
@@ -114,10 +100,7 @@ impl RenderingSystem {
         let rendered_body = self.celestial_hierarchy.get_rendered_body(&body.body.name);
         match rendered_body {
             None => None,
-            Some(rendered_body) => match &rendered_body.terrain_icosphere {
-                None => None,
-                Some(terrain) => Some(terrain.get_radius_at_normal(normal)),
-            },
+            Some(rendered_body) => rendered_body.terrain_icosphere.as_ref().map(|terrain| terrain.get_radius_at_normal(normal)),
         }
     }
 
@@ -131,10 +114,7 @@ impl RenderingSystem {
         let rendered_body = self.celestial_hierarchy.get_rendered_body(&body.body.name);
         match rendered_body {
             None => None,
-            Some(rendered_body) => match &rendered_body.water_icosphere {
-                None => None,
-                Some(water) => Some(water.get_radius_at_normal(normal)),
-            },
+            Some(rendered_body) => rendered_body.water_icosphere.as_ref().map(|water| water.get_radius_at_normal(normal)),
         }
     }
 
@@ -148,7 +128,7 @@ impl RenderingSystem {
         )?;
         let material = Material {
             color: match &description.material.color {
-                ColorOrTextureDescription::Color(color) => ColorOrTexture::Color(color.clone()),
+                ColorOrTextureDescription::Color(color) => ColorOrTexture::Color(*color),
                 ColorOrTextureDescription::Texture(texture) => {
                     ColorOrTexture::Texture(ScaledTexture {
                         scale: texture.scale,
@@ -160,7 +140,7 @@ impl RenderingSystem {
                 }
             },
             roughness: match &description.material.roughness {
-                ValueOrTextureDescription::Value(value) => ValueOrTexture::Value(value.clone()),
+                ValueOrTextureDescription::Value(value) => ValueOrTexture::Value(*value),
                 ValueOrTextureDescription::Texture(texture) => {
                     ValueOrTexture::Texture(ScaledTexture {
                         scale: texture.scale,
@@ -172,7 +152,7 @@ impl RenderingSystem {
                 }
             },
             metalness: match &description.material.metalness {
-                ValueOrTextureDescription::Value(value) => ValueOrTexture::Value(value.clone()),
+                ValueOrTextureDescription::Value(value) => ValueOrTexture::Value(*value),
                 ValueOrTextureDescription::Texture(texture) => {
                     ValueOrTexture::Texture(ScaledTexture {
                         scale: texture.scale,
@@ -184,7 +164,7 @@ impl RenderingSystem {
                 }
             },
             emission: match &description.material.emission {
-                ColorOrTextureDescription::Color(color) => ColorOrTexture::Color(color.clone()),
+                ColorOrTextureDescription::Color(color) => ColorOrTexture::Color(*color),
                 ColorOrTextureDescription::Texture(texture) => {
                     ColorOrTexture::Texture(ScaledTexture {
                         scale: texture.scale,
@@ -238,7 +218,7 @@ impl RenderingSystem {
                     .read()
                     .unwrap()
                     .iter()
-                    .map(|(k, v)| *k)
+                    .map(|(k, _v)| *k)
                     .collect(),
             )
         });
@@ -307,13 +287,13 @@ impl RenderingSystem {
 
             profile!("rendering_system update / updating mesh components", {
                 entities.iter().for_each(|entity| {
-                    let mut entity = &mut ecs[*entity];
+                    let entity = &mut ecs[*entity];
                     let transform_component = entity.components.transform.as_ref().unwrap();
                     entity.components.mesh.iter().for_each(|mc| {
                         let mesh = locked_map.get_mut(&mc.id).unwrap();
                         mesh.position.assign(&transform_component.position);
-                        mesh.scale = transform_component.scale.clone();
-                        mesh.orientation = transform_component.orientation.clone();
+                        mesh.scale = transform_component.scale;
+                        mesh.orientation = transform_component.orientation;
                     });
                 });
             });
@@ -367,7 +347,7 @@ impl RenderingSystem {
                 items,
                 universe_simulation,
                 &mut self.celestial_hierarchy,
-                &camera,
+                camera,
                 total_time,
                 delta_time,
             );

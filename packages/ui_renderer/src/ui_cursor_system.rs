@@ -10,6 +10,12 @@ pub struct UICursorSystemResult {
 
 pub struct UICursorSystem {}
 
+impl Default for UICursorSystem {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl UICursorSystem {
     pub fn new() -> Self {
         Self {}

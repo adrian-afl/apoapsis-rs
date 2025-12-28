@@ -7,7 +7,7 @@ use math::sin_cos::PIMUL2;
 use renderer_common::errors::RenderingError;
 use renderer_common::resolution_config::ResolutionConfig;
 use std::str::FromStr;
-use std::sync::{Arc, LazyLock};
+use std::sync::LazyLock;
 
 static G_CONSTANT: LazyLock<DBig> = LazyLock::new(|| DBig::from_str("0.0000000000667408").unwrap());
 
@@ -25,6 +25,12 @@ pub struct SimulatedBody {
 pub struct Simulation {
     pub bodies: Vec<SimulatedBody>,
     id_counter: i32,
+}
+
+impl Default for Simulation {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl Simulation {
@@ -171,7 +177,7 @@ impl Simulation {
     }
 
     fn get_body_orientation(time: &DBig, body: &SimulatedBody) -> DecimalMatrix3d {
-        let rotation_progression = (time / &body.body.dynamics.rotation_period).fract();
+        let rotation_progression = (time / body.body.dynamics.rotation_period).fract();
         let angle = &*PIMUL2 * rotation_progression;
         DecimalMatrix3d::axis_angle(&body.body.dynamics.rotation_axis, angle)
     }
@@ -205,8 +211,8 @@ impl Simulation {
             body.orientation = orientation;
         }
         for i in 0..self.bodies.len() {
-            let mut body = &self.bodies[i];
-            let closest_static = match &body.body.dynamics.motion {
+            let body = &self.bodies[i];
+            let _closest_static = match &body.body.dynamics.motion {
                 BodyMotion::Static(_) => body,
                 BodyMotion::Orbiting(_) => self.find_closest_static(&body.position),
             };
@@ -214,8 +220,8 @@ impl Simulation {
 
         self.bodies.sort_by(|a, b| {
             a.position
-                .distance_to(&camera_position)
-                .partial_cmp(&b.position.distance_to(&camera_position))
+                .distance_to(camera_position)
+                .partial_cmp(&b.position.distance_to(camera_position))
                 .unwrap()
         });
     }
@@ -231,7 +237,7 @@ impl Simulation {
     ) -> DecimalVector3d {
         let body = self.get_body_by_name(body_name).unwrap();
         let axis = &body.body.dynamics.rotation_axis;
-        let angular_body_vel = &*PIMUL2 / &body.body.dynamics.rotation_period;
+        let angular_body_vel = &*PIMUL2 / body.body.dynamics.rotation_period;
         let angular_velocity_vector = axis * angular_body_vel;
         angular_velocity_vector.cross(relative_point)
     }
@@ -291,7 +297,7 @@ impl Simulation {
             let length_squared = relative.length_squared();
             let length = length_squared.sqrt();
             let strength = &*G_CONSTANT * &body.body.dynamics.mass / length_squared;
-            flux = flux + (relative * (&DBig::ONE / length * strength));
+            flux += (relative * (&DBig::ONE / length * strength));
         }
         flux
     }

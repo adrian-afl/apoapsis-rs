@@ -1,4 +1,4 @@
-use glam::{DVec2, dvec2};
+use glam::DVec2;
 use std::sync::{Arc, Mutex};
 use winit::dpi::PhysicalPosition;
 use winit::window::{CursorGrabMode, CursorIcon, Window};

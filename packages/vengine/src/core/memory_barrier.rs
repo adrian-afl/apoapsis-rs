@@ -1,7 +1,6 @@
 use crate::core::command_buffer::VECommandBuffer;
 use crate::core::device::VEDevice;
 use ash::vk;
-use std::sync::Arc;
 
 pub struct VEMemoryBarrier {
     pub src_access: vk::AccessFlags,
@@ -9,7 +8,7 @@ pub struct VEMemoryBarrier {
 }
 
 impl VEMemoryBarrier {
-    pub fn build(&self) -> vk::MemoryBarrier {
+    pub fn build(&self) -> vk::MemoryBarrier<'_> {
         vk::MemoryBarrier::default()
             .src_access_mask(self.src_access)
             .dst_access_mask(self.dst_access)
@@ -26,7 +25,7 @@ pub struct VEImageMemoryBarrier {
 }
 
 impl VEImageMemoryBarrier {
-    pub fn build(&self) -> vk::ImageMemoryBarrier {
+    pub fn build(&self) -> vk::ImageMemoryBarrier<'_> {
         vk::ImageMemoryBarrier::default()
             .old_layout(self.old_layout)
             .new_layout(self.new_layout)
@@ -55,7 +54,7 @@ pub struct VEBufferMemoryBarrier {
 }
 
 impl VEBufferMemoryBarrier {
-    pub fn build(&self) -> vk::BufferMemoryBarrier {
+    pub fn build(&self) -> vk::BufferMemoryBarrier<'_> {
         vk::BufferMemoryBarrier::default()
             .src_queue_family_index(vk::QUEUE_FAMILY_IGNORED)
             .dst_queue_family_index(vk::QUEUE_FAMILY_IGNORED)

@@ -4,11 +4,9 @@ use planet_generator_library::generate_icosphere::IcosphereMetadataItem;
 use rayon::iter::IndexedParallelIterator;
 use rayon::iter::ParallelIterator;
 use rayon::prelude::IntoParallelRefIterator;
-use renderer_common::errors::RenderingError;
 use std::collections::HashMap;
 use std::sync::Mutex;
 use universe_simulation::simulation::SimulatedBody;
-use vengine_rs::core::toolkit::VEToolkit;
 use vengine_rs::graphics::vertex_buffer::VEVertexBuffer;
 
 pub static ICO_LEVEL_SUBDIVISIONS: [u8; 3] = [4, 5, 6];

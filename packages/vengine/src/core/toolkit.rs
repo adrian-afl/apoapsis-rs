@@ -166,7 +166,7 @@ impl VEToolkit {
     }
 
     pub fn new(window: &VEWindow) -> Result<VEToolkit, VEToolkitError> {
-        let device = Arc::new(VEDevice::new(&window)?);
+        let device = Arc::new(VEDevice::new(window)?);
 
         let memory_manager = Arc::new(Mutex::from(VEMemoryManager::new(device.clone())));
 
@@ -175,7 +175,7 @@ impl VEToolkit {
         let queue = Arc::new(Mutex::from(VEMainDeviceQueue::new(device.clone())));
 
         let swapchain = Arc::new(Mutex::from(VESwapchain::new(
-            &window,
+            window,
             device.clone(),
             queue.clone(),
             command_pool.clone(),

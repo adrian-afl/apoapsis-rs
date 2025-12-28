@@ -8,7 +8,6 @@ use crate::image::image::{VEImage, VEImageError, VEImageUsage};
 use crate::image::image_format::VEImageFormat;
 use crate::memory::memory_manager::VEMemoryManager;
 use ash::vk;
-use ash::vk::CommandBufferUsageFlags;
 use std::sync::{Arc, Mutex};
 
 impl VEImage {

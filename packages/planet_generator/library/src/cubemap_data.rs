@@ -29,12 +29,12 @@ pub enum CubeMapFace {
 impl fmt::Display for CubeMapFace {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            CubeMapFace::PX => write!(f, "{}", "PX"),
-            CubeMapFace::PY => write!(f, "{}", "PY"),
-            CubeMapFace::PZ => write!(f, "{}", "PZ"),
-            CubeMapFace::NX => write!(f, "{}", "NX"),
-            CubeMapFace::NY => write!(f, "{}", "NY"),
-            CubeMapFace::NZ => write!(f, "{}", "NZ"),
+            CubeMapFace::PX => write!(f, "PX"),
+            CubeMapFace::PY => write!(f, "PY"),
+            CubeMapFace::PZ => write!(f, "PZ"),
+            CubeMapFace::NX => write!(f, "NX"),
+            CubeMapFace::NY => write!(f, "NY"),
+            CubeMapFace::NZ => write!(f, "NZ"),
         }
     }
 }
@@ -91,7 +91,7 @@ fn project_direction(face: &CubeMapFace, coord: DVec3) -> Option<DVec2> {
     {
         return None;
     }
-    let mut uv = DVec2::new(-res.x, -res.y) * 0.5 + 0.5;
+    let uv = DVec2::new(-res.x, -res.y) * 0.5 + 0.5;
     // println!("{face}: RES.Z is {}", res.z);
     // match face {
     //     CubeMapFace::NX => {
@@ -136,7 +136,7 @@ impl<Data: Clone> CubeMapDataLayer<Data> {
     pub fn new(res: u16, initializer: Data) -> CubeMapDataLayer<Data> {
         let res_usize = res as usize;
         CubeMapDataLayer {
-            res: res,
+            res,
 
             px: Arc::new(Mutex::from(vec![
                 initializer.clone();
@@ -293,13 +293,13 @@ impl<Data: Clone> CubeMapDataLayer<Data> {
         if pixel.x < 0.0 {
             pixel.x = 0.0;
         }
-        if (pixel.x >= (self.res - 1) as f64) {
+        if pixel.x >= (self.res - 1) as f64  {
             pixel.x = (self.res - 1) as f64;
         }
-        if (pixel.y < 0.0) {
+        if pixel.y < 0.0  {
             pixel.y = 0.0;
         }
-        if (pixel.y >= (self.res - 1) as f64) {
+        if pixel.y >= (self.res - 1) as f64  {
             pixel.y = (self.res - 1) as f64;
         }
         self.get_pixel(&face, pixel.x as usize, pixel.y as usize)
@@ -342,15 +342,15 @@ impl CubeMapDataLayer<f64> {
     pub fn add_bilinear(&self, coord: DVec3, value: f64) {
         let face = get_face(coord);
         let uv01 = project_direction(&face, coord).unwrap();
-        let uv = (uv01 * (self.res as f64));
+        let uv = uv01 * (self.res as f64) ;
 
         let mut pixel1 = uv.floor();
         let mut pixel2 = uv.ceil();
         let pixel_fract = uv.fract_gl();
 
-        if (self.is_out_of_bounds(pixel1.x as isize, pixel1.y as isize)) {
+        if self.is_out_of_bounds(pixel1.x as isize, pixel1.y as isize)  {
             pixel1.clone_from(&pixel2);
-        } else if (self.is_out_of_bounds(pixel2.x as isize, pixel2.y as isize)) {
+        } else if self.is_out_of_bounds(pixel2.x as isize, pixel2.y as isize)  {
             pixel2.clone_from(&pixel1);
         }
 
@@ -381,15 +381,15 @@ impl CubeMapDataLayer<f64> {
     pub fn get_bilinear(&self, coord: DVec3) -> f64 {
         let face = get_face(coord);
         let uv01 = project_direction(&face, coord).unwrap();
-        let uv = (uv01 * (self.res as f64));
+        let uv = uv01 * (self.res as f64) ;
 
         let mut pixel1 = uv.floor();
         let mut pixel2 = uv.ceil();
         let pixel_fract = uv.fract_gl();
 
-        if (self.is_out_of_bounds(pixel1.x as isize, pixel1.y as isize)) {
+        if self.is_out_of_bounds(pixel1.x as isize, pixel1.y as isize)  {
             pixel1.clone_from(&pixel2);
-        } else if (self.is_out_of_bounds(pixel2.x as isize, pixel2.y as isize)) {
+        } else if self.is_out_of_bounds(pixel2.x as isize, pixel2.y as isize)  {
             pixel2.clone_from(&pixel1);
         }
 

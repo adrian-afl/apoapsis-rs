@@ -75,7 +75,7 @@ impl AtmosphereDrawer {
             false,
         )?;
 
-        let mut body_data_set_layout =
+        let body_data_set_layout =
             toolkit.create_descriptor_set_layout(&[VEDescriptorSetLayoutField {
                 // celestial data buffer
                 binding: 0,
@@ -235,7 +235,7 @@ impl AtmosphereDrawer {
 
         submit_barriers(
             &self.device,
-            &command_buffer,
+            command_buffer,
             PipelineStageFlags::COMPUTE_SHADER,
             PipelineStageFlags::ALL_COMMANDS,
             &[],

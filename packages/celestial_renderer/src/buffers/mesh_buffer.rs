@@ -120,20 +120,14 @@ impl MeshBuffer {
         offset += write_bool_as_uint(
             ptr,
             offset,
-            match mesh.material.normal {
-                None => false,
-                Some(_) => true,
-            },
+            mesh.material.normal.is_some(),
         );
 
         //uint useBumpTexture;
         offset += write_bool_as_uint(
             ptr,
             offset,
-            match mesh.material.bump {
-                None => false,
-                Some(_) => true,
-            },
+            mesh.material.bump.is_some(),
         );
 
         /////////////////////

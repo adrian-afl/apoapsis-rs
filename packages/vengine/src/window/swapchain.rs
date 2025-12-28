@@ -7,7 +7,7 @@ use crate::image::image::{VEImage, VEImageError};
 use crate::window::window::VEWindow;
 use ash::khr::swapchain;
 use ash::vk;
-use ash::vk::{CommandBufferUsageFlags, PresentInfoKHR, SwapchainKHR};
+use ash::vk::{PresentInfoKHR, SwapchainKHR};
 use std::fmt::{Debug, Formatter};
 use std::sync::{Arc, Mutex};
 use thiserror::Error;
@@ -376,7 +376,7 @@ impl VESwapchain {
         let swapchains = [self.swapchain];
         let images = [image_index];
         let info = PresentInfoKHR::default()
-            .wait_semaphores(&wait_handles)
+            .wait_semaphores(wait_handles)
             .swapchains(&swapchains)
             .image_indices(&images);
 

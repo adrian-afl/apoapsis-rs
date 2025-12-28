@@ -14,7 +14,7 @@ use vengine_rs::core::descriptor_set_layout::{
     VEDescriptorSetLayoutField,
 };
 use vengine_rs::core::device::VEDevice;
-use vengine_rs::core::memory_barrier::{submit_barriers, VEImageMemoryBarrier, VEMemoryBarrier};
+use vengine_rs::core::memory_barrier::{submit_barriers, VEImageMemoryBarrier};
 use vengine_rs::core::shader_module::VEShaderModuleType;
 use vengine_rs::core::toolkit::VEToolkit;
 use vengine_rs::image::image::{VEImage, VEImageUsage, VEImageViewCreateInfo};
@@ -121,11 +121,11 @@ impl Output {
     }
 
     pub fn record(&self, command_buffer: &VECommandBuffer, multi_merger: &MultiMerger) {
-        self.compute_stage.bind(&command_buffer);
+        self.compute_stage.bind(command_buffer);
         self.compute_stage
-            .set_descriptor_set(&command_buffer, 0, &self.data_set);
+            .set_descriptor_set(command_buffer, 0, &self.data_set);
         self.compute_stage.dispatch(
-            &command_buffer,
+            command_buffer,
             self.config.width / WORKGROUP_SIZE,
             self.config.height / WORKGROUP_SIZE,
             1,
@@ -144,7 +144,7 @@ impl Output {
 
         submit_barriers(
             &self.device,
-            &command_buffer,
+            command_buffer,
             PipelineStageFlags::COMPUTE_SHADER,
             PipelineStageFlags::ALL_COMMANDS,
             &[],
@@ -184,7 +184,7 @@ impl Output {
 
         submit_barriers(
             &self.device,
-            &command_buffer,
+            command_buffer,
             PipelineStageFlags::ALL_COMMANDS,
             PipelineStageFlags::COMPUTE_SHADER,
             &[],
@@ -196,7 +196,7 @@ impl Output {
     pub fn recreate_stage(
         &mut self,
         toolkit: &VEToolkit,
-        multi_merger: &mut MultiMerger,
+        _multi_merger: &mut MultiMerger,
     ) -> Result<(), RenderingError> {
         let shader = toolkit.create_shader_module(
             "shaders/compiled/output/output.comp.spv",

@@ -10,6 +10,12 @@ pub struct UIRaycastResultItem {
 
 pub struct UIRaycastSystem {}
 
+impl Default for UIRaycastSystem {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl UIRaycastSystem {
     pub fn new() -> Self {
         Self {}

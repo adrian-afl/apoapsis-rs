@@ -49,6 +49,12 @@ pub struct ECSWorldSerializedRepresentation {
     pub time_counter: TimeCounter,
 }
 
+impl Default for ECSWorld {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ECSWorld {
     pub fn new() -> ECSWorld {
         ECSWorld {
@@ -211,7 +217,7 @@ impl ECSWorld {
     pub fn parallel_process_all_by_components_mut(
         &mut self,
         types: &[&Components],
-        mut processor: impl Fn(&mut Entity) + Sync + Send,
+        processor: impl Fn(&mut Entity) + Sync + Send,
     ) {
         self.entities
             .par_iter_mut()

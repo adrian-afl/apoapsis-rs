@@ -117,7 +117,7 @@ pub fn save_terrain_maps(
         );
         let res_usize = cube_map_height.res as usize;
 
-        for i in (0..res_usize * res_usize) {
+        for i in 0..res_usize * res_usize  {
             let data = &face_data[i];
 
             file.write_all(&((data.color.x * 255.0) as u8).to_le_bytes())

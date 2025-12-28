@@ -142,7 +142,7 @@ impl UIDrawer {
             },
         ])?;
 
-        let common_buffer = UICommonBuffer::new(&toolkit).expect("Failed to create UICommonBuffer");
+        let common_buffer = UICommonBuffer::new(toolkit).expect("Failed to create UICommonBuffer");
 
         let common_set = common_set_layout.create_descriptor_set()?;
         common_set.bind_buffer(0, &common_buffer.buffer)?;
@@ -169,7 +169,7 @@ impl UIDrawer {
             VECullMode::None,
         )?;
 
-        let font = "media/Perfect DOS VGA 437.ttf";
+        let _font = "media/Perfect DOS VGA 437.ttf";
 
         let mut font_atlas_small = FontAtlas::new_pixel_perfect(
             toolkit,
@@ -237,18 +237,18 @@ impl UIDrawer {
     }
 
     pub fn record(&self, command_buffer: &VECommandBuffer, items: &[&UIRenderedItem]) {
-        self.render_stage.bind(&command_buffer);
+        self.render_stage.bind(command_buffer);
 
         self.render_stage
-            .set_descriptor_set(&command_buffer, 1, &self.common_set);
+            .set_descriptor_set(command_buffer, 1, &self.common_set);
 
         for item in items {
             self.render_stage
-                .set_descriptor_set(&command_buffer, 0, &item.descriptor_set);
-            self.quad_geometry.draw_instanced(&command_buffer, 1);
+                .set_descriptor_set(command_buffer, 0, &item.descriptor_set);
+            self.quad_geometry.draw_instanced(command_buffer, 1);
         }
 
-        self.render_stage.end_render_pass(&command_buffer);
+        self.render_stage.end_render_pass(command_buffer);
     }
 
     pub fn measure_text_pixels(&self, text: &str, font_size: &UIFontSize) -> DVec2 {

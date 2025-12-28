@@ -33,6 +33,12 @@ pub struct PhysicsSystem {
     player_temporary_data: PlayerTemporaryData,
 }
 
+impl Default for PhysicsSystem {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl PhysicsSystem {
     pub fn new() -> Self {
         Self {

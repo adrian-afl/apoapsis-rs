@@ -9,7 +9,7 @@ use vengine_rs::core::descriptor_set_layout::{
     VEDescriptorSetFieldStage, VEDescriptorSetFieldType, VEDescriptorSetLayout,
     VEDescriptorSetLayoutField,
 };
-use vengine_rs::core::helpers::{clear_color_f32, clear_depth};
+use vengine_rs::core::helpers::clear_depth;
 use vengine_rs::core::shader_module::VEShaderModuleType;
 use vengine_rs::core::toolkit::VEToolkit;
 use vengine_rs::graphics::attachment::VEAttachment;
@@ -222,17 +222,17 @@ impl MeshDrawer {
         command_buffer: &VECommandBuffer,
         meshes: &[&Mesh],
     ) {
-        stage.bind(&command_buffer);
+        stage.bind(command_buffer);
 
         self.render_stage
-            .set_descriptor_set(&command_buffer, 1, &self.common_set);
+            .set_descriptor_set(command_buffer, 1, &self.common_set);
 
         for mesh in meshes {
             self.render_stage
-                .set_descriptor_set(&command_buffer, 0, &mesh.descriptor_set);
-            mesh.geometry.draw_instanced(&command_buffer, 1);
+                .set_descriptor_set(command_buffer, 0, &mesh.descriptor_set);
+            mesh.geometry.draw_instanced(command_buffer, 1);
         }
 
-        stage.end_render_pass(&command_buffer);
+        stage.end_render_pass(command_buffer);
     }
 }

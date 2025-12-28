@@ -62,7 +62,7 @@ impl UIRenderedItem {
 
         descriptor_set.bind_image_sampler(
             1,
-            &empty_image.lock().unwrap().as_ref().unwrap(),
+            empty_image.lock().unwrap().as_ref().unwrap(),
             empty_view.lock().unwrap().unwrap(),
             &sampler,
         )?;
@@ -90,7 +90,7 @@ impl UIRenderedItem {
             return;
         }
 
-        let mut texture = self.texture.as_mut().unwrap();
+        let texture = self.texture.as_mut().unwrap();
         let view = texture
             .get_view(VEImageViewCreateInfo::simple_2d())
             .unwrap();
