@@ -1,12 +1,14 @@
 use crate::game_context::GameContext;
 use crate::remote_api::api::create_entity::create_entity;
 use crate::remote_api::api::deserialize_world::deserialize_world;
+// use crate::remote_api::api::generated::handle_message_components_api;
 use crate::remote_api::api::generated::handle_message_components_api;
 use crate::remote_api::api::reset_world::reset_world;
 use crate::remote_api::api::serialize_world::serialize_world;
 use crate::remote_api::nats::{IncomingRemoteIOMessage, OutgoingRemoteIOMessage, connect_nats};
 use ecs::ecs_world::ECSWorld;
 use std::collections::VecDeque;
+use std::string::ToString;
 use std::sync::{Arc, Mutex};
 
 pub struct RemoteGameMode {
@@ -35,12 +37,12 @@ impl RemoteGameMode {
     }
 }
 
-fn handle_message(name: &str, payload: &str, ecs: &mut ECSWorld) -> Result<String, String> {
+fn handle_message(name: &str, payload: &str, ecs: &mut ECSWorld) -> Result<Option<String>, String> {
     match name {
-        "command.reset_world" => Ok(reset_world(payload, ecs)),
-        "command.serialize_world" => Ok(serialize_world(payload, ecs)),
-        "command.deserialize_world" => Ok(deserialize_world(payload, ecs)),
-        "command.create_entity" => Ok(create_entity(payload, ecs)),
+        "command.reset_world" => reset_world(payload, ecs),
+        "command.serialize_world" => serialize_world(payload, ecs),
+        "command.deserialize_world" => deserialize_world(payload, ecs),
+        "command.create_entity" => create_entity(payload, ecs),
         _ => handle_message_components_api(name, payload, ecs),
     }
 }
@@ -60,7 +62,7 @@ impl RemoteGameMode {
                     .unwrap()
                     .push_front(OutgoingRemoteIOMessage {
                         name: message.reply_to.expect("No reply-to set"),
-                        payload: result,
+                        payload: result.unwrap_or("{}".to_string()),
                         success: true,
                     }),
                 Err(error) => {

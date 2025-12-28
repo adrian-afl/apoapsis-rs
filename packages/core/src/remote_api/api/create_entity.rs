@@ -1,4 +1,3 @@
-use ecs::component_trait::AttachedComponents;
 use ecs::ecs_world::ECSWorld;
 use ecs::entity::Entity;
 use serde::{Deserialize, Serialize};
@@ -11,15 +10,16 @@ struct CreateEntityInput {
     name: Option<String>,
 }
 
-pub fn create_entity(payload: &str, ecs: &mut ECSWorld) -> String {
+pub fn create_entity(payload: &str, ecs: &mut ECSWorld) -> Result<Option<String>, String> {
     let input: CreateEntityInput = serde_json::from_str(payload).unwrap();
     let entity = Entity::new(input.name.as_deref());
     let id = entity.id;
     ecs.add(entity);
 
-    json!({
-        "success": true,
-        "id": id
-    })
-    .to_string()
+    Ok(Some(
+        json!({
+            "id": id
+        })
+        .to_string(),
+    ))
 }

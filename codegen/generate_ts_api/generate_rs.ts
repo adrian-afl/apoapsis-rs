@@ -37,13 +37,13 @@ struct Set${component.short}Input {
     component: ${component.full},
 }
 
-pub fn get_${component.snake}(payload: &str, ecs: &mut ECSWorld) -> String {
+pub fn get_${component.snake}(payload: &str, ecs: &mut ECSWorld) -> Result<Option<String>, String> {
     let input: GetComponentInput = serde_json::from_str(payload).unwrap();
     
-    serde_json::to_string(&ecs[input.entity_id].components.${component.snake}).unwrap()
+    Ok(Some(serde_json::to_string(&ecs[input.entity_id].components.${component.snake}).unwrap()))
 }
 
-pub fn set_${component.snake}(payload: &str, ecs: &mut ECSWorld) -> String {
+pub fn set_${component.snake}(payload: &str, ecs: &mut ECSWorld) -> Result<Option<String>, String> {
     let mut input: Set${component.short}Input = serde_json::from_str(payload).unwrap();
 
     let new_id = acquire_next_id();
@@ -51,22 +51,18 @@ pub fn set_${component.snake}(payload: &str, ecs: &mut ECSWorld) -> String {
     
     ecs[input.entity_id].components.${component.snake} = Some(input.component);
 
-    json!({
-        "success": true,
+    Ok(Some(json!({
         "id": new_id,
     })
-    .to_string()
+    .to_string()))
 }
 
-pub fn clear_${component.snake}(payload: &str, ecs: &mut ECSWorld) -> String {
+pub fn clear_${component.snake}(payload: &str, ecs: &mut ECSWorld) -> Result<Option<String>, String> {
     let input: GetComponentInput = serde_json::from_str(payload).unwrap();
     
     ecs[input.entity_id].components.${component.snake} = None;
 
-    json!({
-        "success": true
-    })
-    .to_string()
+    Ok(None)
 }
 `);
 }
@@ -81,13 +77,13 @@ struct Add${component.short}Input {
     component: ${component.full},
 }
 
-pub fn get_${component.snake}(payload: &str, ecs: &mut ECSWorld) -> String {
+pub fn get_${component.snake}(payload: &str, ecs: &mut ECSWorld) -> Result<Option<String>, String> {
     let input: GetComponentInput = serde_json::from_str(payload).unwrap();
     
-    serde_json::to_string(&ecs[input.entity_id].components.${component.snake}).unwrap()
+    Ok(Some(serde_json::to_string(&ecs[input.entity_id].components.${component.snake}).unwrap()))
 }
 
-pub fn add_${component.snake}(payload: &str, ecs: &mut ECSWorld) -> String {
+pub fn add_${component.snake}(payload: &str, ecs: &mut ECSWorld) -> Result<Option<String>, String> {
     let mut input: Add${component.short}Input = serde_json::from_str(payload).unwrap();
     
     let new_id = acquire_next_id();
@@ -95,22 +91,18 @@ pub fn add_${component.snake}(payload: &str, ecs: &mut ECSWorld) -> String {
 
     ecs[input.entity_id].components.${component.snake}.push(input.component);
 
-    json!({
-        "success": true,
+    Ok(Some(json!({
         "id": new_id,
     })
-    .to_string()
+    .to_string()))
 }
 
-pub fn remove_${component.snake}(payload: &str, ecs: &mut ECSWorld) -> String {
+pub fn remove_${component.snake}(payload: &str, ecs: &mut ECSWorld) -> Result<Option<String>, String> {
     let input: RemoveComponentInput = serde_json::from_str(payload).unwrap();
     
     ecs[input.entity_id].components.${component.snake}.retain(|x| x.id != input.component_id.parse::<u64>().unwrap());
 
-    json!({
-        "success": true
-    })
-    .to_string()
+    Ok(None)
 }
 `);
 }
@@ -125,21 +117,18 @@ struct SetBooleanComponentInput {
 
 for (const component of componentsMetadata.filter((x) => x.type === "Marker")) {
   console.log(`
-pub fn get_${component.snake}(payload: &str, ecs: &mut ECSWorld) -> String {
+pub fn get_${component.snake}(payload: &str, ecs: &mut ECSWorld) -> Result<Option<String>, String> {
     let input: GetComponentInput = serde_json::from_str(payload).unwrap();
     
-    serde_json::to_string(&ecs[input.entity_id].components.${component.snake}).unwrap()
+    Ok(Some(serde_json::to_string(&ecs[input.entity_id].components.${component.snake}).unwrap()))
 }
 
-pub fn set_${component.snake}(payload: &str, ecs: &mut ECSWorld) -> String {
+pub fn set_${component.snake}(payload: &str, ecs: &mut ECSWorld) -> Result<Option<String>, String> {
     let input: SetBooleanComponentInput = serde_json::from_str(payload).unwrap();
     
     ecs[input.entity_id].components.${component.snake} = input.value;
 
-    json!({
-        "success": true,
-    })
-    .to_string()
+    Ok(None)
 }
 
 `);
@@ -150,32 +139,32 @@ pub fn handle_message_components_api(
     name: &str,
     payload: &str,
     ecs: &mut ECSWorld,
-) -> Result<String, String> {
+) -> Result<Option<String>, String> {
     match name {
     ${componentsMetadata
       .filter((x) => x.type === "Option")
       .map(
         (x) =>
-          `"command.get_${x.snake}" => Ok(get_${x.snake}(payload, ecs)),
-    "command.set_${x.snake}" => Ok(set_${x.snake}(payload, ecs)),
-    "command.clear_${x.snake}" => Ok(clear_${x.snake}(payload, ecs)),`,
+          `"command.get_${x.snake}" => get_${x.snake}(payload, ecs),
+    "command.set_${x.snake}" => set_${x.snake}(payload, ecs),
+    "command.clear_${x.snake}" => clear_${x.snake}(payload, ecs),`,
       )
       .join("\n    ")}
     ${componentsMetadata
       .filter((x) => x.type === "Vector")
       .map(
         (x) =>
-          `"command.get_${x.snake}" => Ok(get_${x.snake}(payload, ecs)),
-    "command.add_${x.snake}" => Ok(add_${x.snake}(payload, ecs)),
-    "command.remove_${x.snake}" => Ok(remove_${x.snake}(payload, ecs)),`,
+          `"command.get_${x.snake}" => get_${x.snake}(payload, ecs),
+    "command.add_${x.snake}" => add_${x.snake}(payload, ecs),
+    "command.remove_${x.snake}" => remove_${x.snake}(payload, ecs),`,
       )
       .join("\n    ")}
     ${componentsMetadata
       .filter((x) => x.type === "Marker")
       .map(
         (x) =>
-          `"command.get_${x.snake}" => Ok(get_${x.snake}(payload, ecs)),
-    "command.set_${x.snake}" => Ok(set_${x.snake}(payload, ecs)),`,
+          `"command.get_${x.snake}" => get_${x.snake}(payload, ecs),
+    "command.set_${x.snake}" => set_${x.snake}(payload, ecs),`,
       )
       .join("\n    ")}
         _ => Err(format!("Handler not found for message {}", name)),
