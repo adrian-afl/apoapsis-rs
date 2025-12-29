@@ -1,5 +1,4 @@
 use crate::remote_api::api::deserialize_world::deserialize_world;
-use crate::remote_api::api::entity_api::create_entity;
 use crate::remote_api::api::reset_world::reset_world;
 use crate::remote_api::api::serialize_world::serialize_world;
 use crate::remote_api::util::serde_parse_err_map;
@@ -1106,7 +1105,6 @@ pub fn handle_message_api(
     ecs: &mut ECSWorld,
 ) -> Result<Option<String>, String> {
     match name {
-        "command.create_entity" => create_entity(payload, ecs),
         "command.deserialize_world" => deserialize_world(payload, ecs),
         "command.reset_world" => reset_world(payload, ecs),
         "command.serialize_world" => serialize_world(payload, ecs),

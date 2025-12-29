@@ -27,20 +27,6 @@ impl IndexMut<u64> for ECSWorld {
     }
 }
 
-impl Index<&str> for ECSWorld {
-    type Output = Entity;
-
-    fn index(&self, index: &str) -> &Self::Output {
-        self.find_by_name(index).unwrap()
-    }
-}
-
-impl IndexMut<&str> for ECSWorld {
-    fn index_mut(&mut self, index: &str) -> &mut Self::Output {
-        self.find_by_name_mut(index).unwrap()
-    }
-}
-
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
@@ -132,38 +118,6 @@ impl ECSWorld {
         self.entities.remove(&id);
     }
 
-    fn find_id_by_name(&self, name: &str) -> Option<u64> {
-        let mut found_id = None;
-        for entity in self.entities.values() {
-            match &entity.name {
-                None => (),
-                Some(ename) => {
-                    if ename == name {
-                        found_id = Some(entity.id);
-                        break;
-                    }
-                }
-            }
-        }
-        found_id
-    }
-
-    pub fn find_by_name_mut(&mut self, name: &str) -> Option<&mut Entity> {
-        let found_id = self.find_id_by_name(name);
-        if let Some(id) = found_id {
-            return self.entities.get_mut(&id);
-        }
-        None
-    }
-
-    pub fn find_by_name(&self, name: &str) -> Option<&Entity> {
-        let found_id = self.find_id_by_name(name);
-        if let Some(id) = found_id {
-            return self.entities.get(&id);
-        }
-        None
-    }
-
     pub fn find_by_id(&self, id: u64) -> Option<&Entity> {
         self.entities.get(&id)
     }
@@ -200,6 +154,17 @@ impl ECSWorld {
             return self.entities.get(&id);
         }
         None
+    }
+
+    pub fn find_all_ids_by_components(&self, component_types: &[&Components]) -> Vec<u64> {
+        let mut found_ids = vec![];
+        for entity in self.entities.values() {
+            if entity.components.has_all(component_types) {
+                found_ids.push(entity.id);
+                break;
+            }
+        }
+        found_ids
     }
 
     pub fn process_all_by_components_mut(
@@ -262,24 +227,5 @@ impl ECSWorld {
                 None
             })
             .collect()
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn processing_entities() {
-        let mut world = ECSWorld::new();
-
-        // world.process_all_by_components_mut(
-        //     component_types!(CameraFocusComponent, TransformComponent),
-        //     |e| {
-        //         let transform = e.get_first_component::<TransformComponent>().unwrap();
-        //         e.remove_all_components_by_type::<TransformComponent>()
-        //             .unwrap();
-        //     },
-        // );
     }
 }
