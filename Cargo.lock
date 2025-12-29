@@ -617,6 +617,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "config"
+version = "0.1.0"
+dependencies = [
+ "clap",
+ "tracing",
+]
+
+[[package]]
 name = "const-oid"
 version = "0.9.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1804,6 +1812,7 @@ name = "nats"
 version = "0.1.0"
 dependencies = [
  "async-nats",
+ "config",
  "futures-util",
  "serde",
  "serde_json",
@@ -2391,6 +2400,7 @@ version = "0.1.0"
 dependencies = [
  "clap",
  "common_util",
+ "config",
  "core",
  "glam",
  "nats",

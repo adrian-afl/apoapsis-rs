@@ -1,5 +1,5 @@
 use crate::app::GameWindowApp;
-use crate::global_config::GLOBAL_CONFIG;
+use config::GLOBAL_CONFIG;
 use core::game::Game;
 use std::fs::File;
 use std::sync::{Arc, Mutex};
@@ -12,7 +12,6 @@ use winit::dpi::PhysicalSize;
 use winit::window::{Window, WindowAttributes};
 
 mod app;
-mod global_config;
 
 fn main() {
     let subscriber = FmtSubscriber::builder()
@@ -24,7 +23,10 @@ fn main() {
 
     tracing::subscriber::set_global_default(subscriber).unwrap();
 
+    println!("{:?}", GLOBAL_CONFIG);
+
     if GLOBAL_CONFIG.headless {
+        println!("Creating headless instance...");
         let mut game = Game::new_headless();
         println!("Headless loop starting...");
         loop {
@@ -32,6 +34,7 @@ fn main() {
             thread::sleep(Duration::from_millis(10));
         }
     } else {
+        println!("Window loop starting...");
         let window_attributes = WindowAttributes::default()
             .with_inner_size(PhysicalSize::new(640 * 2, 480 * 2))
             .with_title("Codename T.S.P.");

@@ -1,23 +1,27 @@
 use async_nats::client::traits::Publisher;
 use async_nats::message::OutboundMessage;
 use async_nats::{ConnectOptions, HeaderMap};
+use config::GLOBAL_CONFIG;
 use futures_util::StreamExt;
 use std::collections::VecDeque;
 use std::sync::{Arc, LazyLock, Mutex};
 use std::thread;
 use std::time::Duration;
 
+#[derive(Debug)]
 pub struct IncomingRemoteIOMessage {
     pub name: String,
     pub payload: String,
     pub reply_to: Option<String>,
 }
 
+#[derive(Debug)]
 pub struct OutgoingRemoteIOMessage {
     pub name: String,
     pub payload: String,
     pub success: bool,
 }
+
 pub struct NATSConnection {
     pub outbox: Arc<Mutex<VecDeque<OutgoingRemoteIOMessage>>>,
     pub inbox: Arc<Mutex<VecDeque<IncomingRemoteIOMessage>>>,
@@ -29,9 +33,16 @@ pub static NATS_CONNECTION: LazyLock<NATSConnection> = LazyLock::new(|| {
     let inbox: Arc<Mutex<VecDeque<IncomingRemoteIOMessage>>> =
         Arc::new(Mutex::new(VecDeque::new()));
 
-    connect_nats();
+    // this needs to be done like that without send event macro
+    // because here NATS_CONNECTION is not initialized and it would
+    // go into a loop
+    outbox.lock().unwrap().push_front(OutgoingRemoteIOMessage {
+        name: "event.on_nats_connected".to_string(),
+        payload: "null".to_string(),
+        success: true,
+    });
 
-    send_event!("on_nats_connected");
+    connect_nats();
 
     NATSConnection { inbox, outbox }
 });
@@ -76,14 +87,14 @@ fn connect_nats() {
 
     let client = rt
         .block_on(async_nats::connect_with_options(
-            "nats://localhost:4222",
+            GLOBAL_CONFIG.nats_address.clone(),
             ConnectOptions::new().no_echo(),
         ))
         .unwrap();
 
     println!("Connected to NATS, subscribing to all...");
 
-    let mut subscription = rt.block_on(client.subscribe("command.*")).unwrap();
+    let mut subscription = rt.block_on(client.subscribe(">")).unwrap();
 
     {
         let rt = rt.clone();
@@ -93,6 +104,7 @@ fn connect_nats() {
                 let mut outbox = NATS_CONNECTION.outbox.lock().unwrap();
                 while !outbox.is_empty() {
                     let message = outbox.pop_back().unwrap();
+                    println!("OUTGOING {:?}", message);
                     let mut headers = HeaderMap::new();
                     headers.insert("status", if message.success { "ok" } else { "error" });
                     rt.block_on(client.publish_message(OutboundMessage {
@@ -113,6 +125,7 @@ fn connect_nats() {
             println!("NATS receive loop starting...");
             loop {
                 if let Some(message) = rt.block_on(subscription.next()) {
+                    println!("INCOMING {:?}", message);
                     let mut inbox = NATS_CONNECTION.inbox.lock().unwrap();
                     inbox.push_front(IncomingRemoteIOMessage {
                         name: message.subject.into_string(),
@@ -125,6 +138,8 @@ fn connect_nats() {
             }
         });
     }
+
+    println!("NATS connected and set up.");
 
     // You need to drop subscripions in async context, as they do spawn tasks to clean themselves up.
     // rt.block_on(async {

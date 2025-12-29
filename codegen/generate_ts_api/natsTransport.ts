@@ -14,15 +14,21 @@ export class NATSTransport {
 
   public async connect(): Promise<void> {
     this.connection = await connect({ servers: this.host, noEcho: true });
-    this.connection.subscribe("*", {
+    this.connection.subscribe(">", {
       callback: (_, x) => {
         const name = x.subject;
         const payload = JSON.parse(Buffer.from(x.data).toString("utf-8"));
         const success = x.headers?.get("status") === "ok";
+        console.log(name, success ? "ok" : "fail", payload);
         this.onReceive?.({ name, payload, success });
       },
     });
     console.log(`connected to ${this.connection.getServer()}`);
+
+    process.on("exit", async () => {
+      await this.connection?.drain();
+      await this.connection?.close();
+    });
   }
 
   public setOnReceive(
