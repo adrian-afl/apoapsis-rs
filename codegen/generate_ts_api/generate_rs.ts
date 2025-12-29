@@ -1,8 +1,11 @@
 import { readComponentsMetadata } from "./readComponentsMetadata.js";
+import { readApiExports } from "./readApiExports.js";
 
 const componentsMetadata = readComponentsMetadata();
+const apiExports = readApiExports();
 
 console.log(`${componentsMetadata.map((x) => x.importRs).join("\n")}
+${apiExports.commands.map((x) => x.importRs).join("\n")}
 use ecs::ecs_world::ECSWorld;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -138,12 +141,15 @@ pub fn set_${component.snake}(payload: &str, ecs: &mut ECSWorld) -> Result<Optio
 }
 
 console.log(`
-pub fn handle_message_components_api(
+pub fn handle_message_api(
     name: &str,
     payload: &str,
     ecs: &mut ECSWorld,
 ) -> Result<Option<String>, String> {
     match name {
+    ${apiExports.commands
+      .map((x) => `"command.${x.name}" => ${x.name}(payload, ecs),`)
+      .join("\n    ")}
     ${componentsMetadata
       .filter((x) => x.type === "Option")
       .map(
