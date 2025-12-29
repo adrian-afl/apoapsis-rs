@@ -21,6 +21,14 @@ impl Entity {
         }
     }
 
+    pub fn new_with_components(name: Option<&str>, components: AttachedComponents) -> Entity {
+        Entity {
+            id: ENTITY_SEQ.fetch_add(1, Ordering::SeqCst),
+            name: name.map(|name| name.to_owned()),
+            components,
+        }
+    }
+
     pub fn named(name: &str) -> Entity {
         Entity::new(Some(name))
     }
