@@ -2,6 +2,6 @@
 import type { TransformComponent } from "./TransformComponent.js";
 
 export type SetTransformInput = {
-  entityId: bigint;
+  entityId: number;
   component: TransformComponent;
 };

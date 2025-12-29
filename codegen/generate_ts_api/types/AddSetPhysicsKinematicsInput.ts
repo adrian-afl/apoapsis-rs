@@ -2,6 +2,6 @@
 import type { SetPhysicsKinematicsComponent } from "./SetPhysicsKinematicsComponent.js";
 
 export type AddSetPhysicsKinematicsInput = {
-  entityId: bigint;
+  entityId: number;
   component: SetPhysicsKinematicsComponent;
 };

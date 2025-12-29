@@ -2,7 +2,7 @@
 import type { AttachedComponents } from "./AttachedComponents.js";
 
 export type Entity = {
-  id: bigint;
+  id: number;
   name: string | null;
   components: AttachedComponents;
 };

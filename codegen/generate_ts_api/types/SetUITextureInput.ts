@@ -2,6 +2,6 @@
 import type { UITextureComponent } from "./UITextureComponent.js";
 
 export type SetUITextureInput = {
-  entityId: bigint;
+  entityId: number;
   component: UITextureComponent;
 };

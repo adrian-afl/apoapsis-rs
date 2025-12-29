@@ -2,9 +2,7 @@ import { describe, it, after } from "node:test";
 import * as assert from "node:assert";
 import { NATSTransport } from "./natsTransport.js";
 import { GameApi } from "./GameApi.js";
-import { GameComponentsApi } from "./generated_ts_client.js";
-import { GameECSWorldApi } from "./GameECSWorldApi.js";
-import { GameEntityApi } from "./GameEntityApi.js";
+import { GameCommandsApi, GameComponentsApi } from "./generated_ts_client.js";
 import { setTimeout } from "node:timers/promises";
 import { startGame, startNATSServer } from "./starter.js";
 
@@ -24,8 +22,7 @@ describe("test", () => {
     console.log(2);
 
     const componentsApi = new GameComponentsApi(gameApi);
-    const ecsWorldApi = new GameECSWorldApi(gameApi);
-    const entityApi = new GameEntityApi(gameApi);
+    const commandsApi = new GameCommandsApi(gameApi);
 
     console.log(3);
 
@@ -41,17 +38,17 @@ describe("test", () => {
     await setTimeout(5000);
 
     console.time("timer");
-    await ecsWorldApi.resetWorld();
+    await commandsApi.resetWorld();
 
     console.log(5);
 
-    const serializedBefore = await ecsWorldApi.serializeWorld();
+    const serializedBefore = await commandsApi.serializeWorld();
     assert.strictEqual(serializedBefore.entities.length, 0);
 
-    const { id: entityId } = await entityApi.createEntity("test");
+    const { id: entityId } = await commandsApi.createEntity({ name: "test" });
     await componentsApi.isPlayer.set(entityId, true);
 
-    const serializedAfter = await ecsWorldApi.serializeWorld();
+    const serializedAfter = await commandsApi.serializeWorld();
     assert.strictEqual(serializedAfter.entities.length, 1);
     assert.strictEqual(await componentsApi.isPlayer.get(entityId), true);
 

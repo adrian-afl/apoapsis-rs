@@ -2,6 +2,6 @@
 import type { RealPhysicsComponent } from "./RealPhysicsComponent.js";
 
 export type SetRealPhysicsInput = {
-  entityId: bigint;
+  entityId: number;
   component: RealPhysicsComponent;
 };

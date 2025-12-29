@@ -17,6 +17,9 @@ cd ../core
 cargo test export_bindings
 
 cd ../../codegen/generate_ts_api
+cd types
+sed -i 's/: bigint/: number/g' *.ts
+cd ../
 npx tsx generate_rs.ts > ../../packages/core/src/remote_api/api/generated.rs
 npx tsx generate_ts.ts > ./generated_ts_client.ts
 

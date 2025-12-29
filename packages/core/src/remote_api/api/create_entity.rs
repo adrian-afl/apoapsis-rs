@@ -7,10 +7,12 @@ use ts_rs::TS;
 
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(export)]
 struct CreateEntityInput {
     name: Option<String>,
 }
 
+// @api_command create_entity(CreateEntityInput): ObjectWithID
 pub fn create_entity(payload: &str, ecs: &mut ECSWorld) -> Result<Option<String>, String> {
     let input: CreateEntityInput = serde_json::from_str(payload).map_err(serde_err_map)?;
     let entity = Entity::new(input.name.as_deref());

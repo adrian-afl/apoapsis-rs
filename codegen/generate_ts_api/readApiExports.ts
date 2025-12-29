@@ -6,12 +6,14 @@ export interface ApiExportedCommand {
   inputType: string;
   returnType: string;
   importRs: string;
+  importsTs: string[];
 }
 
 export interface ApiExportedEvent {
   name: string;
   payloadType: string;
   importRs: string;
+  importsTs: string[];
 }
 
 export interface ReadApiExportsResult {
@@ -30,8 +32,6 @@ function pathToImportRS(inputPath: string): string {
   const parts = inputPath.split("/");
   const crate = parts[2] === "core" ? "crate" : parts[2]; // special for things inside core
   const isLibRs = inputPath.endsWith("lib.rs");
-
-  console.log(inputPath);
 
   return (isLibRs ? inputPath.replace("/lib.rs", "") : inputPath)
     .replace("/src", "")
@@ -53,9 +53,9 @@ export function readApiExports(): ReadApiExportsResult {
     .split("\n");
 
   const commandRegex =
-    /(.*?):\/\/ @api_command ([A-z0-9_]+?)\(([A-z0-9_]+?)\):[ ]*([A-z0-9_]+?)$/;
+    /(.*?):\/\/ @api_command ([A-z0-9_]+?)\(([A-z0-9_]*?)\):[ ]*([A-z0-9_]+?)$/;
 
-  const eventRegex = /(.*?):\/\/ @api_event ([A-z0-9_]+?)\(([A-z0-9_]+?)\)$/;
+  const eventRegex = /(.*?):\/\/ @api_event ([A-z0-9_]*?)\(([A-z0-9_]*?)\)$/;
 
   const result: ReadApiExportsResult = { commands: [], events: [] };
 
@@ -65,6 +65,14 @@ export function readApiExports(): ReadApiExportsResult {
     if (commandMatch) {
       result.commands.push({
         importRs: `${pathToImportRS(commandMatch[1])}::${commandMatch[2]};`,
+        importsTs: [
+          commandMatch[3].length > 0
+            ? `import { ${commandMatch[3]} } from "./types/${commandMatch[3]}.js";`
+            : "",
+          commandMatch[4].length > 0
+            ? `import { ${commandMatch[4]} } from "./types/${commandMatch[4]}.js";`
+            : "",
+        ].filter((x) => x.length > 0),
         name: commandMatch[2],
         inputType: commandMatch[3],
         returnType: commandMatch[4],
@@ -72,6 +80,12 @@ export function readApiExports(): ReadApiExportsResult {
     } else if (eventMatch) {
       result.events.push({
         importRs: `${pathToImportRS(eventMatch[1])}::${eventMatch[2]};`,
+        importsTs:
+          eventMatch[3].length > 0
+            ? [
+                `import { ${eventMatch[3]} } from "./types/${eventMatch[3]}.js";`,
+              ]
+            : [],
         name: eventMatch[2],
         payloadType: eventMatch[3],
       });

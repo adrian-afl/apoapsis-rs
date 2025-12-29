@@ -47,7 +47,7 @@ pub static NATS_CONNECTION: LazyLock<NATSConnection> = LazyLock::new(|| {
     NATSConnection { inbox, outbox }
 });
 
-// @api_event on_nats_connected(null)
+// @api_event on_nats_connected()
 
 #[macro_export]
 macro_rules! send_event {

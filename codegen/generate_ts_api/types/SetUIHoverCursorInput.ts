@@ -2,6 +2,6 @@
 import type { UIHoverCursorComponent } from "./UIHoverCursorComponent.js";
 
 export type SetUIHoverCursorInput = {
-  entityId: bigint;
+  entityId: number;
   component: UIHoverCursorComponent;
 };

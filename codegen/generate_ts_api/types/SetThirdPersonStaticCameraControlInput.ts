@@ -2,6 +2,6 @@
 import type { ThirdPersonStaticCameraControlComponent } from "./ThirdPersonStaticCameraControlComponent.js";
 
 export type SetThirdPersonStaticCameraControlInput = {
-  entityId: bigint;
+  entityId: number;
   component: ThirdPersonStaticCameraControlComponent;
 };

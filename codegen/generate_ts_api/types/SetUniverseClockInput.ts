@@ -2,6 +2,6 @@
 import type { UniverseClockComponent } from "./UniverseClockComponent.js";
 
 export type SetUniverseClockInput = {
-  entityId: bigint;
+  entityId: number;
   component: UniverseClockComponent;
 };

@@ -2,7 +2,7 @@
 import type { UIFontSize } from "./UIFontSize.js";
 
 export type UITextComponent = {
-  id: bigint;
+  id: number;
   content: string;
   color: [number, number, number, number];
   font_size: UIFontSize;

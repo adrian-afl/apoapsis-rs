@@ -2,6 +2,6 @@
 import type { SimplePhysicsComponent } from "./SimplePhysicsComponent.js";
 
 export type SetSimplePhysicsInput = {
-  entityId: bigint;
+  entityId: number;
   component: SimplePhysicsComponent;
 };

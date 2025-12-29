@@ -1,15 +1,58 @@
 import { readComponentsMetadata } from "./readComponentsMetadata.js";
+import { readApiExports } from "./readApiExports.js";
 
 const componentsMetadata = readComponentsMetadata();
+const apiExports = readApiExports();
 
 function camelize(str: string): string {
   return str[0].toLowerCase() + str.substring(1);
 }
 
+function camelizeSnake(str: string): string {
+  return str
+    .toLowerCase()
+    .replace(/([-_][a-z])/g, (group) =>
+      group.toUpperCase().replace("-", "").replace("_", ""),
+    );
+}
+
+const apiExportImports = [
+  ...new Set(
+    [
+      ...apiExports.commands.map((x) => x.importsTs),
+      ...apiExports.events.map((x) => x.importsTs),
+    ]
+      .flat()
+      .map((x) => x.trim())
+      .filter((x) => !x.endsWith('void.js";') && !x.endsWith('null.js";')),
+  ),
+];
+
 console.log(`${componentsMetadata.map((x) => x.importTs).join("\n")}
+${apiExportImports.join("\n")}
 import { GameApi } from "./GameApi.js";
 
-export class GameComponentsApi {
+export class GameCommandsApi {
+  private readonly api: GameApi;
+  
+  public constructor(api: GameApi){
+    this.api = api;
+  }`);
+
+for (const command of apiExports.commands) {
+  console.log(`
+  public async ${camelizeSnake(command.name)}(${command.inputType.length === 0 ? "" : `input: ${command.inputType}`}): Promise<${command.returnType}> {
+    return this.api.send({
+      name: "command.${command.name}",
+      payload: ${command.inputType.length === 0 ? "{}" : "input"},
+    }) as Promise<${command.returnType}>;
+  }
+  `);
+}
+
+console.log("}"); // GameCommandsApi close
+
+console.log(`export class GameComponentsApi {
   private readonly api: GameApi;
   
   public constructor(api: GameApi){

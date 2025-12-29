@@ -20,8 +20,48 @@ import { UITextureComponent } from "./types/UITextureComponent.js";
 import { UITextComponent } from "./types/UITextComponent.js";
 import { UIIsRaycastableComponent } from "./types/UIIsRaycastableComponent.js";
 import { UIRequireFreeCursorComponent } from "./types/UIRequireFreeCursorComponent.js";
+import { CreateEntityInput } from "./types/CreateEntityInput.js";
+import { ObjectWithID } from "./types/ObjectWithID.js";
+import { ECSWorldSerializedRepresentation } from "./types/ECSWorldSerializedRepresentation.js";
 import { GameApi } from "./GameApi.js";
 
+export class GameCommandsApi {
+  private readonly api: GameApi;
+
+  public constructor(api: GameApi) {
+    this.api = api;
+  }
+
+  public async createEntity(input: CreateEntityInput): Promise<ObjectWithID> {
+    return this.api.send({
+      name: "command.create_entity",
+      payload: input,
+    }) as Promise<ObjectWithID>;
+  }
+
+  public async deserializeWorld(
+    input: ECSWorldSerializedRepresentation,
+  ): Promise<void> {
+    return this.api.send({
+      name: "command.deserialize_world",
+      payload: input,
+    }) as Promise<void>;
+  }
+
+  public async resetWorld(): Promise<void> {
+    return this.api.send({
+      name: "command.reset_world",
+      payload: {},
+    }) as Promise<void>;
+  }
+
+  public async serializeWorld(): Promise<ECSWorldSerializedRepresentation> {
+    return this.api.send({
+      name: "command.serialize_world",
+      payload: {},
+    }) as Promise<ECSWorldSerializedRepresentation>;
+  }
+}
 export class GameComponentsApi {
   private readonly api: GameApi;
 

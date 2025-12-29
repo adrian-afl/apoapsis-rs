@@ -2,6 +2,6 @@
 import type { UIHoverColorComponent } from "./UIHoverColorComponent.js";
 
 export type SetUIHoverColorInput = {
-  entityId: bigint;
+  entityId: number;
   component: UIHoverColorComponent;
 };

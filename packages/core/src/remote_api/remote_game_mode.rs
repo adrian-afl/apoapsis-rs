@@ -1,9 +1,5 @@
-use crate::remote_api::api::create_entity::create_entity;
-use crate::remote_api::api::deserialize_world::deserialize_world;
 // use crate::remote_api::api::generated::handle_message_components_api;
-use crate::remote_api::api::generated::handle_message_components_api;
-use crate::remote_api::api::reset_world::reset_world;
-use crate::remote_api::api::serialize_world::serialize_world;
+use crate::remote_api::api::generated::handle_message_api;
 use ecs::ecs_world::{ECSWorld, ECSWorldSerializedRepresentation};
 use nats::{NATS_CONNECTION, OutgoingRemoteIOMessage, send_event};
 use serde::{Deserialize, Serialize};
@@ -20,7 +16,7 @@ pub struct OnRemoteGameModeInitializedEvent {
     pub ecs: ECSWorldSerializedRepresentation,
 }
 
-// @api_event on_remote_game_mode_initialized(null)
+// @api_event on_remote_game_mode_initialized()
 
 impl RemoteGameMode {
     pub fn new() -> Self {
@@ -37,23 +33,13 @@ impl RemoteGameMode {
     }
 }
 
-fn handle_message(name: &str, payload: &str, ecs: &mut ECSWorld) -> Result<Option<String>, String> {
-    match name {
-        "command.reset_world" => reset_world(payload, ecs),
-        "command.serialize_world" => serialize_world(payload, ecs),
-        "command.deserialize_world" => deserialize_world(payload, ecs),
-        "command.create_entity" => create_entity(payload, ecs),
-        _ => handle_message_components_api(name, payload, ecs),
-    }
-}
-
 impl RemoteGameMode {
     pub fn update(&mut self) {
         let mut inbox = NATS_CONNECTION.inbox.lock().unwrap();
         while let Some(message) = inbox.pop_back() {
             println!("Message processing {}, {}", message.name, message.payload);
 
-            let res = handle_message(&message.name, &message.payload, &mut self.ecs);
+            let res = handle_message_api(&message.name, &message.payload, &mut self.ecs);
 
             match res {
                 Ok(result) => {

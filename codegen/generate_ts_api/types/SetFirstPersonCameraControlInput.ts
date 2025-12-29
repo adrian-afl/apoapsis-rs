@@ -2,6 +2,6 @@
 import type { FirstPersonCameraControlComponent } from "./FirstPersonCameraControlComponent.js";
 
 export type SetFirstPersonCameraControlInput = {
-  entityId: bigint;
+  entityId: number;
   component: FirstPersonCameraControlComponent;
 };

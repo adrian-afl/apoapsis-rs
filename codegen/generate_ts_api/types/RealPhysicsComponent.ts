@@ -2,6 +2,6 @@
 import type { ShapeDescription } from "./ShapeDescription.js";
 
 export type RealPhysicsComponent = {
-  id: bigint;
+  id: number;
   shape_description: ShapeDescription;
 };

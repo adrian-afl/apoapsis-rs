@@ -2,6 +2,6 @@
 import type { ShipControlComponent } from "./ShipControlComponent.js";
 
 export type SetShipControlInput = {
-  entityId: bigint;
+  entityId: number;
   component: ShipControlComponent;
 };

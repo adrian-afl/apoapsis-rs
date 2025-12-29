@@ -2,6 +2,6 @@
 import type { ThirdPersonOrbitCameraControlComponent } from "./ThirdPersonOrbitCameraControlComponent.js";
 
 export type SetThirdPersonOrbitCameraControlInput = {
-  entityId: bigint;
+  entityId: number;
   component: ThirdPersonOrbitCameraControlComponent;
 };
