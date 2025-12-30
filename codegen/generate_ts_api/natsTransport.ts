@@ -1,5 +1,8 @@
 import { connect, NatsConnection } from "nats";
-import { GameApiIncomingMessage, GameApiOutgoingMessage } from "./GameApi.js";
+import {
+  GameApiIncomingMessage,
+  GameApiOutgoingMessage,
+} from "./BaseGameApi.js";
 
 export class NATSTransport {
   private readonly host: string;

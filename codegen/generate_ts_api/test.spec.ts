@@ -1,7 +1,7 @@
 import { describe, it, after } from "node:test";
 import * as assert from "node:assert";
 import { NATSTransport } from "./natsTransport.js";
-import { GameApi } from "./GameApi.js";
+import { GameApi } from "./BaseGameApi.js";
 import { GameCommandsApi, GameComponentsApi } from "./generated_ts_client.js";
 import { setTimeout } from "node:timers/promises";
 import { startGame, startNATSServer } from "./starter.js";

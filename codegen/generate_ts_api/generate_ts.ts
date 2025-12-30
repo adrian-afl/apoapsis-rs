@@ -23,19 +23,25 @@ const apiExportImports = [
       ...apiExports.events.map((x) => x.importsTs),
     ]
       .flat()
-      .map((x) => x.trim())
-      .filter((x) => !x.endsWith('void.js";') && !x.endsWith('null.js";')),
+      .map((x) => x.trim().replaceAll("[]", ""))
+      .filter(
+        (x) =>
+          !x.endsWith('void.js";') &&
+          !x.endsWith('null.js";') &&
+          !x.endsWith('number.js";') &&
+          !x.endsWith('string.js";'),
+      ),
   ),
 ];
 
 console.log(`${componentsMetadata.map((x) => x.importTs).join("\n")}
 ${apiExportImports.join("\n")}
-import { GameApi } from "./GameApi.js";
+import { BaseGameApi } from "./BaseGameApi.js";
 
-export class GameCommandsApi {
-  private readonly api: GameApi;
+export class GameRawApi {
+  private readonly api: BaseGameApi;
   
-  public constructor(api: GameApi){
+  public constructor(api: BaseGameApi){
     this.api = api;
   }`);
 
@@ -49,15 +55,6 @@ for (const command of apiExports.commands) {
   }
   `);
 }
-
-console.log("}"); // GameCommandsApi close
-
-console.log(`export class GameComponentsApi {
-  private readonly api: GameApi;
-  
-  public constructor(api: GameApi){
-    this.api = api;
-  }`);
 
 for (const component of componentsMetadata.filter((x) => x.type === "Option")) {
   console.log(`

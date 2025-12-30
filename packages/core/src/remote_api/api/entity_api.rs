@@ -58,7 +58,10 @@ struct ReplaceEntityComponentsInput {
 }
 
 // @api_command replace_entity_components(ReplaceEntityComponentsInput): void
-pub fn replace_entity(payload: &str, ecs: &mut ECSWorld) -> Result<Option<String>, String> {
+pub fn replace_entity_components(
+    payload: &str,
+    ecs: &mut ECSWorld,
+) -> Result<Option<String>, String> {
     let input: ReplaceEntityComponentsInput =
         serde_json::from_str(payload).map_err(serde_parse_err_map)?;
 

@@ -15,7 +15,7 @@ export type GameApiTransmitter = (
   message: GameApiOutgoingMessage & { replyTo: string },
 ) => void;
 
-export class GameApi {
+export class BaseGameApi {
   private readonly waitingForReply: Map<
     string,
     {
