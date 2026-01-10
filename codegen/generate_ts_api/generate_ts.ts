@@ -1,5 +1,6 @@
 import { readComponentsMetadata } from "./readComponentsMetadata.js";
 import { readApiExports } from "./readApiExports.js";
+import * as fs from "node:fs";
 
 const componentsMetadata = readComponentsMetadata();
 const apiExports = readApiExports();

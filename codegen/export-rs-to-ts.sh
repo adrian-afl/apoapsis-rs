@@ -21,7 +21,11 @@ cd types
 sed -i 's/: bigint/: number/g' *.ts
 cd ../
 npx tsx generate_rs.ts > ../../packages/core/src/remote_api/api/generated.rs
-npx tsx generate_ts.ts > ./generated_ts_client.ts
+npx tsx generate_ts.ts > ./RemoteGameApi.ts
 
 npx prettier --write types
 npx prettier --write *.ts
+
+rm -rf ../../game-script/generated
+cp -R types ../../game-script/generated
+cp -R RemoteGameApi.ts ../../game-script/generated
