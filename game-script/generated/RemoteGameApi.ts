@@ -26,14 +26,16 @@ import { ObjectWithID } from "./types/ObjectWithID.js";
 import { Entity } from "./types/Entity.js";
 import { ReplaceEntityComponentsInput } from "./types/ReplaceEntityComponentsInput.js";
 import { FindAllEntitiesByComponents } from "./types/FindAllEntitiesByComponents.js";
-import { BaseGameApi } from "./BaseGameApi.js";
+import { BaseGameApi } from "../framework/BaseGameApi.js";
 
-export class GameRawApi {
+export class RemoteGameApi {
   private readonly api: BaseGameApi;
 
   public constructor(api: BaseGameApi) {
     this.api = api;
   }
+
+  public waitForEvent(name: string) {}
 
   public async deserializeWorld(
     input: ECSWorldSerializedRepresentation,

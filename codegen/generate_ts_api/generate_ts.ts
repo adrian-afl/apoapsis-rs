@@ -1,6 +1,5 @@
 import { readComponentsMetadata } from "./readComponentsMetadata.js";
 import { readApiExports } from "./readApiExports.js";
-import * as fs from "node:fs";
 
 const componentsMetadata = readComponentsMetadata();
 const apiExports = readApiExports();
@@ -37,9 +36,9 @@ const apiExportImports = [
 
 console.log(`${componentsMetadata.map((x) => x.importTs).join("\n")}
 ${apiExportImports.join("\n")}
-import { BaseGameApi } from "./BaseGameApi.js";
+import { BaseGameApi } from "../framework/BaseGameApi.js";
 
-export class GameRawApi {
+export class RemoteGameApi {
   private readonly api: BaseGameApi;
   
   public constructor(api: BaseGameApi){

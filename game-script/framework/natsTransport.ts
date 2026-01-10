@@ -22,7 +22,7 @@ export class NATSTransport {
         const name = x.subject;
         const payload = JSON.parse(Buffer.from(x.data).toString("utf-8"));
         const success = x.headers?.get("status") === "ok";
-        console.log(name, success ? "ok" : "fail", payload);
+        // console.log(name, success ? "ok" : "fail", payload);
         this.onReceive?.({ name, payload, success });
       },
     });

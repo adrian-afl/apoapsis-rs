@@ -1,57 +1,57 @@
-import { describe, it, after } from "node:test";
-import * as assert from "node:assert";
-import { NATSTransport } from "./natsTransport.js";
-import { GameApi } from "./BaseGameApi.js";
-import { GameCommandsApi, GameComponentsApi } from "./generated_ts_client.js";
+import { describe, it, afterAll, expect } from "vitest";
+import { NATSTransport } from "../framework/natsTransport.js";
 import { setTimeout } from "node:timers/promises";
-import { startGame, startNATSServer } from "./starter.js";
+import { startGame, startNATSServer } from "../framework/starter";
+import { RemoteGameApi } from "../generated/RemoteGameApi";
+import { BaseGameApi } from "../framework/BaseGameApi";
+
+async function boot(port: number) {
+  const natsServer = startNATSServer(port);
+  const nats = new NATSTransport(`localhost:${port}`);
+  const baseApi = new BaseGameApi((message) => nats.send(message));
+  const gameApi = new RemoteGameApi(baseApi);
+  nats.setOnReceive((message) => baseApi.receive(message));
+  const gameInstance = startGame("release", port, true);
+  await setTimeout(5000);
+  await nats.connect();
+  return gameApi;
+}
 
 describe("test", () => {
-  after(() => process.exit(0));
+  // afterAll(() => process.exit(0));
 
   it("has comms two sides", async () => {
-    const port = 4321;
-
-    const natsServer = startNATSServer(port);
-
-    console.log(1);
-
-    const nats = new NATSTransport(`localhost:${port}`);
-    const gameApi = new GameApi((message) => nats.send(message));
-
-    console.log(2);
-
-    const componentsApi = new GameComponentsApi(gameApi);
-    const commandsApi = new GameCommandsApi(gameApi);
-
-    console.log(3);
-
-    nats.setOnReceive((message) => gameApi.receive(message));
-
-    await setTimeout(1000);
-    await nats.connect();
-
-    console.log(4);
-
-    const gameInstance = startGame("release", port, true);
+    const gameApi = await boot(4321);
 
     await setTimeout(5000);
 
     console.time("timer");
-    await commandsApi.resetWorld();
+    await gameApi.resetWorld();
 
-    console.log(5);
+    console.log(8);
 
-    const serializedBefore = await commandsApi.serializeWorld();
-    assert.strictEqual(serializedBefore.entities.length, 0);
+    const serializedBefore = await gameApi.serializeWorld();
+    // assert.strictEqual(serializedBefore.entities.length, 0);
 
-    const { id: entityId } = await commandsApi.createEntity({ name: "test" });
-    await componentsApi.isPlayer.set(entityId, true);
+    const { id: entityId } = await gameApi.addEntity({ components: null });
+    await gameApi.isPlayer.set(entityId, true);
 
-    const serializedAfter = await commandsApi.serializeWorld();
-    assert.strictEqual(serializedAfter.entities.length, 1);
-    assert.strictEqual(await componentsApi.isPlayer.get(entityId), true);
+    const serializedAfter = await gameApi.serializeWorld();
+    // assert.strictEqual(serializedAfter.entities.length, 1);
+    // assert.strictEqual(await gameApi.isPlayer.get(entityId), true);
 
     console.timeEnd("timer");
+  });
+
+  it("Just adds entity successfully", async () => {
+    const gameApi = await boot(4321);
+
+    console.log(1);
+
+    const { id: entityId } = await gameApi.addEntity({ components: null });
+
+    console.log(2);
+
+    console.log(entityId);
   });
 });

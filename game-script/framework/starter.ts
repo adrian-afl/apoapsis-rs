@@ -1,4 +1,5 @@
 import { spawn } from "node:child_process";
+import { InspectColorForeground, styleText } from "node:util";
 
 export interface ProcessStartResult {
   kill: () => void;
@@ -9,6 +10,7 @@ export interface ProcessStartResult {
 }
 
 async function startProcess(
+  color: InspectColorForeground,
   path: string,
   cwd: string,
   args: string[],
@@ -27,12 +29,12 @@ async function startProcess(
   };
 
   ls.stdout.on("data", (data) => {
-    console.log(data.toString("utf-8"));
+    console.log(styleText(color, data.toString("utf-8")));
     result.stdout += data.toString("utf-8");
   });
 
   ls.stderr.on("data", (data) => {
-    console.log(data.toString("utf-8"));
+    console.log(styleText(color, data.toString("utf-8")));
     result.stderr += data.toString("utf-8");
   });
 
@@ -48,7 +50,7 @@ async function startProcess(
 }
 
 export function startNATSServer(port: number): Promise<ProcessStartResult> {
-  return startProcess("nats-server.exe", "../../nats-server", [
+  return startProcess("blue", "nats-server.exe", "../nats-server", [
     "--port",
     port.toString(),
   ]);
@@ -60,8 +62,9 @@ export function startGame(
   headless: boolean,
 ): Promise<ProcessStartResult> {
   return startProcess(
+    "green",
     `target/${mode}/planetdraw-rs.exe`,
-    `../../`,
+    `../`,
     headless
       ? ["--headless", "--nats-address", `nats://localhost:${natsPort}`]
       : ["--nats-address", `nats://localhost:${natsPort}`],

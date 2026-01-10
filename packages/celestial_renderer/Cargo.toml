@@ -17,4 +17,3 @@ dashu-float = { workspace = true }
 glam = { workspace = true, features = ["serde"] }
 ash = { workspace = true, features = ["loaded"] }
 rayon = { workspace = true }
-tracing = { workspace = true }

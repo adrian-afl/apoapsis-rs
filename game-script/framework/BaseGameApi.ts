@@ -40,7 +40,7 @@ export class BaseGameApi {
     if (this.waitingForReply.has(message.name)) {
       const handlers = this.waitingForReply.get(message.name)!;
       this.waitingForReply.delete(message.name);
-      console.log({ message });
+      // console.log({ message });
       if (message.success) {
         handlers.resolve(message.payload);
       } else {
@@ -55,6 +55,15 @@ export class BaseGameApi {
     return new Promise<unknown>((resolve, reject) => {
       this.waitingForReply.set(replyTo, { resolve, reject });
       this.transmitter({ ...message, replyTo });
+    });
+  }
+
+  public waitFor(name: string): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      this.waitingForReply.set(name, {
+        resolve,
+        reject,
+      });
     });
   }
 }

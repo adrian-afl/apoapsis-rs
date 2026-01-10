@@ -1,13 +1,9 @@
 use clap::Parser;
 use std::sync::LazyLock;
-use tracing::Level;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 pub struct GlobalConfig {
-    #[arg(short, long, default_value_t = Level::TRACE)]
-    pub log_level: Level,
-
     #[arg(short, long, default_value_t = false)]
     pub headless: bool,
 

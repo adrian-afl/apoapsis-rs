@@ -5,3 +5,4 @@ log.txt
 shaders/tmp-preparsed
 shaders/node_modules
 /codegen/generate_ts_api/node_modules
+/game-script/node_modules

@@ -1,5 +1,6 @@
 #!/usr/bin/env sh
 set -euo pipefail
+set -o verbose
 
 export TS_RS_LARGE_INT=number
 export TS_RS_IMPORT_EXTENSION=js
@@ -27,5 +28,7 @@ npx prettier --write types
 npx prettier --write *.ts
 
 rm -rf ../../game-script/generated
-cp -R types ../../game-script/generated
-cp -R RemoteGameApi.ts ../../game-script/generated
+mkdir ../../game-script/generated
+mkdir ../../game-script/generated/types
+mv types ../../game-script/generated/
+mv RemoteGameApi.ts ../../game-script/generated/
