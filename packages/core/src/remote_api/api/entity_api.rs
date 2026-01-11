@@ -13,7 +13,7 @@ struct AddEntityInput {
     components: Option<AttachedComponents>,
 }
 
-// @api_command add_entity(AddEntityInput): ObjectWithID
+// @api_command add_entity(input: AddEntityInput): ObjectWithID
 pub fn add_entity(payload: &str, ecs: &mut ECSWorld) -> Result<Option<String>, String> {
     let input: AddEntityInput = serde_json::from_str(payload).map_err(serde_parse_err_map)?;
     let entity = match input.components {
@@ -31,7 +31,7 @@ pub fn add_entity(payload: &str, ecs: &mut ECSWorld) -> Result<Option<String>, S
     ))
 }
 
-// @api_command remove_entity(number): void
+// @api_command remove_entity(id: number): void
 pub fn remove_entity(payload: &str, ecs: &mut ECSWorld) -> Result<Option<String>, String> {
     let id: u64 = payload.parse().map_err(|_| "Invalid id")?;
     ecs.remove_by_id(id);
@@ -39,7 +39,7 @@ pub fn remove_entity(payload: &str, ecs: &mut ECSWorld) -> Result<Option<String>
     Ok(None)
 }
 
-// @api_command get_entity(number): Entity
+// @api_command get_entity(id: number): Entity
 pub fn get_entity(payload: &str, ecs: &mut ECSWorld) -> Result<Option<String>, String> {
     let id: u64 = payload.parse().map_err(|_| "Invalid id")?;
 
@@ -57,7 +57,7 @@ struct ReplaceEntityComponentsInput {
     components: AttachedComponents,
 }
 
-// @api_command replace_entity_components(ReplaceEntityComponentsInput): void
+// @api_command replace_entity_components(id: number, components: AttachedComponents): void
 pub fn replace_entity_components(
     payload: &str,
     ecs: &mut ECSWorld,
@@ -78,7 +78,7 @@ struct FindAllEntitiesByComponents {
     components: Vec<Components>,
 }
 
-// @api_command find_all_entities_by_components(FindAllEntitiesByComponents): number[]
+// @api_command find_all_entities_by_components(components: AttachedComponents[]): number[]
 pub fn find_all_entities_by_components(
     payload: &str,
     ecs: &mut ECSWorld,

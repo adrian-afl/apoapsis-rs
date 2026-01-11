@@ -1,15 +1,19 @@
 use crate::decimal_vector_3d::DecimalVector3d;
 use crate::sin_cos::{cos, f64_to_dbig, sin};
-use dashu_float::ops::SquareRoot;
 use dashu_float::DBig;
+use dashu_float::ops::SquareRoot;
 use glam::{DMat3, DMat4, DQuat};
+use serde::{Deserialize, Serialize};
 use std::ops::Deref;
 use std::sync::LazyLock;
+use ts_rs::TS;
 
 static DBIGHALF: LazyLock<DBig> = LazyLock::new(|| f64_to_dbig(0.5));
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export)]
 pub struct DecimalMatrix3d {
+    #[ts(type = "string[][]")]
     pub data: [[DBig; 3]; 3],
 }
 

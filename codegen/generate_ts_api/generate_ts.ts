@@ -1,5 +1,6 @@
 import { readComponentsMetadata } from "./readComponentsMetadata.js";
 import { readApiExports } from "./readApiExports.js";
+import { retfun } from "./retfun.js";
 
 const componentsMetadata = readComponentsMetadata();
 const apiExports = readApiExports();
@@ -46,11 +47,19 @@ export class RemoteGameApi {
   }`);
 
 for (const command of apiExports.commands) {
+  const argsSignature = command.inputType
+    .map((x) => `${x.name}: ${x.type}`)
+    .join(", ");
+  const argsUsage = retfun(() => {
+    if (command.inputType.length === 0) return "{}";
+    if (command.inputType.length === 1) return `${command.inputType[0].name}`;
+    return `{ ${command.inputType.map((x) => x.name).join(", ")} }`;
+  });
   console.log(`
-  public async ${camelizeSnake(command.name)}(${command.inputType.length === 0 ? "" : `input: ${command.inputType}`}): Promise<${command.returnType}> {
+  public async ${camelizeSnake(command.name)}(${argsSignature}): Promise<${command.returnType}> {
     return this.api.send({
       name: "command.${command.name}",
-      payload: ${command.inputType.length === 0 ? "{}" : "input"},
+      payload: ${argsUsage},
     }) as Promise<${command.returnType}>;
   }
   `);

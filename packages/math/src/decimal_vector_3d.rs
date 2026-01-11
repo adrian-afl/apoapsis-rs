@@ -8,6 +8,7 @@ use std::str::FromStr;
 use ts_rs::TS;
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export)]
 pub struct DecimalVector3d {
     #[ts(type = "string")]
     pub x: DBig,
@@ -121,13 +122,7 @@ impl DecimalVector3d {
 
 impl fmt::Display for DecimalVector3d {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(
-            f,
-            "{{ x: {}, y: {}, z: {} }}",
-            self.x,
-            self.y,
-            self.z
-        )
+        write!(f, "{{ x: {}, y: {}, z: {} }}", self.x, self.y, self.z)
     }
 }
 

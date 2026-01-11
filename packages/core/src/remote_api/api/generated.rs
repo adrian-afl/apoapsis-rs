@@ -21,13 +21,15 @@ use ecs::components::ui::ui_text_component::UITextComponent;
 use ecs::components::ui::ui_is_raycastable_component::UIIsRaycastableComponent;
 use ecs::components::ui::ui_require_free_cursor_component::UIRequireFreeCursorComponent;
 use crate::remote_api::api::deserialize_world::deserialize_world;
-use crate::remote_api::api::entity_api::add_entity;
-use crate::remote_api::api::entity_api::remove_entity;
-use crate::remote_api::api::entity_api::get_entity;
-use crate::remote_api::api::entity_api::replace_entity_components;
-use crate::remote_api::api::entity_api::find_all_entities_by_components;
 use crate::remote_api::api::reset_world::reset_world;
 use crate::remote_api::api::serialize_world::serialize_world;
+use crate::remote_api::api::universe_simulation_api::get_all_celestial_body_names;
+use crate::remote_api::api::universe_simulation_api::get_celestial_body_position;
+use crate::remote_api::api::universe_simulation_api::get_celestial_body_orientation;
+use crate::remote_api::api::universe_simulation_api::get_celestial_body_satellites;
+use crate::remote_api::api::universe_simulation_api::get_altitude_over_celestial_body;
+use crate::remote_api::api::universe_simulation_api::get_closest_celestial_body;
+use crate::remote_api::api::universe_simulation_api::get_gravity_flux;
 use ecs::ecs_world::ECSWorld;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -784,13 +786,15 @@ pub fn handle_message_api(
 ) -> Result<Option<String>, String> {
     match name {
     "command.deserialize_world" => deserialize_world(payload, ecs),
-    "command.add_entity" => add_entity(payload, ecs),
-    "command.remove_entity" => remove_entity(payload, ecs),
-    "command.get_entity" => get_entity(payload, ecs),
-    "command.replace_entity_components" => replace_entity_components(payload, ecs),
-    "command.find_all_entities_by_components" => find_all_entities_by_components(payload, ecs),
     "command.reset_world" => reset_world(payload, ecs),
     "command.serialize_world" => serialize_world(payload, ecs),
+    "command.get_all_celestial_body_names" => get_all_celestial_body_names(payload, ecs),
+    "command.get_celestial_body_position" => get_celestial_body_position(payload, ecs),
+    "command.get_celestial_body_orientation" => get_celestial_body_orientation(payload, ecs),
+    "command.get_celestial_body_satellites" => get_celestial_body_satellites(payload, ecs),
+    "command.get_altitude_over_celestial_body" => get_altitude_over_celestial_body(payload, ecs),
+    "command.get_closest_celestial_body" => get_closest_celestial_body(payload, ecs),
+    "command.get_gravity_flux" => get_gravity_flux(payload, ecs),
     "command.get_universe_clock" => get_universe_clock(payload, ecs),
     "command.set_universe_clock" => set_universe_clock(payload, ecs),
     "command.clear_universe_clock" => clear_universe_clock(payload, ecs),

@@ -1,0 +1,600 @@
+import { UniverseClockComponent } from "./types/UniverseClockComponent.js";
+import { CameraFocusComponent } from "./types/CameraFocusComponent.js";
+import { FirstPersonCameraControlComponent } from "./types/FirstPersonCameraControlComponent.js";
+import { ThirdPersonOrbitCameraControlComponent } from "./types/ThirdPersonOrbitCameraControlComponent.js";
+import { ThirdPersonStaticCameraControlComponent } from "./types/ThirdPersonStaticCameraControlComponent.js";
+import { TransformComponent } from "./types/TransformComponent.js";
+import { IsGroundColliderComponent } from "./types/IsGroundColliderComponent.js";
+import { RealPhysicsComponent } from "./types/RealPhysicsComponent.js";
+import { SimplePhysicsComponent } from "./types/SimplePhysicsComponent.js";
+import { SetPhysicsKinematicsComponent } from "./types/SetPhysicsKinematicsComponent.js";
+import { IsPlayerComponent } from "./types/IsPlayerComponent.js";
+import { MeshComponent } from "./types/MeshComponent.js";
+import { ControlFocusComponent } from "./types/ControlFocusComponent.js";
+import { ShipControlComponent } from "./types/ShipControlComponent.js";
+import { UIColorComponent } from "./types/UIColorComponent.js";
+import { UIHoverColorComponent } from "./types/UIHoverColorComponent.js";
+import { UIBoxComponent } from "./types/UIBoxComponent.js";
+import { UIHoverCursorComponent } from "./types/UIHoverCursorComponent.js";
+import { UITextureComponent } from "./types/UITextureComponent.js";
+import { UITextComponent } from "./types/UITextComponent.js";
+import { UIIsRaycastableComponent } from "./types/UIIsRaycastableComponent.js";
+import { UIRequireFreeCursorComponent } from "./types/UIRequireFreeCursorComponent.js";
+import { ECSWorldSerializedRepresentation } from "./types/ECSWorldSerializedRepresentation.js";
+import { DecimalVector3d } from "./types/DecimalVector3d.js";
+import { DecimalMatrix3d } from "./types/DecimalMatrix3d.js";
+import { BaseGameApi } from "../framework/BaseGameApi.js";
+
+export class RemoteGameApi {
+  private readonly api: BaseGameApi;
+  
+  public constructor(api: BaseGameApi){
+    this.api = api;
+  }
+
+  public async deserializeWorld(ECSWorldSerializedRepresentation: undefined): Promise<void> {
+    return this.api.send({
+      name: "command.deserialize_world",
+      payload: ECSWorldSerializedRepresentation,
+    }) as Promise<void>;
+  }
+  
+
+  public async resetWorld(): Promise<void> {
+    return this.api.send({
+      name: "command.reset_world",
+      payload: {},
+    }) as Promise<void>;
+  }
+  
+
+  public async serializeWorld(): Promise<ECSWorldSerializedRepresentation> {
+    return this.api.send({
+      name: "command.serialize_world",
+      payload: {},
+    }) as Promise<ECSWorldSerializedRepresentation>;
+  }
+  
+
+  public async getAllCelestialBodyNames(): Promise<string[]> {
+    return this.api.send({
+      name: "command.get_all_celestial_body_names",
+      payload: {},
+    }) as Promise<string[]>;
+  }
+  
+
+  public async getCelestialBodyPosition(string: undefined): Promise<DecimalVector3d> {
+    return this.api.send({
+      name: "command.get_celestial_body_position",
+      payload: string,
+    }) as Promise<DecimalVector3d>;
+  }
+  
+
+  public async getCelestialBodyOrientation(string: undefined): Promise<DecimalMatrix3d> {
+    return this.api.send({
+      name: "command.get_celestial_body_orientation",
+      payload: string,
+    }) as Promise<DecimalMatrix3d>;
+  }
+  
+
+  public async getCelestialBodySatellites(string: undefined): Promise<string[]> {
+    return this.api.send({
+      name: "command.get_celestial_body_satellites",
+      payload: string,
+    }) as Promise<string[]>;
+  }
+  
+
+  public async getAltitudeOverCelestialBody(string: undefined): Promise<string> {
+    return this.api.send({
+      name: "command.get_altitude_over_celestial_body",
+      payload: string,
+    }) as Promise<string>;
+  }
+  
+
+  public async getClosestCelestialBody(DecimalVector3d: undefined): Promise<string> {
+    return this.api.send({
+      name: "command.get_closest_celestial_body",
+      payload: DecimalVector3d,
+    }) as Promise<string>;
+  }
+  
+
+  public async getGravityFlux(DecimalVector3d: undefined): Promise<DecimalVector3d> {
+    return this.api.send({
+      name: "command.get_gravity_flux",
+      payload: DecimalVector3d,
+    }) as Promise<DecimalVector3d>;
+  }
+  
+
+  public const universeClock = {
+    get: (entityId: number): Promise<UniverseClockComponent> => {
+      return this.api.send({
+        name: "command.get_universe_clock",
+        payload: { entityId },
+      }) retfun Promise<UniverseClockComponent>;
+    },
+    
+    set: async (entityId: number, component: UniverseClockComponent): Promise<void> => {
+      await this.api.send({
+        name: "command.set_universe_clock",
+        payload: { entityId, component },
+      });
+    },
+    
+    clear: async (entityId: number): Promise<void> => {
+      await this.api.send({
+        name: "command.clear_universe_clock",
+        payload: { entityId },
+      });
+    }
+  }
+
+
+  public const firstPersonCameraControl = {
+    get: (entityId: number): Promise<FirstPersonCameraControlComponent> => {
+      return this.api.send({
+        name: "command.get_first_person_camera_control",
+        payload: { entityId },
+      }) retfun Promise<FirstPersonCameraControlComponent>;
+    },
+    
+    set: async (entityId: number, component: FirstPersonCameraControlComponent): Promise<void> => {
+      await this.api.send({
+        name: "command.set_first_person_camera_control",
+        payload: { entityId, component },
+      });
+    },
+    
+    clear: async (entityId: number): Promise<void> => {
+      await this.api.send({
+        name: "command.clear_first_person_camera_control",
+        payload: { entityId },
+      });
+    }
+  }
+
+
+  public const thirdPersonOrbitCameraControl = {
+    get: (entityId: number): Promise<ThirdPersonOrbitCameraControlComponent> => {
+      return this.api.send({
+        name: "command.get_third_person_orbit_camera_control",
+        payload: { entityId },
+      }) retfun Promise<ThirdPersonOrbitCameraControlComponent>;
+    },
+    
+    set: async (entityId: number, component: ThirdPersonOrbitCameraControlComponent): Promise<void> => {
+      await this.api.send({
+        name: "command.set_third_person_orbit_camera_control",
+        payload: { entityId, component },
+      });
+    },
+    
+    clear: async (entityId: number): Promise<void> => {
+      await this.api.send({
+        name: "command.clear_third_person_orbit_camera_control",
+        payload: { entityId },
+      });
+    }
+  }
+
+
+  public const thirdPersonStaticCameraControl = {
+    get: (entityId: number): Promise<ThirdPersonStaticCameraControlComponent> => {
+      return this.api.send({
+        name: "command.get_third_person_static_camera_control",
+        payload: { entityId },
+      }) retfun Promise<ThirdPersonStaticCameraControlComponent>;
+    },
+    
+    set: async (entityId: number, component: ThirdPersonStaticCameraControlComponent): Promise<void> => {
+      await this.api.send({
+        name: "command.set_third_person_static_camera_control",
+        payload: { entityId, component },
+      });
+    },
+    
+    clear: async (entityId: number): Promise<void> => {
+      await this.api.send({
+        name: "command.clear_third_person_static_camera_control",
+        payload: { entityId },
+      });
+    }
+  }
+
+
+  public const transform = {
+    get: (entityId: number): Promise<TransformComponent> => {
+      return this.api.send({
+        name: "command.get_transform",
+        payload: { entityId },
+      }) retfun Promise<TransformComponent>;
+    },
+    
+    set: async (entityId: number, component: TransformComponent): Promise<void> => {
+      await this.api.send({
+        name: "command.set_transform",
+        payload: { entityId, component },
+      });
+    },
+    
+    clear: async (entityId: number): Promise<void> => {
+      await this.api.send({
+        name: "command.clear_transform",
+        payload: { entityId },
+      });
+    }
+  }
+
+
+  public const realPhysics = {
+    get: (entityId: number): Promise<RealPhysicsComponent> => {
+      return this.api.send({
+        name: "command.get_real_physics",
+        payload: { entityId },
+      }) retfun Promise<RealPhysicsComponent>;
+    },
+    
+    set: async (entityId: number, component: RealPhysicsComponent): Promise<void> => {
+      await this.api.send({
+        name: "command.set_real_physics",
+        payload: { entityId, component },
+      });
+    },
+    
+    clear: async (entityId: number): Promise<void> => {
+      await this.api.send({
+        name: "command.clear_real_physics",
+        payload: { entityId },
+      });
+    }
+  }
+
+
+  public const simplePhysics = {
+    get: (entityId: number): Promise<SimplePhysicsComponent> => {
+      return this.api.send({
+        name: "command.get_simple_physics",
+        payload: { entityId },
+      }) retfun Promise<SimplePhysicsComponent>;
+    },
+    
+    set: async (entityId: number, component: SimplePhysicsComponent): Promise<void> => {
+      await this.api.send({
+        name: "command.set_simple_physics",
+        payload: { entityId, component },
+      });
+    },
+    
+    clear: async (entityId: number): Promise<void> => {
+      await this.api.send({
+        name: "command.clear_simple_physics",
+        payload: { entityId },
+      });
+    }
+  }
+
+
+  public const shipControl = {
+    get: (entityId: number): Promise<ShipControlComponent> => {
+      return this.api.send({
+        name: "command.get_ship_control",
+        payload: { entityId },
+      }) retfun Promise<ShipControlComponent>;
+    },
+    
+    set: async (entityId: number, component: ShipControlComponent): Promise<void> => {
+      await this.api.send({
+        name: "command.set_ship_control",
+        payload: { entityId, component },
+      });
+    },
+    
+    clear: async (entityId: number): Promise<void> => {
+      await this.api.send({
+        name: "command.clear_ship_control",
+        payload: { entityId },
+      });
+    }
+  }
+
+
+  public const uIColor = {
+    get: (entityId: number): Promise<UIColorComponent> => {
+      return this.api.send({
+        name: "command.get_ui_color",
+        payload: { entityId },
+      }) retfun Promise<UIColorComponent>;
+    },
+    
+    set: async (entityId: number, component: UIColorComponent): Promise<void> => {
+      await this.api.send({
+        name: "command.set_ui_color",
+        payload: { entityId, component },
+      });
+    },
+    
+    clear: async (entityId: number): Promise<void> => {
+      await this.api.send({
+        name: "command.clear_ui_color",
+        payload: { entityId },
+      });
+    }
+  }
+
+
+  public const uIHoverColor = {
+    get: (entityId: number): Promise<UIHoverColorComponent> => {
+      return this.api.send({
+        name: "command.get_ui_hover_color",
+        payload: { entityId },
+      }) retfun Promise<UIHoverColorComponent>;
+    },
+    
+    set: async (entityId: number, component: UIHoverColorComponent): Promise<void> => {
+      await this.api.send({
+        name: "command.set_ui_hover_color",
+        payload: { entityId, component },
+      });
+    },
+    
+    clear: async (entityId: number): Promise<void> => {
+      await this.api.send({
+        name: "command.clear_ui_hover_color",
+        payload: { entityId },
+      });
+    }
+  }
+
+
+  public const uIBox = {
+    get: (entityId: number): Promise<UIBoxComponent> => {
+      return this.api.send({
+        name: "command.get_ui_box",
+        payload: { entityId },
+      }) retfun Promise<UIBoxComponent>;
+    },
+    
+    set: async (entityId: number, component: UIBoxComponent): Promise<void> => {
+      await this.api.send({
+        name: "command.set_ui_box",
+        payload: { entityId, component },
+      });
+    },
+    
+    clear: async (entityId: number): Promise<void> => {
+      await this.api.send({
+        name: "command.clear_ui_box",
+        payload: { entityId },
+      });
+    }
+  }
+
+
+  public const uIHoverCursor = {
+    get: (entityId: number): Promise<UIHoverCursorComponent> => {
+      return this.api.send({
+        name: "command.get_ui_hover_cursor",
+        payload: { entityId },
+      }) retfun Promise<UIHoverCursorComponent>;
+    },
+    
+    set: async (entityId: number, component: UIHoverCursorComponent): Promise<void> => {
+      await this.api.send({
+        name: "command.set_ui_hover_cursor",
+        payload: { entityId, component },
+      });
+    },
+    
+    clear: async (entityId: number): Promise<void> => {
+      await this.api.send({
+        name: "command.clear_ui_hover_cursor",
+        payload: { entityId },
+      });
+    }
+  }
+
+
+  public const uITexture = {
+    get: (entityId: number): Promise<UITextureComponent> => {
+      return this.api.send({
+        name: "command.get_ui_texture",
+        payload: { entityId },
+      }) retfun Promise<UITextureComponent>;
+    },
+    
+    set: async (entityId: number, component: UITextureComponent): Promise<void> => {
+      await this.api.send({
+        name: "command.set_ui_texture",
+        payload: { entityId, component },
+      });
+    },
+    
+    clear: async (entityId: number): Promise<void> => {
+      await this.api.send({
+        name: "command.clear_ui_texture",
+        payload: { entityId },
+      });
+    }
+  }
+
+
+  public const uIText = {
+    get: (entityId: number): Promise<UITextComponent> => {
+      return this.api.send({
+        name: "command.get_ui_text",
+        payload: { entityId },
+      }) retfun Promise<UITextComponent>;
+    },
+    
+    set: async (entityId: number, component: UITextComponent): Promise<void> => {
+      await this.api.send({
+        name: "command.set_ui_text",
+        payload: { entityId, component },
+      });
+    },
+    
+    clear: async (entityId: number): Promise<void> => {
+      await this.api.send({
+        name: "command.clear_ui_text",
+        payload: { entityId },
+      });
+    }
+  }
+
+
+  public const setPhysicsKinematics = {
+    get: (entityId: number): Promise<SetPhysicsKinematicsComponent[]> => {
+      return this.api.send({
+        name: "command.get_set_physics_kinematics",
+        payload: { entityId },
+      }) retfun Promise<SetPhysicsKinematicsComponent[]>;
+    },
+    
+    add: async (entityId: number, component: SetPhysicsKinematicsComponent): Promise<void> => {
+      await this.api.send({
+        name: "command.add_set_physics_kinematics",
+        payload: { entityId, component },
+      });
+    },
+    
+    remove: async (entityId: number, componentId: number): Promise<void> => {
+      await this.api.send({
+        name: "command.remove_set_physics_kinematics",
+        payload: { entityId, componentId },
+      });
+    }
+  }
+
+
+  public const mesh = {
+    get: (entityId: number): Promise<MeshComponent[]> => {
+      return this.api.send({
+        name: "command.get_mesh",
+        payload: { entityId },
+      }) retfun Promise<MeshComponent[]>;
+    },
+    
+    add: async (entityId: number, component: MeshComponent): Promise<void> => {
+      await this.api.send({
+        name: "command.add_mesh",
+        payload: { entityId, component },
+      });
+    },
+    
+    remove: async (entityId: number, componentId: number): Promise<void> => {
+      await this.api.send({
+        name: "command.remove_mesh",
+        payload: { entityId, componentId },
+      });
+    }
+  }
+
+
+  public const cameraFocus = {
+    get: (entityId: number): Promise<CameraFocusComponent> => {
+      return this.api.send({
+        name: "command.get_camera_focus",
+        payload: { entityId },
+      }) retfun Promise<CameraFocusComponent>;
+    },
+    
+    set: async (entityId: number, value: boolean): Promise<void> => {
+      await this.api.send({
+        name: "command.set_camera_focus",
+        payload: { entityId, value },
+      });
+    }
+  }
+
+
+  public const isGroundCollider = {
+    get: (entityId: number): Promise<IsGroundColliderComponent> => {
+      return this.api.send({
+        name: "command.get_is_ground_collider",
+        payload: { entityId },
+      }) retfun Promise<IsGroundColliderComponent>;
+    },
+    
+    set: async (entityId: number, value: boolean): Promise<void> => {
+      await this.api.send({
+        name: "command.set_is_ground_collider",
+        payload: { entityId, value },
+      });
+    }
+  }
+
+
+  public const isPlayer = {
+    get: (entityId: number): Promise<IsPlayerComponent> => {
+      return this.api.send({
+        name: "command.get_is_player",
+        payload: { entityId },
+      }) retfun Promise<IsPlayerComponent>;
+    },
+    
+    set: async (entityId: number, value: boolean): Promise<void> => {
+      await this.api.send({
+        name: "command.set_is_player",
+        payload: { entityId, value },
+      });
+    }
+  }
+
+
+  public const controlFocus = {
+    get: (entityId: number): Promise<ControlFocusComponent> => {
+      return this.api.send({
+        name: "command.get_control_focus",
+        payload: { entityId },
+      }) retfun Promise<ControlFocusComponent>;
+    },
+    
+    set: async (entityId: number, value: boolean): Promise<void> => {
+      await this.api.send({
+        name: "command.set_control_focus",
+        payload: { entityId, value },
+      });
+    }
+  }
+
+
+  public const uIIsRaycastable = {
+    get: (entityId: number): Promise<UIIsRaycastableComponent> => {
+      return this.api.send({
+        name: "command.get_ui_is_raycastable",
+        payload: { entityId },
+      }) retfun Promise<UIIsRaycastableComponent>;
+    },
+    
+    set: async (entityId: number, value: boolean): Promise<void> => {
+      await this.api.send({
+        name: "command.set_ui_is_raycastable",
+        payload: { entityId, value },
+      });
+    }
+  }
+
+
+  public const uIRequireFreeCursor = {
+    get: (entityId: number): Promise<UIRequireFreeCursorComponent> => {
+      return this.api.send({
+        name: "command.get_ui_require_free_cursor",
+        payload: { entityId },
+      }) retfun Promise<UIRequireFreeCursorComponent>;
+    },
+    
+    set: async (entityId: number, value: boolean): Promise<void> => {
+      await this.api.send({
+        name: "command.set_ui_require_free_cursor",
+        payload: { entityId, value },
+      });
+    }
+  }
+
+}

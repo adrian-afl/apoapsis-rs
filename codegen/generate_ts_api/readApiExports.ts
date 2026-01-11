@@ -3,7 +3,7 @@ import * as path from "node:path";
 
 export interface ApiExportedCommand {
   name: string;
-  inputType: string;
+  inputType: { name: string; type: string }[];
   returnType: string;
   importRs: string;
   importsTs: string[];
@@ -74,7 +74,13 @@ export function readApiExports(): ReadApiExportsResult {
             : "",
         ].filter((x) => x.length > 0),
         name: commandMatch[2],
-        inputType: commandMatch[3],
+        inputType:
+          commandMatch[3].length > 0
+            ? commandMatch[3].split(",").map((x) => {
+                const splitType = x.split(":");
+                return { name: splitType[0], type: splitType[1] };
+              })
+            : [],
         returnType: commandMatch[4],
       });
     } else if (eventMatch) {

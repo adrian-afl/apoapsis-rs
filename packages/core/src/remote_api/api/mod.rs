@@ -3,3 +3,4 @@ pub mod entity_api;
 pub mod generated;
 pub mod reset_world;
 pub mod serialize_world;
+pub mod universe_simulation_api;
