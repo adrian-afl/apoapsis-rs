@@ -5,6 +5,7 @@ use crate::remote_api::api::entity_api::get_entity;
 use crate::remote_api::api::entity_api::remove_entity;
 use crate::remote_api::api::reset_world::reset_world;
 use crate::remote_api::api::serialize_world::serialize_world;
+use crate::remote_api::remote_game_mode::RemoteGameExecutionContext;
 use crate::remote_api::util::{serde_parse_err_map, serde_serialize_err_map};
 use ecs::component_trait::acquire_next_id;
 use ecs::components::camera::camera_focus_component::CameraFocusComponent;
@@ -33,6 +34,7 @@ use ecs::ecs_world::ECSWorld;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use ts_rs::TS;
+use universe_simulation::simulation::Simulation;
 
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
@@ -1106,12 +1108,12 @@ pub fn set_ui_require_free_cursor(
 pub fn handle_message_api(
     name: &str,
     payload: &str,
-    ecs: &mut ECSWorld,
+    context: &mut RemoteGameExecutionContext,
 ) -> Result<Option<String>, String> {
     match name {
         "command.deserialize_world" => deserialize_world(payload, ecs),
         "command.add_entity" => add_entity(payload, ecs),
-        "command.remove_entity" => remove_entity(payload, ecs),
+        "command.remove_entity" => remove_entity(payload, context),
         "command.get_entity" => get_entity(payload, ecs),
         "command.find_all_entities_by_components" => find_all_entities_by_components(payload, ecs),
         "command.reset_world" => reset_world(payload, ecs),

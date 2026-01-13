@@ -6,6 +6,12 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::string::ToString;
 use ts_rs::TS;
+use universe_simulation::simulation::Simulation;
+
+pub struct RemoteGameExecutionContext<'a> {
+    pub ecs: &'a mut ECSWorld,
+    pub simulation: &'a mut Simulation,
+}
 
 pub struct RemoteGameMode {
     pub ecs: ECSWorld,
@@ -34,12 +40,18 @@ impl RemoteGameMode {
 }
 
 impl RemoteGameMode {
-    pub fn update(&mut self) {
+    pub fn update(&mut self, simulation: &mut Simulation) {
         let mut inbox = NATS_CONNECTION.inbox.lock().unwrap();
         while let Some(message) = inbox.pop_back() {
             println!("Message processing {}, {}", message.name, message.payload);
 
-            let res = handle_message_api(&message.name, &message.payload, &mut self.ecs);
+            let res = {
+                let mut full_context = RemoteGameExecutionContext {
+                    simulation,
+                    ecs: &mut self.ecs,
+                };
+                handle_message_api(&message.name, &message.payload, &mut full_context)
+            };
 
             match res {
                 Ok(result) => {

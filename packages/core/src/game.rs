@@ -1,5 +1,5 @@
 use crate::camera_system::CameraSystem;
-use crate::remote_api::remote_game_mode::RemoteGameMode;
+use crate::remote_api::remote_game_mode::{RemoteGameExecutionContext, RemoteGameMode};
 use celestial_renderer::renderer::Renderer;
 use celestial_renderer::rendering_system::RenderingSystem;
 use common_util::profile;
@@ -177,7 +177,7 @@ impl Game {
             }
         });
 
-        self.remote_game_mode.update();
+        self.remote_game_mode.update(&mut self.universe_simulation);
 
         if let Some(ref mut controls) = self.controls {
             controls.clear_events();

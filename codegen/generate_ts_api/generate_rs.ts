@@ -12,6 +12,7 @@ use serde_json::json;
 use ts_rs::TS;
 use ecs::component_trait::acquire_next_id;
 use crate::remote_api::util::{serde_parse_err_map, serde_serialize_err_map};
+use crate::remote_api::remote_game_mode::RemoteGameExecutionContext;
 
 
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
@@ -41,21 +42,21 @@ struct Set${component.short}Input {
     component: ${component.full},
 }
 
-pub fn get_${component.snake}(payload: &str, ecs: &mut ECSWorld) -> Result<Option<String>, String> {
+pub fn get_${component.snake}(payload: &str, context: &mut RemoteGameExecutionContext) -> Result<Option<String>, String> {
     let input: GetComponentInput = serde_json::from_str(payload).map_err(serde_parse_err_map)?;
     
     Ok(Some(serde_json::to_string(
-        &ecs.find_by_id(input.entity_id).ok_or("Entity not found")?.components.${component.snake}).map_err(serde_serialize_err_map)?
+        &context.ecs.find_by_id(input.entity_id).ok_or("Entity not found")?.components.${component.snake}).map_err(serde_serialize_err_map)?
     ))
 }
 
-pub fn set_${component.snake}(payload: &str, ecs: &mut ECSWorld) -> Result<Option<String>, String> {
+pub fn set_${component.snake}(payload: &str, context: &mut RemoteGameExecutionContext) -> Result<Option<String>, String> {
     let mut input: Set${component.short}Input = serde_json::from_str(payload).map_err(serde_parse_err_map)?;
 
     let new_id = acquire_next_id();
     input.component.id = new_id;
     
-    ecs.find_by_id_mut(input.entity_id).ok_or("Entity not found")?.components.${component.snake} = Some(input.component);
+    context.ecs.find_by_id_mut(input.entity_id).ok_or("Entity not found")?.components.${component.snake} = Some(input.component);
 
     Ok(Some(json!({
         "id": new_id,
@@ -63,10 +64,10 @@ pub fn set_${component.snake}(payload: &str, ecs: &mut ECSWorld) -> Result<Optio
     .to_string()))
 }
 
-pub fn clear_${component.snake}(payload: &str, ecs: &mut ECSWorld) -> Result<Option<String>, String> {
+pub fn clear_${component.snake}(payload: &str, context: &mut RemoteGameExecutionContext) -> Result<Option<String>, String> {
     let input: GetComponentInput = serde_json::from_str(payload).map_err(serde_parse_err_map)?;
     
-    ecs.find_by_id_mut(input.entity_id).ok_or("Entity not found")?.components.${component.snake} = None;
+    context.ecs.find_by_id_mut(input.entity_id).ok_or("Entity not found")?.components.${component.snake} = None;
 
     Ok(None)
 }
@@ -83,19 +84,19 @@ struct Add${component.short}Input {
     component: ${component.full},
 }
 
-pub fn get_${component.snake}(payload: &str, ecs: &mut ECSWorld) -> Result<Option<String>, String> {
+pub fn get_${component.snake}(payload: &str, context: &mut RemoteGameExecutionContext) -> Result<Option<String>, String> {
     let input: GetComponentInput = serde_json::from_str(payload).map_err(serde_parse_err_map)?;
     
-    Ok(Some(serde_json::to_string(&ecs.find_by_id(input.entity_id).ok_or("Entity not found")?.components.${component.snake}).map_err(serde_serialize_err_map)?))
+    Ok(Some(serde_json::to_string(&context.ecs.find_by_id(input.entity_id).ok_or("Entity not found")?.components.${component.snake}).map_err(serde_serialize_err_map)?))
 }
 
-pub fn add_${component.snake}(payload: &str, ecs: &mut ECSWorld) -> Result<Option<String>, String> {
+pub fn add_${component.snake}(payload: &str, context: &mut RemoteGameExecutionContext) -> Result<Option<String>, String> {
     let mut input: Add${component.short}Input = serde_json::from_str(payload).map_err(serde_parse_err_map)?;
     
     let new_id = acquire_next_id();
     input.component.id = new_id;
 
-    ecs.find_by_id_mut(input.entity_id).ok_or("Entity not found")?.components.${component.snake}.push(input.component);
+    context.ecs.find_by_id_mut(input.entity_id).ok_or("Entity not found")?.components.${component.snake}.push(input.component);
 
     Ok(Some(json!({
         "id": new_id,
@@ -103,10 +104,10 @@ pub fn add_${component.snake}(payload: &str, ecs: &mut ECSWorld) -> Result<Optio
     .to_string()))
 }
 
-pub fn remove_${component.snake}(payload: &str, ecs: &mut ECSWorld) -> Result<Option<String>, String> {
+pub fn remove_${component.snake}(payload: &str, context: &mut RemoteGameExecutionContext) -> Result<Option<String>, String> {
     let input: RemoveComponentInput = serde_json::from_str(payload).map_err(serde_parse_err_map)?;
     
-    ecs.find_by_id_mut(input.entity_id).ok_or("Entity not found")?.components.${component.snake}.retain(|x| x.id != input.component_id);
+    context.ecs.find_by_id_mut(input.entity_id).ok_or("Entity not found")?.components.${component.snake}.retain(|x| x.id != input.component_id);
 
     Ok(None)
 }
@@ -123,16 +124,16 @@ struct SetBooleanComponentInput {
 
 for (const component of componentsMetadata.filter((x) => x.type === "Marker")) {
   console.log(`
-pub fn get_${component.snake}(payload: &str, ecs: &mut ECSWorld) -> Result<Option<String>, String> {
+pub fn get_${component.snake}(payload: &str, context: &mut RemoteGameExecutionContext) -> Result<Option<String>, String> {
     let input: GetComponentInput = serde_json::from_str(payload).map_err(serde_parse_err_map)?;
     
-    Ok(Some(serde_json::to_string(&ecs.find_by_id(input.entity_id).ok_or("Entity not found")?.components.${component.snake}).map_err(serde_serialize_err_map)?))
+    Ok(Some(serde_json::to_string(&context.ecs.find_by_id(input.entity_id).ok_or("Entity not found")?.components.${component.snake}).map_err(serde_serialize_err_map)?))
 }
 
-pub fn set_${component.snake}(payload: &str, ecs: &mut ECSWorld) -> Result<Option<String>, String> {
+pub fn set_${component.snake}(payload: &str, context: &mut RemoteGameExecutionContext) -> Result<Option<String>, String> {
     let input: SetBooleanComponentInput = serde_json::from_str(payload).map_err(serde_parse_err_map)?;
     
-    ecs.find_by_id_mut(input.entity_id).ok_or("Entity not found")?.components.${component.snake} = input.value;
+    context.ecs.find_by_id_mut(input.entity_id).ok_or("Entity not found")?.components.${component.snake} = input.value;
 
     Ok(None)
 }
@@ -144,36 +145,36 @@ console.log(`
 pub fn handle_message_api(
     name: &str,
     payload: &str,
-    ecs: &mut ECSWorld,
+    context: &mut RemoteGameExecutionContext,
 ) -> Result<Option<String>, String> {
     match name {
     ${apiExports.commands
-      .map((x) => `"command.${x.name}" => ${x.name}(payload, ecs),`)
+      .map((x) => `"command.${x.name}" => ${x.name}(payload, context),`)
       .join("\n    ")}
     ${componentsMetadata
       .filter((x) => x.type === "Option")
       .map(
         (x) =>
-          `"command.get_${x.snake}" => get_${x.snake}(payload, ecs),
-    "command.set_${x.snake}" => set_${x.snake}(payload, ecs),
-    "command.clear_${x.snake}" => clear_${x.snake}(payload, ecs),`,
+          `"command.get_${x.snake}" => get_${x.snake}(payload, context),
+    "command.set_${x.snake}" => set_${x.snake}(payload, context),
+    "command.clear_${x.snake}" => clear_${x.snake}(payload, context),`,
       )
       .join("\n    ")}
     ${componentsMetadata
       .filter((x) => x.type === "Vector")
       .map(
         (x) =>
-          `"command.get_${x.snake}" => get_${x.snake}(payload, ecs),
-    "command.add_${x.snake}" => add_${x.snake}(payload, ecs),
-    "command.remove_${x.snake}" => remove_${x.snake}(payload, ecs),`,
+          `"command.get_${x.snake}" => get_${x.snake}(payload, context),
+    "command.add_${x.snake}" => add_${x.snake}(payload, context),
+    "command.remove_${x.snake}" => remove_${x.snake}(payload, context),`,
       )
       .join("\n    ")}
     ${componentsMetadata
       .filter((x) => x.type === "Marker")
       .map(
         (x) =>
-          `"command.get_${x.snake}" => get_${x.snake}(payload, ecs),
-    "command.set_${x.snake}" => set_${x.snake}(payload, ecs),`,
+          `"command.get_${x.snake}" => get_${x.snake}(payload, context),
+    "command.set_${x.snake}" => set_${x.snake}(payload, context),`,
       )
       .join("\n    ")}
         _ => Err(format!("Handler not found for message {}", name)),

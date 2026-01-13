@@ -66,6 +66,16 @@ export class RemoteGameApi {
     }) as Promise<Entity>;
   }
 
+  public async replaceEntityComponents(
+    id: number,
+    components: AttachedComponents,
+  ): Promise<void> {
+    return this.api.send({
+      name: "command.replace_entity_components",
+      payload: { id, components },
+    }) as Promise<void>;
+  }
+
   public async findAllEntitiesByComponents(
     components: AttachedComponents[],
   ): Promise<number[]> {
@@ -105,6 +115,16 @@ export class RemoteGameApi {
     }) as Promise<DecimalVector3d>;
   }
 
+  public async getCelestialBodySurfaceVelocity(
+    name: string,
+    point: DecimalVector3d,
+  ): Promise<DecimalVector3d> {
+    return this.api.send({
+      name: "command.get_celestial_body_surface_velocity",
+      payload: { name, point },
+    }) as Promise<DecimalVector3d>;
+  }
+
   public async getCelestialBodyOrientation(
     name: string,
   ): Promise<DecimalMatrix3d> {
@@ -126,6 +146,16 @@ export class RemoteGameApi {
       name: "command.get_celestial_body_satellites",
       payload: name,
     }) as Promise<string[]>;
+  }
+
+  public async getAltitudeOverCelestialBody(
+    name: string,
+    point: DecimalVector3d,
+  ): Promise<string> {
+    return this.api.send({
+      name: "command.get_altitude_over_celestial_body",
+      payload: { name, point },
+    }) as Promise<string>;
   }
 
   public async getClosestCelestialBody(

@@ -1,3 +1,4 @@
+use crate::remote_api::remote_game_mode::RemoteGameExecutionContext;
 use crate::remote_api::util::serde_parse_err_map;
 use ecs::component_trait::{AttachedComponents, Components};
 use ecs::ecs_world::ECSWorld;
@@ -14,14 +15,17 @@ struct AddEntityInput {
 }
 
 // @api_command add_entity(input: AddEntityInput): ObjectWithID
-pub fn add_entity(payload: &str, ecs: &mut ECSWorld) -> Result<Option<String>, String> {
+pub fn add_entity(
+    payload: &str,
+    context: &mut RemoteGameExecutionContext,
+) -> Result<Option<String>, String> {
     let input: AddEntityInput = serde_json::from_str(payload).map_err(serde_parse_err_map)?;
     let entity = match input.components {
         None => Entity::new(),
         Some(components) => Entity::new_with_components(components),
     };
     let id = entity.id;
-    ecs.add(entity);
+    context.ecs.add(entity);
 
     Ok(Some(
         json!({
@@ -32,19 +36,25 @@ pub fn add_entity(payload: &str, ecs: &mut ECSWorld) -> Result<Option<String>, S
 }
 
 // @api_command remove_entity(id: number): void
-pub fn remove_entity(payload: &str, ecs: &mut ECSWorld) -> Result<Option<String>, String> {
+pub fn remove_entity(
+    payload: &str,
+    context: &mut RemoteGameExecutionContext,
+) -> Result<Option<String>, String> {
     let id: u64 = payload.parse().map_err(|_| "Invalid id")?;
-    ecs.remove_by_id(id);
+    context.ecs.remove_by_id(id);
 
     Ok(None)
 }
 
 // @api_command get_entity(id: number): Entity
-pub fn get_entity(payload: &str, ecs: &mut ECSWorld) -> Result<Option<String>, String> {
+pub fn get_entity(
+    payload: &str,
+    context: &mut RemoteGameExecutionContext,
+) -> Result<Option<String>, String> {
     let id: u64 = payload.parse().map_err(|_| "Invalid id")?;
 
     Ok(Some(
-        serde_json::to_string(&ecs.find_by_id(id).ok_or("Entity not found")?)
+        serde_json::to_string(&context.ecs.find_by_id(id).ok_or("Entity not found")?)
             .map_err(|_| "Cannot serialize")?,
     ))
 }
@@ -60,12 +70,15 @@ struct ReplaceEntityComponentsInput {
 // @api_command replace_entity_components(id: number, components: AttachedComponents): void
 pub fn replace_entity_components(
     payload: &str,
-    ecs: &mut ECSWorld,
+    context: &mut RemoteGameExecutionContext,
 ) -> Result<Option<String>, String> {
     let input: ReplaceEntityComponentsInput =
         serde_json::from_str(payload).map_err(serde_parse_err_map)?;
 
-    let entity = ecs.find_by_id_mut(input.id).ok_or("Entity not found")?;
+    let entity = context
+        .ecs
+        .find_by_id_mut(input.id)
+        .ok_or("Entity not found")?;
     entity.components = input.components;
 
     Ok(None)
@@ -81,7 +94,7 @@ struct FindAllEntitiesByComponents {
 // @api_command find_all_entities_by_components(components: AttachedComponents[]): number[]
 pub fn find_all_entities_by_components(
     payload: &str,
-    ecs: &mut ECSWorld,
+    context: &mut RemoteGameExecutionContext,
 ) -> Result<Option<String>, String> {
     let input: FindAllEntitiesByComponents =
         serde_json::from_str(payload).map_err(serde_parse_err_map)?;
@@ -89,7 +102,7 @@ pub fn find_all_entities_by_components(
     let components: Vec<&Components> = input.components.iter().map(|x| x).collect();
 
     Ok(Some(
-        serde_json::to_string(&ecs.find_all_ids_by_components(&*components))
+        serde_json::to_string(&context.ecs.find_all_ids_by_components(&*components))
             .map_err(|_| "Cannot serialize")?,
     ))
 }
