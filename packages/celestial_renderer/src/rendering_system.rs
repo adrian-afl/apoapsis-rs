@@ -18,7 +18,7 @@ use renderer_common::errors::RenderingError;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, RwLock};
 use ui_renderer::ui_system::UISystem;
-use universe_simulation::simulation::Simulation;
+use universe_simulation::simulation::{SimulatedBody, Simulation};
 use vengine_rs::core::toolkit::VEToolkit;
 use vengine_rs::image::image::VEImageUsage;
 
@@ -47,19 +47,21 @@ impl RenderingSystem {
         Ok(())
     }
 
-    pub fn get_altitude(&self, universe: &Simulation, point: &DecimalVector3d) -> Option<f64> {
-        let closest_body = universe.find_closest_body(point);
-        let rendered_body = self
-            .celestial_hierarchy
-            .get_rendered_body(&closest_body.body.name);
+    pub fn get_altitude(
+        &self,
+        universe: &Simulation,
+        body: &SimulatedBody,
+        point: &DecimalVector3d,
+    ) -> Option<f64> {
+        let rendered_body = self.celestial_hierarchy.get_rendered_body(&body.body.name);
         match rendered_body {
             None => None,
             Some(rendered_body) => {
-                let mut normal = point - &closest_body.position;
+                let mut normal = point - &body.position;
                 let distance_center = normal.length();
                 normal.normalize();
                 let mut normal = normal.to_dvec3_with_precision(6);
-                normal = (closest_body.orientation.as_dquat() * normal).normalize();
+                normal = (body.orientation.as_dquat() * normal).normalize();
 
                 let terrain_altitude = rendered_body.terrain_icosphere.as_ref().map(|terrain| {
                     distance_center.to_f64().value() - terrain.get_radius_at_normal(normal)
@@ -67,7 +69,7 @@ impl RenderingSystem {
                 let water_altitude = rendered_body.water_icosphere.as_ref().map(|water| {
                     distance_center.to_f64().value() - water.get_radius_at_normal(normal)
                 });
-                let atmosphere_altitude = closest_body
+                let atmosphere_altitude = body
                     .body
                     .atmosphere
                     .as_ref()

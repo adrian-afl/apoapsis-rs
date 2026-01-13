@@ -230,6 +230,23 @@ impl Simulation {
         self.get_body_by_name(body_name).unwrap()
     }
 
+    pub fn get_body_parent(&self, body_name: &str) -> Option<&SimulatedBody> {
+        let parent_id = self.get_body_by_name(body_name).unwrap().parent;
+        match parent_id {
+            None => None,
+            Some(parent_id) => Some(self.get_body_by_id(parent_id).unwrap()),
+        }
+    }
+
+    pub fn get_body_satellites(&self, body_name: &str) -> Vec<&SimulatedBody> {
+        self.get_body_by_name(body_name)
+            .unwrap()
+            .satellites
+            .iter()
+            .map(|x| self.get_body_by_id(*x).unwrap())
+            .collect()
+    }
+
     pub fn get_surface_velocity(
         &self,
         body_name: &str,
