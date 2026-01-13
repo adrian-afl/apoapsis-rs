@@ -24,8 +24,9 @@ import { ECSWorldSerializedRepresentation } from "./types/ECSWorldSerializedRepr
 import { AddEntityInput } from "./types/AddEntityInput.js";
 import { ObjectWithID } from "./types/ObjectWithID.js";
 import { Entity } from "./types/Entity.js";
-import { ReplaceEntityComponentsInput } from "./types/ReplaceEntityComponentsInput.js";
-import { FindAllEntitiesByComponents } from "./types/FindAllEntitiesByComponents.js";
+import { AttachedComponents } from "./types/AttachedComponents.js";
+import { DecimalVector3d } from "./types/DecimalVector3d.js";
+import { DecimalMatrix3d } from "./types/DecimalMatrix3d.js";
 import { BaseGameApi } from "../framework/BaseGameApi.js";
 
 export class RemoteGameApi {
@@ -35,14 +36,12 @@ export class RemoteGameApi {
     this.api = api;
   }
 
-  public waitForEvent(name: string) {}
-
   public async deserializeWorld(
-    input: ECSWorldSerializedRepresentation,
+    serializedWorld: ECSWorldSerializedRepresentation,
   ): Promise<void> {
     return this.api.send({
       name: "command.deserialize_world",
-      payload: input,
+      payload: serializedWorld,
     }) as Promise<void>;
   }
 
@@ -53,35 +52,26 @@ export class RemoteGameApi {
     }) as Promise<ObjectWithID>;
   }
 
-  public async removeEntity(input: number): Promise<void> {
+  public async removeEntity(id: number): Promise<void> {
     return this.api.send({
       name: "command.remove_entity",
-      payload: input,
+      payload: id,
     }) as Promise<void>;
   }
 
-  public async getEntity(input: number): Promise<Entity> {
+  public async getEntity(id: number): Promise<Entity> {
     return this.api.send({
       name: "command.get_entity",
-      payload: input,
+      payload: id,
     }) as Promise<Entity>;
   }
 
-  public async replaceEntityComponents(
-    input: ReplaceEntityComponentsInput,
-  ): Promise<void> {
-    return this.api.send({
-      name: "command.replace_entity_components",
-      payload: input,
-    }) as Promise<void>;
-  }
-
   public async findAllEntitiesByComponents(
-    input: FindAllEntitiesByComponents,
+    components: AttachedComponents[],
   ): Promise<number[]> {
     return this.api.send({
       name: "command.find_all_entities_by_components",
-      payload: input,
+      payload: components,
     }) as Promise<number[]>;
   }
 
@@ -97,6 +87,63 @@ export class RemoteGameApi {
       name: "command.serialize_world",
       payload: {},
     }) as Promise<ECSWorldSerializedRepresentation>;
+  }
+
+  public async getAllCelestialBodyNames(): Promise<string[]> {
+    return this.api.send({
+      name: "command.get_all_celestial_body_names",
+      payload: {},
+    }) as Promise<string[]>;
+  }
+
+  public async getCelestialBodyPosition(
+    name: string,
+  ): Promise<DecimalVector3d> {
+    return this.api.send({
+      name: "command.get_celestial_body_position",
+      payload: name,
+    }) as Promise<DecimalVector3d>;
+  }
+
+  public async getCelestialBodyOrientation(
+    name: string,
+  ): Promise<DecimalMatrix3d> {
+    return this.api.send({
+      name: "command.get_celestial_body_orientation",
+      payload: name,
+    }) as Promise<DecimalMatrix3d>;
+  }
+
+  public async getCelestialBodyParent(name: string): Promise<string | null> {
+    return this.api.send({
+      name: "command.get_celestial_body_parent",
+      payload: name,
+    }) as Promise<string | null>;
+  }
+
+  public async getCelestialBodySatellites(name: string): Promise<string[]> {
+    return this.api.send({
+      name: "command.get_celestial_body_satellites",
+      payload: name,
+    }) as Promise<string[]>;
+  }
+
+  public async getClosestCelestialBody(
+    point: DecimalVector3d,
+  ): Promise<string> {
+    return this.api.send({
+      name: "command.get_closest_celestial_body",
+      payload: point,
+    }) as Promise<string>;
+  }
+
+  public async getGravityFlux(
+    point: DecimalVector3d,
+  ): Promise<DecimalVector3d> {
+    return this.api.send({
+      name: "command.get_gravity_flux",
+      payload: point,
+    }) as Promise<DecimalVector3d>;
   }
 
   public universeClock = {

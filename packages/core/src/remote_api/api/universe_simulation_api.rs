@@ -14,11 +14,11 @@ struct AddEntityInput {
 }
 
 // @api_command get_all_celestial_body_names(): string[]
-// @api_command get_celestial_body_position(string): DecimalVector3d
-// @api_command get_celestial_body_surface_velocity(string, DecimalVector3d): DecimalVector3d
-// @api_command get_celestial_body_orientation(string): DecimalMatrix3d
-// @api_command get_celestial_body_parent(string): string | null
-// @api_command get_celestial_body_satellites(string): string[]
-// @api_command get_altitude_over_celestial_body(string): string
-// @api_command get_closest_celestial_body(DecimalVector3d): string
-// @api_command get_gravity_flux(DecimalVector3d): DecimalVector3d
+// @api_command get_celestial_body_position(name: string): DecimalVector3d
+// @api_command get_celestial_body_surface_velocity(name: string, point: DecimalVector3d): DecimalVector3d
+// @api_command get_celestial_body_orientation(name: string): DecimalMatrix3d
+// @api_command get_celestial_body_parent(name: string): string | null
+// @api_command get_celestial_body_satellites(name: string): string[]
+// @api_command get_altitude_over_celestial_body(name: string, point: DecimalVector3d): string
+// @api_command get_closest_celestial_body(point: DecimalVector3d): string
+// @api_command get_gravity_flux(point: DecimalVector3d): DecimalVector3d
