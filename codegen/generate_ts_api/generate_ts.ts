@@ -19,10 +19,7 @@ function camelizeSnake(str: string): string {
 
 const apiExportImports = [
   ...new Set(
-    [
-      ...apiExports.commands.map((x) => x.importsTs),
-      ...apiExports.events.map((x) => x.importsTs),
-    ]
+    [...apiExports.commands.map((x) => x.importsTs)]
       .flat()
       .map((x) => x.trim().replaceAll("[]", ""))
       .filter(

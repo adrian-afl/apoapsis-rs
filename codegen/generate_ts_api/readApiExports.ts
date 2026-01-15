@@ -53,10 +53,10 @@ export function readApiExports(): ReadApiExportsResult {
     .split("\n");
 
   const commandRegex =
-    /(.*?):\/\/ @api_command ([A-z0-9_]+?)\(([A-z0-9_:, ]*?)\):[ ]*(.+?)$/;
+    /(.*?):.*?\/\/ @api_command ([A-z0-9_]+?)\(([A-z0-9_:, ]*?)\):[ ]*(.+?)$/;
 
   const eventRegex =
-    /(.*?):\/\/ @api_event ([A-z0-9_: ]*?)\(([A-z0-9_:, ]*?)\)$/;
+    /(.*?):.*?\/\/ @api_event ([A-z0-9_: ]*?)\(([A-z0-9_:, ]*?)\)$/;
 
   const result: ReadApiExportsResult = { commands: [], events: [] };
 

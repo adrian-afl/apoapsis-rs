@@ -56,7 +56,7 @@ macro_rules! send_event {
             .outbox
             .lock()
             .unwrap()
-            .push_front(OutgoingRemoteIOMessage {
+            .push_front($crate::OutgoingRemoteIOMessage {
                 name: format!("event.{}", $name),
                 payload: "null".to_string(),
                 success: true,
@@ -67,7 +67,7 @@ macro_rules! send_event {
             .outbox
             .lock()
             .unwrap()
-            .push_front(OutgoingRemoteIOMessage {
+            .push_front($crate::OutgoingRemoteIOMessage {
                 name: format!("event.{}", $name),
                 payload: serde_json::to_string(&$payload).unwrap(),
                 success: true,

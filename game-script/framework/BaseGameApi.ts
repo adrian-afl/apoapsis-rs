@@ -1,4 +1,8 @@
 import * as crypto from "crypto";
+import {
+  eventsConstructors,
+  AbstractBaseEvent,
+} from "../generated/RemoteGameEvents";
 
 export interface GameApiIncomingMessage {
   name: string;
@@ -15,6 +19,22 @@ export type GameApiTransmitter = (
   message: GameApiOutgoingMessage & { replyTo: string },
 ) => void;
 
+export type Constructor<T> = new (...args: any[]) => T;
+
+export type EventHandler<EventType extends AbstractBaseEvent> = (
+  event: EventType,
+) => Promise<void> | void;
+
+type AnyEventHandler = EventHandler<AbstractBaseEvent>;
+
+class Subscription {
+  public constructor(
+    public readonly id: number,
+    public readonly eventName: string,
+    public readonly handler: AnyEventHandler,
+  ) {}
+}
+
 export class BaseGameApi {
   private readonly waitingForReply: Map<
     string,
@@ -24,6 +44,9 @@ export class BaseGameApi {
     }
   >;
   private readonly transmitter: GameApiTransmitter;
+
+  private subscriptions: Subscription[] = [];
+  private lastSubscriptionId = 1;
 
   public constructor(transmitter: GameApiTransmitter) {
     this.transmitter = transmitter;
@@ -46,8 +69,17 @@ export class BaseGameApi {
       } else {
         handlers.reject(message.payload);
       }
+      return;
     }
     // other stuff like events
+    if (message.name.startsWith("event.")) {
+      console.log(message.name.substring("event.".length));
+      void this.publish(
+        eventsConstructors[message.name.substring("event.".length)](
+          message.payload,
+        ),
+      ).catch((e) => console.error(e));
+    }
   }
 
   public send(message: GameApiOutgoingMessage): Promise<unknown> {
@@ -58,12 +90,44 @@ export class BaseGameApi {
     });
   }
 
-  public waitFor(name: string): Promise<void> {
-    return new Promise<void>((resolve, reject) => {
-      this.waitingForReply.set(name, {
-        resolve,
-        reject,
-      });
-    });
+  public subscribe<T extends AbstractBaseEvent>(
+    eventClass: Constructor<T>,
+    handler: EventHandler<T>,
+  ): number {
+    const eventName = eventClass.name;
+    const id = this.lastSubscriptionId++;
+    this.subscriptions.push(
+      new Subscription(id, eventName, handler as AnyEventHandler),
+    );
+    // console.log(`Subscribed on ${eventName}, subid ${id}`);
+    return id;
+  }
+
+  public unsubscribeBySubscriptionId(id: number): void {
+    // console.log(`Unsubscribed subid ${id}`);
+    this.subscriptions = this.subscriptions.filter((s) => s.id !== id);
+  }
+
+  public unsubscribeByEventClass<T extends AbstractBaseEvent>(
+    eventClass: Constructor<T>,
+  ): void {
+    const eventName = eventClass.name;
+    this.subscriptions = this.subscriptions.filter(
+      (s) => s.eventName !== eventName,
+    );
+  }
+
+  public unsubscribeAllSubscriptions(): void {
+    this.subscriptions = [];
+  }
+
+  private async publish<T extends AbstractBaseEvent>(event: T): Promise<void> {
+    await Promise.all(
+      this.subscriptions
+        .filter((s) => s.eventName === event.constructor.name)
+        .map(async (s) => {
+          await s.handler(event);
+        }),
+    );
   }
 }

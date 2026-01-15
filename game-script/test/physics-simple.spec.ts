@@ -4,18 +4,7 @@ import { setTimeout } from "node:timers/promises";
 import { startGame, startNATSServer } from "../framework/starter";
 import { RemoteGameApi } from "../generated/RemoteGameApi";
 import { BaseGameApi } from "../framework/BaseGameApi";
-
-async function boot(port: number) {
-  const natsServer = startNATSServer(port);
-  const nats = new NATSTransport(`localhost:${port}`);
-  const baseApi = new BaseGameApi((message) => nats.send(message));
-  const gameApi = new RemoteGameApi(baseApi);
-  nats.setOnReceive((message) => baseApi.receive(message));
-  const gameInstance = startGame("release", port, true);
-  await setTimeout(5000);
-  await nats.connect();
-  return gameApi;
-}
+import { boot } from "./util/boot";
 
 describe("physics simple tests", () => {
   // afterAll(() => process.exit(0));
@@ -41,17 +30,5 @@ describe("physics simple tests", () => {
     // assert.strictEqual(await gameApi.isPlayer.get(entityId), true);
 
     console.timeEnd("timer");
-  });
-
-  it("Just adds entity successfully", async () => {
-    const gameApi = await boot(4321);
-
-    console.log(1);
-
-    const { id: entityId } = await gameApi.addEntity({ components: null });
-
-    console.log(2);
-
-    console.log(entityId);
   });
 });

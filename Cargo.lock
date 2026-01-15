@@ -2377,6 +2377,10 @@ dependencies = [
  "config",
  "core",
  "glam",
+ "nats",
+ "serde",
+ "serde_json",
+ "ts-rs",
  "vengine-rs",
  "winit",
 ]

@@ -4,26 +4,13 @@ import { setTimeout } from "node:timers/promises";
 import { startGame, startNATSServer } from "../framework/starter";
 import { RemoteGameApi } from "../generated/RemoteGameApi";
 import { BaseGameApi } from "../framework/BaseGameApi";
-
-async function boot(port: number) {
-  const natsServer = startNATSServer(port);
-  const nats = new NATSTransport(`localhost:${port}`);
-  const baseApi = new BaseGameApi((message) => nats.send(message));
-  const gameApi = new RemoteGameApi(baseApi);
-  nats.setOnReceive((message) => baseApi.receive(message));
-  const gameInstance = startGame("release", port, true);
-  await setTimeout(5000);
-  await nats.connect();
-  return gameApi;
-}
+import { boot } from "./util/boot";
 
 describe("test", () => {
   // afterAll(() => process.exit(0));
 
   it("has comms two sides", async () => {
     const gameApi = await boot(4321);
-
-    await setTimeout(5000);
 
     console.time("timer");
     await gameApi.resetWorld();

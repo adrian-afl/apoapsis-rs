@@ -17,23 +17,12 @@ pub struct RemoteGameMode {
     pub ecs: ECSWorld,
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize, TS)]
-pub struct OnRemoteGameModeInitializedEvent {
-    pub ecs: ECSWorldSerializedRepresentation,
-}
-
-// @api_event on_remote_game_mode_initialized()
-
 impl RemoteGameMode {
     pub fn new() -> Self {
         let ecs = ECSWorld::new();
 
-        send_event!(
-            "on_remote_game_mode_initialized",
-            OnRemoteGameModeInitializedEvent {
-                ecs: ecs.serialize()
-            }
-        );
+        // @api_event on_remote_game_mode_initialized()
+        send_event!("on_remote_game_mode_initialized");
 
         Self { ecs }
     }

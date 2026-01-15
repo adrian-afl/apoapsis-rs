@@ -1,14 +1,25 @@
 use crate::app::GameWindowApp;
 use config::GLOBAL_CONFIG;
 use core::game::Game;
+use nats::send_event;
+use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
+use ts_rs::TS;
 use vengine_rs::core::toolkit::{App, VEToolkit};
 use winit::dpi::PhysicalSize;
 use winit::window::{Window, WindowAttributes};
 
 mod app;
+
+#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[ts(export)]
+pub struct OnGameBootReadyEventData {
+    pub headless: bool,
+}
+
+// @api_event on_game_boot_ready(OnGameBootReadyEventData)
 
 fn main() {
     println!("{:?}", GLOBAL_CONFIG);
@@ -17,6 +28,12 @@ fn main() {
         println!("Creating headless instance...");
         let mut game = Game::new_headless();
         println!("Headless loop starting...");
+
+        send_event!(
+            "on_game_boot_ready",
+            OnGameBootReadyEventData { headless: true }
+        );
+
         loop {
             game.update();
             thread::sleep(Duration::from_millis(10));
@@ -41,5 +58,10 @@ fn main() {
         .unwrap();
 
         thread::sleep(Duration::from_millis(500));
+
+        send_event!(
+            "on_game_boot_ready",
+            OnGameBootReadyEventData { headless: false }
+        );
     }
 }
