@@ -1,8 +1,5 @@
-import {
-  AbstractBaseEvent,
-  BaseGameApi,
-  Constructor,
-} from "../../framework/BaseGameApi";
+import { BaseGameApi, Constructor } from "../../framework/BaseGameApi";
+import { AbstractBaseEvent } from "../../generated/RemoteGameEvents";
 
 export function waitForEvent<T extends AbstractBaseEvent>(
   api: BaseGameApi,
@@ -10,10 +7,11 @@ export function waitForEvent<T extends AbstractBaseEvent>(
   additionalMatcher?: (event: T) => boolean,
 ): Promise<T> {
   return new Promise<T>((resolve, reject) => {
-    api.subscribe(event, (received) => {
+    const sub = api.subscribe(event, (received) => {
       if (additionalMatcher) {
         if (additionalMatcher(received)) {
           resolve(received);
+          api.unsubscribeBySubscriptionId(sub);
         }
       } else {
         resolve(received);
