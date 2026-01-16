@@ -49,8 +49,14 @@ export class NATSTransport {
     if (!this.connection) {
       throw new Error("not connected to nats");
     }
-    this.connection.publish(message.name, JSON.stringify(message.payload), {
-      reply: message.replyTo,
-    });
+    this.connection.publish(
+      message.name,
+      typeof message.payload === "object"
+        ? JSON.stringify(message.payload)
+        : message.payload.toString(),
+      {
+        reply: message.replyTo,
+      },
+    );
   }
 }

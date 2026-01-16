@@ -40,6 +40,8 @@ pub fn get_celestial_body_position(
     let body_name = payload;
     let body = context.simulation.get_body(body_name);
 
+    println!("{}", body.position);
+
     Ok(Some(json!(body.position).to_string()))
 }
 
