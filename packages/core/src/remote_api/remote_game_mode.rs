@@ -1,7 +1,9 @@
+use std::collections::VecDeque;
+use std::ops::Deref;
 // use crate::remote_api::api::generated::handle_message_components_api;
 use crate::remote_api::api::generated::handle_message_api;
 use ecs::ecs_world::{ECSWorld, ECSWorldSerializedRepresentation};
-use nats::{NATS_CONNECTION, OutgoingRemoteIOMessage, send_event};
+use nats::{IncomingRemoteIOMessage, NATS_CONNECTION, OutgoingRemoteIOMessage, send_event};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::string::ToString;
@@ -30,9 +32,14 @@ impl RemoteGameMode {
 
 impl RemoteGameMode {
     pub fn update(&mut self, simulation: &mut Simulation) {
-        let mut inbox = NATS_CONNECTION.inbox.lock().unwrap();
+        let mut inbox: VecDeque<IncomingRemoteIOMessage> = {
+            let mut guard = NATS_CONNECTION.inbox.lock().unwrap();
+            let clone = guard.clone();
+            guard.clear();
+            clone
+        };
         while let Some(message) = inbox.pop_back() {
-            println!("Message processing {}, {}", message.name, message.payload);
+            // println!("Message processing {}, {}", message.name, message.payload);
 
             let res = {
                 let mut full_context = RemoteGameExecutionContext {

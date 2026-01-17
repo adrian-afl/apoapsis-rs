@@ -8,14 +8,14 @@ use std::sync::{Arc, LazyLock, Mutex};
 use std::thread;
 use std::time::Duration;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct IncomingRemoteIOMessage {
     pub name: String,
     pub payload: String,
     pub reply_to: Option<String>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct OutgoingRemoteIOMessage {
     pub name: String,
     pub payload: String,
@@ -43,6 +43,8 @@ pub static NATS_CONNECTION: LazyLock<NATSConnection> = LazyLock::new(|| {
     });
 
     connect_nats();
+
+    println!("NATS CONNECTED");
 
     NATSConnection { inbox, outbox }
 });
@@ -101,19 +103,21 @@ fn connect_nats() {
         thread::spawn(move || {
             println!("NATS transmit loop starting...");
             loop {
-                let mut outbox = NATS_CONNECTION.outbox.lock().unwrap();
-                while !outbox.is_empty() {
-                    let message = outbox.pop_back().unwrap();
-                    println!("OUTGOING {:?}", message);
-                    let mut headers = HeaderMap::new();
-                    headers.insert("status", if message.success { "ok" } else { "error" });
-                    rt.block_on(client.publish_message(OutboundMessage {
-                        subject: message.name.into(),
-                        reply: None, // server doesn't expect responses from the client
-                        payload: message.payload.into(),
-                        headers: Some(headers),
-                    }))
-                    .unwrap();
+                {
+                    let mut outbox = NATS_CONNECTION.outbox.lock().unwrap();
+                    while !outbox.is_empty() {
+                        let message = outbox.pop_back().unwrap();
+                        // println!("OUTGOING {:?}", message);
+                        let mut headers = HeaderMap::new();
+                        headers.insert("status", if message.success { "ok" } else { "error" });
+                        rt.block_on(client.publish_message(OutboundMessage {
+                            subject: message.name.into(),
+                            reply: None, // server doesn't expect responses from the client
+                            payload: message.payload.into(),
+                            headers: Some(headers),
+                        }))
+                        .unwrap();
+                    }
                 }
                 thread::sleep(Duration::from_millis(10));
             }
@@ -125,7 +129,7 @@ fn connect_nats() {
             println!("NATS receive loop starting...");
             loop {
                 if let Some(message) = rt.block_on(subscription.next()) {
-                    println!("INCOMING {:?}", message);
+                    // println!("INCOMING {:?}", message);
                     let mut inbox = NATS_CONNECTION.inbox.lock().unwrap();
                     inbox.push_front(IncomingRemoteIOMessage {
                         name: message.subject.into_string(),
@@ -134,7 +138,7 @@ fn connect_nats() {
                         reply_to: message.reply.map(|x| x.to_string()),
                     })
                 }
-                thread::sleep(Duration::from_millis(10));
+                //thread::sleep(Duration::from_millis(10));
             }
         });
     }

@@ -55,6 +55,22 @@ macro_rules! vector_or_option_initializer {
     };
 }
 
+macro_rules! vector_or_option_id_regenerator {
+    ($self:ident, $component_snake:ident, Vector) => {
+        $self
+            .$component_snake
+            .iter_mut()
+            .for_each(|x| x.id = acquire_next_id())
+    };
+    ($self:ident, $component_snake:ident, Option) => {{
+        match &mut $self.$component_snake {
+            Some(x) => x.id = acquire_next_id(),
+            None => (),
+        }
+    }};
+    ($self:ident, $component_snake:ident, Marker) => {};
+}
+
 macro_rules! has_component {
     ($self:ident, $component_snake:ident, $component:ident, Vector) => {
         $self.$component_snake.len() > 0
@@ -146,6 +162,12 @@ macro_rules! create_component_types_enum {
                     }
                 }
                 true
+            }
+
+            pub fn regenerate_ids(&mut self) {
+                $(
+                    vector_or_option_id_regenerator!(self, $component_snake, $component_multiple);
+                )*
             }
         }
 

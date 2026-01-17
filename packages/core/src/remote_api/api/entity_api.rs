@@ -19,12 +19,15 @@ pub fn add_entity(
     payload: &str,
     context: &mut RemoteGameExecutionContext,
 ) -> Result<Option<String>, String> {
-    let input: AddEntityInput = serde_json::from_str(payload).map_err(serde_parse_err_map)?;
+    let mut input: AddEntityInput = serde_json::from_str(payload).map_err(serde_parse_err_map)?;
     // println!("{:?}", input);
     // panic!();
     let entity = match input.components {
         None => Entity::new(),
-        Some(components) => Entity::new_with_components(components),
+        Some(mut components) => {
+            components.regenerate_ids();
+            Entity::new_with_components(components)
+        }
     };
     let id = entity.id;
     context.ecs.add(entity);
