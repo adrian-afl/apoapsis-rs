@@ -11,7 +11,9 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@aeroflightlabs/linear-math": "^0.0.4",
     "@types/node": "^25.0.3",
+    "decimal.js": "^10.6.0",
     "nats": "^2.29.3",
     "prettier": "^3.7.4",
     "tsx": "^4.21.0",

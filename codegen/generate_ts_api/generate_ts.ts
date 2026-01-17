@@ -137,3 +137,18 @@ for (const component of componentsMetadata.filter((x) => x.type === "Marker")) {
 }
 
 console.log("}"); // GameComponentsApi close
+
+console.log("export const emptyAttachedComponents = {");
+
+for (const component of componentsMetadata) {
+  if (component.type === "Vector") {
+    console.log(`  ${component.snake}: [],`);
+  }
+  if (component.type === "Option") {
+    console.log(`  ${component.snake}: null,`);
+  }
+  if (component.type === "Marker") {
+    console.log(`  ${component.snake}: false,`);
+  }
+}
+console.log("};"); // emptyAttachedComponents close

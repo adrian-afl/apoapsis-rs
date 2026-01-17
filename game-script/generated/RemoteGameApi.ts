@@ -686,3 +686,27 @@ export class RemoteGameApi {
     },
   };
 }
+export const emptyAttachedComponents = {
+  universe_clock: null,
+  camera_focus: false,
+  first_person_camera_control: null,
+  third_person_orbit_camera_control: null,
+  third_person_static_camera_control: null,
+  transform: null,
+  is_ground_collider: false,
+  real_physics: null,
+  simple_physics: null,
+  set_physics_kinematics: [],
+  is_player: false,
+  mesh: [],
+  control_focus: false,
+  ship_control: null,
+  ui_color: null,
+  ui_hover_color: null,
+  ui_box: null,
+  ui_hover_cursor: null,
+  ui_texture: null,
+  ui_text: null,
+  ui_is_raycastable: false,
+  ui_require_free_cursor: false,
+};
