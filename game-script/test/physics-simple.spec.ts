@@ -132,5 +132,7 @@ describe("physics simple tests", () => {
         })
         .build(),
     );
+
+    await setTimeout(10 * 1000.0);
   });
 });
