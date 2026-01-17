@@ -26,7 +26,7 @@ describe("latency testing", () => {
   // afterAll(() => process.exit(0));
 
   it("measures latency", async () => {
-    const gameApi = await boot(4321);
+    const gameApi = await boot(4321, false);
 
     console.log("Booted");
 

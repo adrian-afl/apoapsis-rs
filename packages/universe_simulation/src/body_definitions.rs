@@ -2,30 +2,36 @@ use common_util::strip_json_line_comments::strip_json_line_comments;
 use dashu_float::DBig;
 use glam::DVec3;
 use math::decimal_vector_3d::DecimalVector3d;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::fs;
+use ts_rs::TS;
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[ts(export)]
 #[serde(rename_all = "camelCase")]
 pub struct BodyHeightModifier {
     pub image_path: String,
+    #[ts(type = "[number, number, number]")]
     pub direction: DVec3,
     pub size: f64,
     pub rotation: f64,
     pub influence: f64,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[ts(export)]
 #[serde(rename_all = "camelCase")]
 pub struct BodyColorModifier {
     pub image_path: String,
+    #[ts(type = "[number, number, number]")]
     pub direction: DVec3,
     pub size: f64,
     pub rotation: f64,
     pub influence: f64,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[ts(export)]
 #[serde(rename_all = "camelCase")]
 pub struct BodyTerrainGeneration {
     pub seed: f64,
@@ -39,7 +45,8 @@ pub struct BodyTerrainGeneration {
     pub craters_count: u32,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[ts(export)]
 #[serde(rename_all = "camelCase")]
 pub enum BodyBiomeModifier {
     Latitude,
@@ -47,7 +54,8 @@ pub enum BodyBiomeModifier {
     Random,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[ts(export)]
 #[serde(rename_all = "camelCase")]
 pub struct BodyBiome {
     pub id: u32,
@@ -56,6 +64,7 @@ pub struct BodyBiome {
     pub max_altitude: f64,
     pub min_modifier: f64,
     pub max_modifier: f64,
+    #[ts(type = "[number, number, number]")]
     pub color: DVec3,
     pub roughness: f64,
     pub erosion_strength: f64,
@@ -65,7 +74,8 @@ pub struct BodyBiome {
     pub max_crater_size: f64,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[ts(export)]
 #[serde(rename_all = "camelCase")]
 pub struct BodyTerrain {
     pub radius: f64,
@@ -77,25 +87,30 @@ pub struct BodyTerrain {
     pub icosphere_path: String,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[ts(export)]
 #[serde(rename_all = "camelCase")]
 pub struct BodyWater {
     pub radius: f64,
     pub waves_height: f64,
+    #[ts(type = "[number, number, number]")]
     pub color: DVec3,
     pub icosphere_path: String,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[ts(export)]
 #[serde(rename_all = "camelCase")]
 pub struct BodyClouds {
     pub min_height: f64,
     pub max_height: f64,
 
+    #[ts(type = "[number, number, number]")]
     pub color: DVec3,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[ts(export)]
 #[serde(rename_all = "camelCase")]
 pub struct BodyAtmosphere {
     pub seed: f64,
@@ -106,24 +121,30 @@ pub struct BodyAtmosphere {
 
     pub mie_height: f64,
     pub mie_density: f64,
+    #[ts(type = "[number, number, number]")]
     pub mie_color: DVec3,
 
     pub clouds: Option<BodyClouds>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[ts(export)]
 pub struct StaticBodyMotion {
     pub position: DecimalVector3d,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[ts(export)]
 pub struct OrbitingBodyMotion {
+    #[ts(type = "string")]
     pub orbit_radius: DBig,
     pub orbit_plane_normal: DecimalVector3d,
+    #[ts(type = "string")]
     pub orbit_period: DBig,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[ts(export)]
 pub enum BodyMotion {
     Static(StaticBodyMotion),
     Orbiting(OrbitingBodyMotion),
@@ -133,12 +154,14 @@ fn empty_sat_vec() -> Vec<BodyCelestialBodyDefinition> {
     vec![]
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[ts(export)]
 #[serde(rename_all = "camelCase")]
 pub struct BodyDynamics {
     pub rotation_axis: DecimalVector3d,
     pub rotation_period: u64, // in seconds
-    pub mass: DBig,           // in kg
+    #[ts(type = "string")]
+    pub mass: DBig, // in kg
     pub motion: BodyMotion,
     pub satellite_paths: Vec<String>,
 
@@ -146,7 +169,8 @@ pub struct BodyDynamics {
     pub satellites: Vec<BodyCelestialBodyDefinition>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[ts(export)]
 #[serde(rename_all = "camelCase")]
 pub struct BodyPlanetGenConfig {
     pub out_dir: String,
@@ -159,14 +183,17 @@ pub struct BodyPlanetGenConfig {
     pub cube_map_resolution: u16,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[ts(export)]
 #[serde(rename_all = "camelCase")]
 pub struct BodyStarEmission {
     pub radius: f64,
+    #[ts(type = "[number, number, number]")]
     pub radiance: DVec3,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[ts(export)]
 #[serde(rename_all = "camelCase")]
 pub struct BodyCelestialBodyDefinition {
     pub name: String,
@@ -186,8 +213,8 @@ fn parse_body_data(str: &str) -> BodyCelestialBodyDefinition {
 
 pub fn load_body_data(path: &str) -> BodyCelestialBodyDefinition {
     println!("Loading body from path {}", path);
-    let input_json =
-        fs::read_to_string(path).unwrap_or_else(|_| panic!("Failed to to read the input file {}", path));
+    let input_json = fs::read_to_string(path)
+        .unwrap_or_else(|_| panic!("Failed to to read the input file {}", path));
     let mut data = parse_body_data(&input_json);
     for path in &data.dynamics.satellite_paths {
         data.dynamics.satellites.push(load_body_data(path.as_str()));

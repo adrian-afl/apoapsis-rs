@@ -30,6 +30,7 @@ use crate::remote_api::api::reset_world::reset_world;
 use crate::remote_api::api::serialize_world::serialize_world;
 use crate::remote_api::api::universe_simulation_api::get_all_celestial_body_names;
 use crate::remote_api::api::universe_simulation_api::get_celestial_body_position;
+use crate::remote_api::api::universe_simulation_api::get_celestial_body_definition;
 use crate::remote_api::api::universe_simulation_api::get_celestial_body_surface_velocity;
 use crate::remote_api::api::universe_simulation_api::get_celestial_body_orientation;
 use crate::remote_api::api::universe_simulation_api::get_celestial_body_parent;
@@ -803,6 +804,7 @@ pub fn handle_message_api(
     "command.serialize_world" => serialize_world(payload, context),
     "command.get_all_celestial_body_names" => get_all_celestial_body_names(payload, context),
     "command.get_celestial_body_position" => get_celestial_body_position(payload, context),
+    "command.get_celestial_body_definition" => get_celestial_body_definition(payload, context),
     "command.get_celestial_body_surface_velocity" => get_celestial_body_surface_velocity(payload, context),
     "command.get_celestial_body_orientation" => get_celestial_body_orientation(payload, context),
     "command.get_celestial_body_parent" => get_celestial_body_parent(payload, context),

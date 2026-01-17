@@ -20,8 +20,10 @@ pub struct OnGameBootReadyEventData {
 }
 
 // @api_event on_game_boot_ready(OnGameBootReadyEventData)
+// @api_event startup()
 
 fn main() {
+    send_event!("startup");
     println!("{:?}", GLOBAL_CONFIG);
 
     if GLOBAL_CONFIG.headless {
@@ -51,17 +53,15 @@ fn main() {
                 thread::sleep(Duration::from_millis(500));
                 let app = GameWindowApp::new(toolkit, window);
                 thread::sleep(Duration::from_millis(500));
+
+                send_event!(
+                    "on_game_boot_ready",
+                    OnGameBootReadyEventData { headless: false }
+                );
                 Arc::new(Mutex::from(app)) as Arc<Mutex<dyn App>>
             }),
             window_attributes,
         )
         .unwrap();
-
-        thread::sleep(Duration::from_millis(500));
-
-        send_event!(
-            "on_game_boot_ready",
-            OnGameBootReadyEventData { headless: false }
-        );
     }
 }

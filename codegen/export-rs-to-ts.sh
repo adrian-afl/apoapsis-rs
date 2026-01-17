@@ -22,6 +22,8 @@ cd ../core
 cargo test export_bindings
 cd ../math
 cargo test export_bindings
+cd ../universe_simulation
+cargo test export_bindings
 
 cd ../../codegen/generate_ts_api
 cd types

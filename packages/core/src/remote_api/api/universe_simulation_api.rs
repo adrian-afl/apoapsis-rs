@@ -40,9 +40,18 @@ pub fn get_celestial_body_position(
     let body_name = payload;
     let body = context.simulation.get_body(body_name);
 
-    println!("{}", body.position);
-
     Ok(Some(json!(body.position).to_string()))
+}
+
+// @api_command get_celestial_body_definition(name: string): BodyCelestialBodyDefinition
+pub fn get_celestial_body_definition(
+    payload: &str,
+    context: &mut RemoteGameExecutionContext,
+) -> Result<Option<String>, String> {
+    let body_name = payload;
+    let body = context.simulation.get_body(body_name);
+
+    Ok(Some(json!(body.body).to_string()))
 }
 
 // @api_command get_celestial_body_surface_velocity(name: string, point: DecimalVector3d): DecimalVector3d

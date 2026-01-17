@@ -76,14 +76,7 @@ impl Simulation {
     }
 
     fn get_body_by_name(&self, name: &str) -> Option<&SimulatedBody> {
-        println!("{name}");
         for i in 0..self.bodies.len() {
-            println!(
-                "{} == {} -> {}",
-                self.bodies[i].body.name,
-                name,
-                self.bodies[i].body.name == name
-            );
             if self.bodies[i].body.name == name {
                 return Some(&self.bodies[i]);
             }
@@ -191,22 +184,17 @@ impl Simulation {
 
     pub fn update(&mut self, camera_position: &DecimalVector3d, time: &DBig) {
         let mut schedule: Vec<i32> = vec![];
-        println!("self bodies len {}", self.bodies.len());
         for i in 0..self.bodies.len() {
             let body = &self.bodies[i];
             match body.body.dynamics.motion {
                 BodyMotion::Static(_) => {
                     let hierarchy = self.resolve_hierarchy_down(body);
                     schedule.push(body.id);
-                    println!("pushin {}", body.id);
                     for body in hierarchy {
                         schedule.push(body.id);
-                        println!("subpushin {}", body.id);
                     }
                 }
-                BodyMotion::Orbiting(_) => {
-                    println!("ops opribitng {}", body.id);
-                }
+                BodyMotion::Orbiting(_) => (),
             }
         }
         // println!("le shecdule update");
@@ -220,7 +208,6 @@ impl Simulation {
             let orientation = Self::get_body_orientation(time, body_immutable);
 
             let body = self.get_mut_body_by_id(item).unwrap();
-            println!("le shecdule pos {} - > {}", item, position.to_string());
             body.position = position;
             body.velocity = velocity;
             body.orientation = orientation;

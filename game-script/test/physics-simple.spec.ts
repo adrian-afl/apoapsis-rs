@@ -3,12 +3,13 @@ import { setTimeout } from "node:timers/promises";
 import { emptyAttachedComponents } from "../generated/RemoteGameApi";
 import { boot } from "./util/boot";
 import { AttachedComponents } from "../generated/types/AttachedComponents";
+import DVec3 from "../framework/mathModule/logic/linear/DVec3";
 
 describe("physics simple tests", () => {
   // afterAll(() => process.exit(0));
 
   it("can spawn an entity with physics near a planet", async () => {
-    const gameApi = await boot(4321);
+    const gameApi = await boot(4321, false);
 
     console.log(await gameApi.getAllCelestialBodyNames());
 
@@ -89,7 +90,7 @@ describe("physics simple tests", () => {
           },
           universe_clock: {
             time: "1",
-            should_advance: true,
+            should_advance: false,
           },
         })
         .build(),
@@ -99,5 +100,37 @@ describe("physics simple tests", () => {
 
     const earthPosition = await gameApi.getCelestialBodyPosition("earth");
     console.log(earthPosition);
+
+    const earthDef = await gameApi.getCelestialBodyDefinition("earth");
+    console.log(earthDef);
+
+    const radius = earthDef.terrain.radius + 400.0 * 1000.0; // 400 km over surface
+
+    const newPosition = DVec3.fromDecimalVector3d(earthPosition).addVec3(
+      DVec3.fromNumbers(0.0, 0.0, radius),
+    );
+
+    await gameApi.replaceEntityComponents(
+      entityId,
+      buildComponents()
+        .add({
+          camera_focus: true,
+          transform: {
+            orientation: [1.0, 0.0, 0.0, 1.0],
+            position: newPosition.toDecimalVector3d(),
+            scale: [1.0, 1.0, 1.0],
+          },
+          first_person_camera_control: {
+            fov: 90.0,
+          },
+          is_player: true,
+          control_focus: true,
+          universe_clock: {
+            time: "1",
+            should_advance: false,
+          },
+        })
+        .build(),
+    );
   });
 });

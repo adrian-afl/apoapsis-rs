@@ -13,3 +13,4 @@ dashu-float = { workspace = true }
 glam = { workspace = true, features = ["serde"] }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
+ts-rs = { workspace = true }

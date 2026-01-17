@@ -3612,6 +3612,7 @@ dependencies = [
  "renderer_common",
  "serde",
  "serde_json",
+ "ts-rs",
 ]
 
 [[package]]

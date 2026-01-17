@@ -26,6 +26,7 @@ import { ObjectWithID } from "./types/ObjectWithID.js";
 import { Entity } from "./types/Entity.js";
 import { AttachedComponents } from "./types/AttachedComponents.js";
 import { DecimalVector3d } from "./types/DecimalVector3d.js";
+import { BodyCelestialBodyDefinition } from "./types/BodyCelestialBodyDefinition.js";
 import { DecimalMatrix3d } from "./types/DecimalMatrix3d.js";
 import { BaseGameApi } from "../framework/BaseGameApi.js";
 
@@ -113,6 +114,15 @@ export class RemoteGameApi {
       name: "command.get_celestial_body_position",
       payload: name,
     }) as Promise<DecimalVector3d>;
+  }
+
+  public async getCelestialBodyDefinition(
+    name: string,
+  ): Promise<BodyCelestialBodyDefinition> {
+    return this.api.send({
+      name: "command.get_celestial_body_definition",
+      payload: name,
+    }) as Promise<BodyCelestialBodyDefinition>;
   }
 
   public async getCelestialBodySurfaceVelocity(
