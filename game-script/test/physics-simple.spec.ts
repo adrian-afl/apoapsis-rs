@@ -104,10 +104,10 @@ describe("physics simple tests", () => {
     const earthDef = await gameApi.getCelestialBodyDefinition("earth");
     console.log(earthDef);
 
-    const radius = earthDef.terrain.radius + 400.0 * 1000.0; // 400 km over surface
+    const radius = earthDef.terrain.radius + 10.0 * 1000.0; // 400 km over surface
 
     const newPosition = DVec3.fromDecimalVector3d(earthPosition).addVec3(
-      DVec3.fromNumbers(0.0, 0.0, radius),
+      DVec3.fromNumbers(0.0, 0.0, -radius),
     );
 
     await gameApi.replaceEntityComponents(
@@ -121,18 +121,65 @@ describe("physics simple tests", () => {
             scale: [1.0, 1.0, 1.0],
           },
           first_person_camera_control: {
-            fov: 90.0,
+            fov: 70.0,
           },
           is_player: true,
           control_focus: true,
+          ui_require_free_cursor: true,
           universe_clock: {
             time: "1",
             should_advance: false,
+          },
+          simple_physics: {
+            angular_velocity: [0.0, 0.0, 0.0],
+            mass: "1.0",
+            linear_velocity: [0.0, 0.0, 0.0],
           },
         })
         .build(),
     );
 
-    await setTimeout(10 * 1000.0);
+    const { id: labelId } = await gameApi.addEntity({
+      components: buildComponents()
+        .add({
+          ui_text: {
+            color: [1.0, 1.0, 1.0, 1.0],
+            content: "Keke",
+            font_size: "Medium",
+          },
+          ui_box: {
+            orientation: 0,
+            z_index: 1,
+            position: [0.5, 0.5],
+            size: [0.1, 0.1],
+          },
+          ui_color: {
+            color: [0.0, 0.0, 0.0, 0.0],
+          },
+        })
+        .build(),
+    });
+
+    console.log(
+      DVec3.fromDecimalVector3d(
+        (await gameApi.transform.get(entityId)).position,
+      ).distanceTo(DVec3.fromDecimalVector3d(earthPosition)),
+    );
+
+    while (true) {
+      const altitude = DVec3.fromDecimalVector3d(
+        (await gameApi.transform.get(entityId)).position,
+      ).distanceTo(DVec3.fromDecimalVector3d(earthPosition));
+
+      await gameApi.uIText.set(labelId, {
+        id: 0,
+        color: [1.0, 1.0, 1.0, 1.0],
+        content: altitude.toString(),
+        font_size: "Medium",
+      });
+      await setTimeout(1000.0);
+    }
+
+    // await setTimeout(10 * 1000.0);
   });
 });
