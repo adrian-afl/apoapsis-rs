@@ -5,6 +5,7 @@ use crate::components::camera::third_person_static_camera_control_component::Thi
 use crate::components::common::control_focus_component::ControlFocusComponent;
 use crate::components::common::transform_component::TransformComponent;
 use crate::components::common::universe_clock_component::UniverseClockComponent;
+use crate::components::physics::glue_to_celestial_body_component::GlueToCelestialBodyComponent;
 use crate::components::physics::is_ground_collider_component::IsGroundColliderComponent;
 use crate::components::physics::real_physics_component::RealPhysicsComponent;
 use crate::components::physics::set_physics_kinematics_component::SetPhysicsKinematicsComponent;
@@ -223,6 +224,12 @@ create_component_types_enum!(
         SetPhysicsKinematics,
         SetPhysicsKinematicsComponent,
         Vector
+    ),
+    (
+        glue_to_celestial_body,
+        GlueToCelestialBody,
+        GlueToCelestialBodyComponent,
+        Option
     ),
     (is_player, IsPlayer, IsPlayerComponent, Marker),
     (mesh, Mesh, MeshComponent, Vector),

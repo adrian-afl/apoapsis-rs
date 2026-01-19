@@ -8,6 +8,7 @@ import { IsGroundColliderComponent } from "./types/IsGroundColliderComponent.js"
 import { RealPhysicsComponent } from "./types/RealPhysicsComponent.js";
 import { SimplePhysicsComponent } from "./types/SimplePhysicsComponent.js";
 import { SetPhysicsKinematicsComponent } from "./types/SetPhysicsKinematicsComponent.js";
+import { GlueToCelestialBodyComponent } from "./types/GlueToCelestialBodyComponent.js";
 import { IsPlayerComponent } from "./types/IsPlayerComponent.js";
 import { MeshComponent } from "./types/MeshComponent.js";
 import { ControlFocusComponent } from "./types/ControlFocusComponent.js";

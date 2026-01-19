@@ -3,9 +3,11 @@ import type { BallColliderDescription } from "./BallColliderDescription.js";
 import type { BoxColliderDescription } from "./BoxColliderDescription.js";
 import type { ConeColliderDescription } from "./ConeColliderDescription.js";
 import type { CylinderColliderDescription } from "./CylinderColliderDescription.js";
+import type { TriMeshColliderDescription } from "./TriMeshColliderDescription.js";
 
 export type ShapeDescription =
   | { ball: BallColliderDescription }
   | { box: BoxColliderDescription }
   | { cylinder: CylinderColliderDescription }
-  | { cone: ConeColliderDescription };
+  | { cone: ConeColliderDescription }
+  | { triMesh: TriMeshColliderDescription };

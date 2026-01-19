@@ -1,3 +1,4 @@
+use ecs::components::physics::real_physics_component::RealPhysicsComponent;
 use glam::{DMat4, DVec3, Vec3};
 use math::decimal_vector_3d::DecimalVector3d;
 use planet_generator_library::generate_icosphere::IcosphereMetadataItem;
@@ -14,8 +15,7 @@ static ICO_THRESHOLDS: [f64; 2] = [2000000.0, 5000000.0];
 
 pub struct IcosphereLoadedGeometry {
     pub vertex_buffer: VEVertexBuffer,
-    pub vertices: Vec<DVec3>,
-    pub physicsTriMesh
+    pub physics_tri_mesh: RealPhysicsComponent,
     pub level: u8,
 }
 

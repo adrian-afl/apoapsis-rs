@@ -53,6 +53,7 @@ pub enum ShapeDescription {
 pub struct RealPhysicsComponent {
     pub id: u64,
     pub shape_description: ShapeDescription,
+    pub override_real_simulation_cutoff: Option<f64>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
@@ -67,6 +68,18 @@ impl RealPhysicsComponent {
         Self {
             id: acquire_next_id(),
             shape_description,
+            override_real_simulation_cutoff: None,
+        }
+    }
+
+    pub fn with_override(
+        shape_description: ShapeDescription,
+        override_real_simulation_cutoff: f64,
+    ) -> Self {
+        Self {
+            id: acquire_next_id(),
+            shape_description,
+            override_real_simulation_cutoff: Some(override_real_simulation_cutoff),
         }
     }
 }

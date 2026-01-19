@@ -8,6 +8,7 @@ use ecs::components::physics::is_ground_collider_component::IsGroundColliderComp
 use ecs::components::physics::real_physics_component::RealPhysicsComponent;
 use ecs::components::physics::simple_physics_component::SimplePhysicsComponent;
 use ecs::components::physics::set_physics_kinematics_component::SetPhysicsKinematicsComponent;
+use ecs::components::physics::glue_to_celestial_body_component::GlueToCelestialBodyComponent;
 use ecs::components::player::is_player_component::IsPlayerComponent;
 use ecs::components::rendering::mesh_component::MeshComponent;
 use ecs::components::common::control_focus_component::ControlFocusComponent;
@@ -332,6 +333,45 @@ pub fn clear_simple_physics(payload: &str, context: &mut RemoteGameExecutionCont
     let input: GetComponentInput = serde_json::from_str(payload).map_err(serde_parse_err_map)?;
     
     context.ecs.find_by_id_mut(input.entity_id).ok_or("Entity not found")?.components.simple_physics = None;
+
+    Ok(None)
+}
+
+
+#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+struct SetGlueToCelestialBodyInput {
+    entity_id: u64,
+    component: GlueToCelestialBodyComponent,
+}
+
+pub fn get_glue_to_celestial_body(payload: &str, context: &mut RemoteGameExecutionContext) -> Result<Option<String>, String> {
+    let input: GetComponentInput = serde_json::from_str(payload).map_err(serde_parse_err_map)?;
+    
+    Ok(Some(serde_json::to_string(
+        &context.ecs.find_by_id(input.entity_id).ok_or("Entity not found")?.components.glue_to_celestial_body).map_err(serde_serialize_err_map)?
+    ))
+}
+
+pub fn set_glue_to_celestial_body(payload: &str, context: &mut RemoteGameExecutionContext) -> Result<Option<String>, String> {
+    let mut input: SetGlueToCelestialBodyInput = serde_json::from_str(payload).map_err(serde_parse_err_map)?;
+
+    let new_id = acquire_next_id();
+    input.component.id = new_id;
+    
+    context.ecs.find_by_id_mut(input.entity_id).ok_or("Entity not found")?.components.glue_to_celestial_body = Some(input.component);
+
+    Ok(Some(json!({
+        "id": new_id,
+    })
+    .to_string()))
+}
+
+pub fn clear_glue_to_celestial_body(payload: &str, context: &mut RemoteGameExecutionContext) -> Result<Option<String>, String> {
+    let input: GetComponentInput = serde_json::from_str(payload).map_err(serde_parse_err_map)?;
+    
+    context.ecs.find_by_id_mut(input.entity_id).ok_or("Entity not found")?.components.glue_to_celestial_body = None;
 
     Ok(None)
 }
@@ -833,6 +873,9 @@ pub fn handle_message_api(
     "command.get_simple_physics" => get_simple_physics(payload, context),
     "command.set_simple_physics" => set_simple_physics(payload, context),
     "command.clear_simple_physics" => clear_simple_physics(payload, context),
+    "command.get_glue_to_celestial_body" => get_glue_to_celestial_body(payload, context),
+    "command.set_glue_to_celestial_body" => set_glue_to_celestial_body(payload, context),
+    "command.clear_glue_to_celestial_body" => clear_glue_to_celestial_body(payload, context),
     "command.get_ship_control" => get_ship_control(payload, context),
     "command.set_ship_control" => set_ship_control(payload, context),
     "command.clear_ship_control" => clear_ship_control(payload, context),

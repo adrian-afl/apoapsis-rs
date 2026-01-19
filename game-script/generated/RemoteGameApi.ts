@@ -8,6 +8,7 @@ import { IsGroundColliderComponent } from "./types/IsGroundColliderComponent.js"
 import { RealPhysicsComponent } from "./types/RealPhysicsComponent.js";
 import { SimplePhysicsComponent } from "./types/SimplePhysicsComponent.js";
 import { SetPhysicsKinematicsComponent } from "./types/SetPhysicsKinematicsComponent.js";
+import { GlueToCelestialBodyComponent } from "./types/GlueToCelestialBodyComponent.js";
 import { IsPlayerComponent } from "./types/IsPlayerComponent.js";
 import { MeshComponent } from "./types/MeshComponent.js";
 import { ControlFocusComponent } from "./types/ControlFocusComponent.js";
@@ -372,6 +373,32 @@ export class RemoteGameApi {
     },
   };
 
+  public glueToCelestialBody = {
+    get: (entityId: number): Promise<GlueToCelestialBodyComponent> => {
+      return this.api.send({
+        name: "command.get_glue_to_celestial_body",
+        payload: { entityId },
+      }) as Promise<GlueToCelestialBodyComponent>;
+    },
+
+    set: async (
+      entityId: number,
+      component: GlueToCelestialBodyComponent,
+    ): Promise<void> => {
+      await this.api.send({
+        name: "command.set_glue_to_celestial_body",
+        payload: { entityId, component },
+      });
+    },
+
+    clear: async (entityId: number): Promise<void> => {
+      await this.api.send({
+        name: "command.clear_glue_to_celestial_body",
+        payload: { entityId },
+      });
+    },
+  };
+
   public shipControl = {
     get: (entityId: number): Promise<ShipControlComponent> => {
       return this.api.send({
@@ -707,6 +734,7 @@ export const emptyAttachedComponents = {
   real_physics: null,
   simple_physics: null,
   set_physics_kinematics: [],
+  glue_to_celestial_body: null,
   is_player: false,
   mesh: [],
   control_focus: false,

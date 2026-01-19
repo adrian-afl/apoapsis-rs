@@ -11,6 +11,7 @@ export type Components =
   | "RealPhysics"
   | "SimplePhysics"
   | "SetPhysicsKinematics"
+  | "GlueToCelestialBody"
   | "IsPlayer"
   | "Mesh"
   | "ControlFocus"

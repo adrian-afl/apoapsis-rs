@@ -135,6 +135,11 @@ describe("physics simple tests", () => {
             mass: "1.0",
             linear_velocity: [0.0, 0.0, 0.0],
           },
+          glue_to_celestial_body: {
+            bodyName: "earth",
+            offset: [0.0, 0.0, -radius],
+            orientation: [1.0, 0.0, 0.0, 1.0],
+          },
         })
         .build(),
     );
@@ -169,7 +174,9 @@ describe("physics simple tests", () => {
     while (true) {
       const altitude = DVec3.fromDecimalVector3d(
         (await gameApi.transform.get(entityId)).position,
-      ).distanceTo(DVec3.fromDecimalVector3d(earthPosition));
+      )
+        .distanceTo(DVec3.fromDecimalVector3d(earthPosition))
+        .sub(earthDef.terrain.radius);
 
       await gameApi.uIText.set(labelId, {
         id: 0,
@@ -177,7 +184,7 @@ describe("physics simple tests", () => {
         content: altitude.toString(),
         font_size: "Medium",
       });
-      await setTimeout(1000.0);
+      await setTimeout(100.0);
     }
 
     // await setTimeout(10 * 1000.0);

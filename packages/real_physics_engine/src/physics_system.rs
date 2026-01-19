@@ -12,6 +12,7 @@ use rapier3d_f64::prelude::{RigidBodyBuilder, RigidBodyHandle};
 use rayon::iter::IntoParallelRefIterator;
 use rayon::iter::ParallelIterator;
 use std::collections::HashMap;
+use std::ops::Add;
 use std::sync::{Mutex, RwLock};
 use universe_simulation::simulation::Simulation;
 
@@ -83,6 +84,28 @@ impl PhysicsSystem {
                 let transform = entity.components.transform.as_mut().unwrap();
                 let simple_physics = entity.components.simple_physics.as_mut().unwrap();
                 let real_physics = entity.components.real_physics.as_ref();
+
+                let glue_to_body = entity.components.glue_to_celestial_body.as_ref();
+                let has_glue_to_body = glue_to_body.is_some();
+
+                if has_glue_to_body {
+                    let glue_to_body = glue_to_body.unwrap();
+                    let body = universe_simulation.get_body(&glue_to_body.body_name);
+                    transform.position = body.position.clone().add(DecimalVector3d::from_dvec3(
+                        body.orientation.as_dquat().mul_vec3(glue_to_body.offset),
+                    ));
+                    transform.orientation = glue_to_body
+                        .orientation
+                        .mul_quat(body.orientation.as_dquat());
+                    simple_physics.linear_velocity = universe_simulation
+                        .get_surface_velocity(
+                            &glue_to_body.body_name,
+                            &DecimalVector3d::from_dvec3(
+                                body.orientation.as_dquat().mul_vec3(glue_to_body.offset),
+                            ),
+                        )
+                        .to_dvec3_with_precision(9)
+                }
 
                 if real_physics.is_some() {
                     let real_physics = real_physics.unwrap();
@@ -266,7 +289,11 @@ impl PhysicsSystem {
         let relative_position =
             (&transform.position - &self.player_temporary_data.position).to_dvec3_with_precision(7);
 
-        let should_simulate = relative_position.length() < self.real_simulation_cutoff;
+        let cutoff = match real_physics.override_real_simulation_cutoff {
+            None => self.real_simulation_cutoff,
+            Some(cutoff) => cutoff,
+        };
+        let should_simulate = relative_position.length() < cutoff;
 
         let mut exists = self
             .currently_simulated_bodies
@@ -300,11 +327,7 @@ impl PhysicsSystem {
             exists = true;
         }
 
-        if exists {
-            Some(real_physics.id)
-        } else {
-            None
-        }
+        if exists { Some(real_physics.id) } else { None }
     }
 
     fn start_real_physics_sim(
@@ -314,6 +337,8 @@ impl PhysicsSystem {
         simple_physics: &SimplePhysicsComponent,
         real_physics: &RealPhysicsComponent,
     ) {
+        // let mass_f64 = simple_physics.mass.eq(&DBig::ZERO);
+        // remember somehow to do it in future
         let rigid_body_builder =
             RigidBodyBuilder::dynamic().additional_mass(simple_physics.mass.to_f64().unwrap());
         let body_collider_tuple = real_physics_system.add_body_with_collider(

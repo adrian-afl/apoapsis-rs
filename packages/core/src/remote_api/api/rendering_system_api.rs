@@ -17,17 +17,17 @@ struct GetRealAltitudeOverCelestialBody {
     point: DecimalVector3d,
 }
 
-// @api_command get_real_altitude_over_celestial_body(): {water: number, terrain:}
-pub fn get_all_celestial_body_names(
-    payload: &str,
-    context: &mut RemoteGameExecutionContext,
-) -> Result<Option<String>, String> {
-    let names: Vec<String> = context
-        .simulation
-        .bodies
-        .iter()
-        .map(|x| x.body.name.clone())
-        .collect();
-
-    Ok(Some(json!(names).to_string()))
-}
+// @XDapi_command get_real_altitude_over_celestial_body(): {water: number, terrain:}
+// pub fn get_all_celestial_body_names(
+//     payload: &str,
+//     context: &mut RemoteGameExecutionContext,
+// ) -> Result<Option<String>, String> {
+//     let names: Vec<String> = context
+//         .simulation
+//         .bodies
+//         .iter()
+//         .map(|x| x.body.name.clone())
+//         .collect();
+//
+//     Ok(Some(json!(names).to_string()))
+// }

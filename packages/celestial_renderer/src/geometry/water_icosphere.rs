@@ -4,6 +4,10 @@ use crate::geometry::common_icosphere::{
     update_icosphere_matrices, which_part_to_preload,
 };
 use crate::geometry::icosphere_drawer::WATER_ICOSPHERE_VERTEX_ATTRIBUTES;
+use ecs::component_trait::acquire_next_id;
+use ecs::components::physics::real_physics_component::{
+    RealPhysicsComponent, ShapeDescription, TriMeshColliderDescription,
+};
 use glam::{DMat4, DVec3};
 use math::decimal_vector_3d::DecimalVector3d;
 use planet_generator_library::cubemap_data::CubeMapDataLayer;
@@ -210,9 +214,23 @@ impl WaterIcosphere {
         let vertex_buffer = toolkit
             .create_vertex_buffer_from_data(segment.0, &WATER_ICOSPHERE_VERTEX_ATTRIBUTES)?;
 
+        let vertices = segment.1;
+        let mut indices: Vec<[u32; 3]> = Vec::new();
+        for vertex_i in 0..vertices.len() / 3 {
+            let start = indices.len();
+            indices.push([(start + 0) as u32, (start + 1) as u32, (start + 2) as u32]);
+        }
+
         Ok(IcosphereLoadedGeometry {
             vertex_buffer,
-            vertices: segment.1,
+            physics_tri_mesh: RealPhysicsComponent {
+                id: acquire_next_id(),
+                shape_description: ShapeDescription::TriMesh(TriMeshColliderDescription {
+                    vertices,
+                    indices,
+                }),
+                override_real_simulation_cutoff: Some(self.loaded_data.radius * 2.0),
+            },
             level,
         })
     }
