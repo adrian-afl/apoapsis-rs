@@ -1,9 +1,8 @@
 use ecs::components::physics::real_physics_component::ShapeDescription;
+use rapier3d_f64::math::Point;
 use rapier3d_f64::prelude::ColliderBuilder;
 
 pub fn build_collider(shape_description: &ShapeDescription) -> ColliderBuilder {
-    
-
     match shape_description {
         ShapeDescription::Ball(ball_description) => ColliderBuilder::ball(ball_description.radius),
         ShapeDescription::Box(box_description) => ColliderBuilder::cuboid(
@@ -18,5 +17,14 @@ pub fn build_collider(shape_description: &ShapeDescription) -> ColliderBuilder {
         ShapeDescription::Cone(cone_description) => {
             ColliderBuilder::cone(cone_description.height * 0.5, cone_description.radius)
         }
+        ShapeDescription::TriMesh(trimesh_description) => ColliderBuilder::trimesh(
+            trimesh_description
+                .vertices
+                .iter()
+                .map(|x| Point::new(x.x, x.y, x.z))
+                .collect(),
+            trimesh_description.indices.clone(),
+        )
+        .unwrap(),
     }
 }

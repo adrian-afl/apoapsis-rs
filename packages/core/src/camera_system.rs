@@ -3,6 +3,37 @@ use ecs::ecs_world::ECSWorld;
 use renderer_common::camera::Camera;
 use std::f64::consts::PI;
 
+/*
+lets think about it
+i think each camera system is coupled with a movement style
+maybe it should then be called differently
+
+lets imagine first from controlmethod
+FirstPersonNearSurface
+FirstPersonInSpace
+ThirdPersonVehicleNearSurface
+ThirdPersonVehicleInSpace
+
+so this logic actually boils down to simpler:
+if(vehicle){
+    if (near space){
+        ...
+    }
+} else if (on foot){
+    if (near space){
+        ...
+    }
+}
+
+which means this needs:
+FP normal camera rotating for Near Surface First Person
+TP orbit camera rotating for Near Surface Vehicle
+FP special camera that allows 3rd axis to rotate for In Space First Person
+Chase rotating TP camera for In Space Vehicle
+
+Before that surface collision must be implemented first
+ */
+
 pub struct CameraSystem {}
 
 impl CameraSystem {

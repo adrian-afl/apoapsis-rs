@@ -203,10 +203,11 @@ impl TerrainIcosphere {
         );
 
         let vertex_buffer = toolkit
-            .create_vertex_buffer_from_data(segment, &TERRAIN_ICOSPHERE_VERTEX_ATTRIBUTES)?;
+            .create_vertex_buffer_from_data(segment.0, &TERRAIN_ICOSPHERE_VERTEX_ATTRIBUTES)?;
 
         Ok(IcosphereLoadedGeometry {
             vertex_buffer,
+            vertices: segment.1,
             level,
         })
     }

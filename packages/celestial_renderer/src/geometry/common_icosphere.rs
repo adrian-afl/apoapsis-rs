@@ -1,4 +1,4 @@
-use glam::{DMat4, DVec3};
+use glam::{DMat4, DVec3, Vec3};
 use math::decimal_vector_3d::DecimalVector3d;
 use planet_generator_library::generate_icosphere::IcosphereMetadataItem;
 use rayon::iter::IndexedParallelIterator;
@@ -14,6 +14,8 @@ static ICO_THRESHOLDS: [f64; 2] = [2000000.0, 5000000.0];
 
 pub struct IcosphereLoadedGeometry {
     pub vertex_buffer: VEVertexBuffer,
+    pub vertices: Vec<DVec3>,
+    pub physicsTriMesh
     pub level: u8,
 }
 

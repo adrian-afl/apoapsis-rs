@@ -2,6 +2,7 @@ use std::collections::VecDeque;
 use std::ops::Deref;
 // use crate::remote_api::api::generated::handle_message_components_api;
 use crate::remote_api::api::generated::handle_message_api;
+use celestial_renderer::rendering_system::RenderingSystem;
 use ecs::ecs_world::{ECSWorld, ECSWorldSerializedRepresentation};
 use nats::{IncomingRemoteIOMessage, NATS_CONNECTION, OutgoingRemoteIOMessage, send_event};
 use serde::{Deserialize, Serialize};

@@ -1,4 +1,5 @@
 use crate::component_trait::acquire_next_id;
+use glam::DVec3;
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
@@ -32,11 +33,20 @@ pub struct ConeColliderDescription {
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
+pub struct TriMeshColliderDescription {
+    #[ts(type = "[number, number, number][]")]
+    pub vertices: Vec<DVec3>,
+    pub indices: Vec<[u32; 3]>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
 pub enum ShapeDescription {
     Ball(BallColliderDescription),
     Box(BoxColliderDescription),
     Cylinder(CylinderColliderDescription),
     Cone(ConeColliderDescription),
+    TriMesh(TriMeshColliderDescription),
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, TS)]

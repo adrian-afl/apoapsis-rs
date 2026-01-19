@@ -472,6 +472,7 @@ dependencies = [
  "glam",
  "math",
  "planet_generator_library",
+ "rapier3d-f64",
  "rayon",
  "renderer_common",
  "ui_renderer",

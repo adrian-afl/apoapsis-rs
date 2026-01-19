@@ -30,6 +30,12 @@ pub struct RenderingSystem {
     rendering_cutoff: f64,
 }
 
+pub struct GetAltitudeResult {
+    pub terrain: Option<f64>,
+    pub atmosphere: Option<f64>,
+    pub water: Option<f64>,
+}
+
 impl RenderingSystem {
     pub fn new(toolkit: Arc<VEToolkit>, renderer: Renderer) -> Self {
         Self {
@@ -49,10 +55,9 @@ impl RenderingSystem {
 
     pub fn get_altitude(
         &self,
-        universe: &Simulation,
         body: &SimulatedBody,
         point: &DecimalVector3d,
-    ) -> Option<f64> {
+    ) -> Option<GetAltitudeResult> {
         let rendered_body = self.celestial_hierarchy.get_rendered_body(&body.body.name);
         match rendered_body {
             None => None,
@@ -74,27 +79,12 @@ impl RenderingSystem {
                     .atmosphere
                     .as_ref()
                     .map(|atmo| distance_center.to_f64().value() - atmo.start);
-                if terrain_altitude.is_none()
-                    && water_altitude.is_none()
-                    && atmosphere_altitude.is_none()
-                {
-                    return None;
-                }
-                if terrain_altitude.is_none() && water_altitude.is_none() {
-                    return atmosphere_altitude;
-                }
 
-                if terrain_altitude.is_some() && water_altitude.is_some() {
-                    return Some(terrain_altitude.unwrap().min(water_altitude.unwrap()));
-                }
-                if terrain_altitude.is_some() {
-                    return terrain_altitude;
-                }
-                if water_altitude.is_some() {
-                    return water_altitude;
-                }
-
-                None
+                Some(GetAltitudeResult {
+                    water: water_altitude,
+                    terrain: terrain_altitude,
+                    atmosphere: atmosphere_altitude,
+                })
             }
         }
     }

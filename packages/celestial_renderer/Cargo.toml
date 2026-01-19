@@ -17,3 +17,4 @@ dashu-float = { workspace = true }
 glam = { workspace = true, features = ["serde"] }
 ash = { workspace = true, features = ["loaded"] }
 rayon = { workspace = true }
+rapier3d-f64 = { workspace = true, features = ["simd-stable"] }

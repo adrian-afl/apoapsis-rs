@@ -1,7 +1,7 @@
 use crate::base_icosphere::get_base_icosphere;
 use crate::cubemap_data::CubeMapDataLayer;
 use crate::interpolated_biome_data::LoadedBiomeData;
-use glam::DVec3;
+use glam::{DVec3, Vec3};
 use rayon::iter::ParallelIterator;
 use rayon::prelude::IntoParallelRefIterator;
 use std::collections::HashMap;
@@ -279,7 +279,7 @@ impl IcosphereSegmentGenerator {
         subdivisions: u8,
         height_data: &CubeMapDataLayer<f64>,
         biome_data: &CubeMapDataLayer<LoadedBiomeData>,
-    ) -> Vec<u8> {
+    ) -> (Vec<u8>, Vec<DVec3>) {
         let precalculated = self
             .precalculated_subdivisions
             .get(&(subdivisions, base_segment))
@@ -288,6 +288,7 @@ impl IcosphereSegmentGenerator {
         let center = precalculated.center * sphere_radius;
 
         let mut vertex_buffer: Cursor<Vec<u8>> = Cursor::new(Vec::new());
+        let mut vertices: Vec<DVec3> = Vec::new();
 
         for t in subdivided {
             let t = normalize_triangle(t);
@@ -306,9 +307,12 @@ impl IcosphereSegmentGenerator {
                 &directions_triangle,
                 base_segment as u32,
             );
+            vertices.push(t_terrain[0]);
+            vertices.push(t_terrain[1]);
+            vertices.push(t_terrain[2]);
         }
 
-        vertex_buffer.into_inner()
+        (vertex_buffer.into_inner(), vertices)
     }
 
     pub fn generate_water(
@@ -317,7 +321,7 @@ impl IcosphereSegmentGenerator {
         sphere_radius: f64,
         subdivisions: u8,
         height_data: &CubeMapDataLayer<f64>,
-    ) -> Vec<u8> {
+    ) -> (Vec<u8>, Vec<DVec3>) {
         let precalculated = self
             .precalculated_subdivisions
             .get(&(subdivisions, base_segment))
@@ -326,14 +330,18 @@ impl IcosphereSegmentGenerator {
         let center = precalculated.center * sphere_radius;
 
         let mut vertex_buffer: Cursor<Vec<u8>> = Cursor::new(Vec::new());
+        let mut vertices: Vec<DVec3> = Vec::new();
 
         for t in subdivided {
             let t = normalize_triangle(t);
             let t_water = scale_triangle(&t, height_data);
             let t_water = translate_triangle(&t_water, -center);
             write_triangle_water(&mut vertex_buffer, &t_water, base_segment as u32);
+            vertices.push(t_water[0]);
+            vertices.push(t_water[1]);
+            vertices.push(t_water[2]);
         }
 
-        vertex_buffer.into_inner()
+        (vertex_buffer.into_inner(), vertices)
     }
 }
