@@ -41,12 +41,29 @@ pub struct TriMeshColliderDescription {
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
+pub enum CelestialBodyColliderSurfaceType {
+    Terrain,
+    Water,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+pub struct CelestialBodySurfaceColliderDescription {
+    #[ts(type = "[number, number, number][]")]
+    pub body_name: String,
+    pub surface_type: CelestialBodyColliderSurfaceType,
+    pub index: u16,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
 pub enum ShapeDescription {
     Ball(BallColliderDescription),
     Box(BoxColliderDescription),
     Cylinder(CylinderColliderDescription),
     Cone(ConeColliderDescription),
     TriMesh(TriMeshColliderDescription),
+    CelestialBodySurface(CelestialBodySurfaceColliderDescription),
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, TS)]

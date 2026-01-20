@@ -1,3 +1,4 @@
+use ecs::components::physics::glue_to_celestial_body_component::GlueToCelestialBodyComponent;
 use ecs::components::physics::real_physics_component::RealPhysicsComponent;
 use glam::{DMat4, DVec3, Vec3};
 use math::decimal_vector_3d::DecimalVector3d;
@@ -15,7 +16,8 @@ static ICO_THRESHOLDS: [f64; 2] = [2000000.0, 5000000.0];
 
 pub struct IcosphereLoadedGeometry {
     pub vertex_buffer: VEVertexBuffer,
-    pub physics_tri_mesh: RealPhysicsComponent,
+    pub real_physics_component: RealPhysicsComponent,
+    pub glue_to_celestial_body_component: GlueToCelestialBodyComponent,
     pub level: u8,
 }
 
@@ -101,4 +103,12 @@ pub fn update_icosphere_matrices(
         let model_offset_matrix = DMat4::from_translation(metadata.center);
         part_matrices[i] = pre_final_matrix * model_offset_matrix;
     }
+}
+
+pub fn get_icosphere_segment_displacement(
+    metadata: &Vec<IcosphereMetadataItem>,
+    index: usize,
+) -> DVec3 {
+    let metadata = &metadata[index];
+    metadata.center
 }

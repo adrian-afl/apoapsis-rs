@@ -1,14 +1,16 @@
 use crate::buffers::terrain_icosphere_data_buffer::TerrainIcosphereDataBuffer;
 use crate::geometry::common_icosphere::{
     ICO_LEVEL_SUBDIVISIONS, IcosphereLoadedGeometry, PreloadDetectionResultAction, PreloadResult,
-    update_icosphere_matrices, which_part_to_preload,
+    get_icosphere_segment_displacement, update_icosphere_matrices, which_part_to_preload,
 };
 use crate::geometry::icosphere_drawer::TERRAIN_ICOSPHERE_VERTEX_ATTRIBUTES;
 use ecs::component_trait::acquire_next_id;
+use ecs::components::physics::glue_to_celestial_body_component::GlueToCelestialBodyComponent;
 use ecs::components::physics::real_physics_component::{
+    CelestialBodyColliderSurfaceType, CelestialBodySurfaceColliderDescription,
     RealPhysicsComponent, ShapeDescription, TriMeshColliderDescription,
 };
-use glam::{DMat4, DVec3};
+use glam::{DMat4, DQuat, DVec3};
 use math::decimal_vector_3d::DecimalVector3d;
 use planet_generator_library::cubemap_data::CubeMapDataLayer;
 use planet_generator_library::generate_icosphere::{
@@ -31,6 +33,7 @@ use vengine_rs::core::toolkit::VEToolkit;
 use vengine_rs::graphics::render_stage::VERenderStage;
 
 struct LoadedTerrainData {
+    body_name: String,
     radius: f64,
     loaded_height: CubeMapDataLayer<f64>,
     loaded_biome: CubeMapDataLayer<LoadedBiomeData>,
@@ -57,6 +60,7 @@ impl TerrainIcosphere {
     pub fn new(
         toolkit: &VEToolkit,
         generator: Arc<IcosphereSegmentGenerator>,
+        body_name: &str,
         terrain_data: TerrainData,
         base_icosphere: Arc<Vec<Triangle>>,
         data_set_layout: &mut VEDescriptorSetLayout,
@@ -65,6 +69,7 @@ impl TerrainIcosphere {
         let part_matrices = vec![DMat4::IDENTITY; metadata.len()];
         let maps_resolutions = get_terrain_maps_resolution(&terrain_data.dir_path);
         let loaded_data = LoadedTerrainData {
+            body_name: body_name.to_owned(),
             radius: terrain_data.radius,
             part_matrices,
             metadata,
@@ -218,13 +223,25 @@ impl TerrainIcosphere {
 
         Ok(IcosphereLoadedGeometry {
             vertex_buffer,
-            physics_tri_mesh: RealPhysicsComponent {
+            real_physics_component: RealPhysicsComponent {
                 id: acquire_next_id(),
-                shape_description: ShapeDescription::TriMesh(TriMeshColliderDescription {
-                    vertices,
-                    indices,
-                }),
+                shape_description: ShapeDescription::CelestialBodySurface(
+                    CelestialBodySurfaceColliderDescription {
+                        body_name: self.loaded_data.body_name.clone(),
+                        surface_type: CelestialBodyColliderSurfaceType::Terrain,
+                        index: base_segment,
+                    },
+                ),
                 override_real_simulation_cutoff: Some(self.loaded_data.radius * 2.0),
+            },
+            glue_to_celestial_body_component: GlueToCelestialBodyComponent {
+                body_name: self.loaded_data.body_name.clone(),
+                id: acquire_next_id(),
+                offset: get_icosphere_segment_displacement(
+                    &self.loaded_data.metadata,
+                    base_segment as usize,
+                ),
+                orientation: DQuat::IDENTITY,
             },
             level,
         })
