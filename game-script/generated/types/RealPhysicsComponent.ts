@@ -2,7 +2,6 @@
 import type { ShapeDescription } from "./ShapeDescription.js";
 
 export type RealPhysicsComponent = {
-  id: number;
   shape_description: ShapeDescription;
   override_real_simulation_cutoff: number | null;
 };

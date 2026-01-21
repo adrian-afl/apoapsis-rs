@@ -6,7 +6,7 @@ export interface ProcessStartResult {
   stdout: string;
   stderr: string;
   writeStdin: (data: string) => Promise<void>;
-  exitedWithCode: number | null;
+  exitedWithCode: Promise<number>;
 }
 
 async function startProcess(
@@ -15,7 +15,7 @@ async function startProcess(
   cwd: string,
   args: string[],
 ): Promise<ProcessStartResult> {
-  const ls = spawn(path, args, { cwd });
+  const ls = spawn(path, args, { cwd, env: { RUST_BACKTRACE: "1" } });
 
   const result: ProcessStartResult = {
     kill: () => ls.kill(9),
@@ -25,7 +25,12 @@ async function startProcess(
       new Promise<void>((resolve, reject) =>
         ls.stdin.write(data, (error) => (error ? reject(error) : resolve())),
       ),
-    exitedWithCode: null,
+    exitedWithCode: new Promise<number>((resolve) => {
+      ls.on("close", (code) => {
+        console.log(styleText(color, `Exited with code: ${code}`));
+        resolve(code);
+      });
+    }),
   };
 
   ls.stdout.on("data", (data) => {
@@ -36,10 +41,6 @@ async function startProcess(
   ls.stderr.on("data", (data) => {
     console.log(styleText(color, data.toString("utf-8")));
     result.stderr += data.toString("utf-8");
-  });
-
-  ls.on("close", (code) => {
-    result.exitedWithCode = code;
   });
 
   process.on("exit", () => {
@@ -53,6 +54,8 @@ export function startNATSServer(port: number): Promise<ProcessStartResult> {
   return startProcess("blue", "nats-server.exe", "../nats-server", [
     "--port",
     port.toString(),
+    "--config",
+    "config.conf",
   ]);
 }
 

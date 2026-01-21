@@ -40,10 +40,17 @@ impl DecimalVector3d {
     }
 
     pub fn to_dvec3_with_precision(self, precision: usize) -> DVec3 {
-        let x = self.x.with_precision(precision).value();
-        let y = self.y.with_precision(precision).value();
-        let z = self.z.with_precision(precision).value();
-        DVec3::new(x.to_f64().value(), y.to_f64().value(), z.to_f64().value())
+        DVec3::new(
+            // TODO !!!!!!!!!!!!!!!!!!
+            self.x.to_f64().value(),
+            self.y.to_f64().value(),
+            self.z.to_f64().value(),
+        )
+
+        // let x = self.x.with_precision(precision).value();
+        // let y = self.y.with_precision(precision).value();
+        // let z = self.z.with_precision(precision).value();
+        // DVec3::new(x.to_f64().value(), y.to_f64().value(), z.to_f64().value())
     }
 
     pub fn from_dvec3(vec: DVec3) -> DecimalVector3d {

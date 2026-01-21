@@ -177,7 +177,8 @@ impl Game {
             }
         });
 
-        self.remote_game_mode.update(&mut self.universe_simulation);
+        self.remote_game_mode
+            .update(&mut self.universe_simulation, &mut self.physics_system);
 
         if let Some(ref mut controls) = self.controls {
             controls.clear_events();

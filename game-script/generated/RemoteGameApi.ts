@@ -9,6 +9,7 @@ import { RealPhysicsComponent } from "./types/RealPhysicsComponent.js";
 import { SimplePhysicsComponent } from "./types/SimplePhysicsComponent.js";
 import { SetPhysicsKinematicsComponent } from "./types/SetPhysicsKinematicsComponent.js";
 import { GlueToCelestialBodyComponent } from "./types/GlueToCelestialBodyComponent.js";
+import { IsCelestialBodySurfaceComponent } from "./types/IsCelestialBodySurfaceComponent.js";
 import { IsPlayerComponent } from "./types/IsPlayerComponent.js";
 import { MeshComponent } from "./types/MeshComponent.js";
 import { ControlFocusComponent } from "./types/ControlFocusComponent.js";
@@ -26,6 +27,7 @@ import { AddEntityInput } from "./types/AddEntityInput.js";
 import { ObjectWithID } from "./types/ObjectWithID.js";
 import { Entity } from "./types/Entity.js";
 import { AttachedComponents } from "./types/AttachedComponents.js";
+import { DebugCollector } from "./types/DebugCollector.js";
 import { DecimalVector3d } from "./types/DecimalVector3d.js";
 import { BodyCelestialBodyDefinition } from "./types/BodyCelestialBodyDefinition.js";
 import { DecimalMatrix3d } from "./types/DecimalMatrix3d.js";
@@ -85,6 +87,13 @@ export class RemoteGameApi {
       name: "command.find_all_entities_by_components",
       payload: components,
     }) as Promise<number[]>;
+  }
+
+  public async getDebugRealPhysicsWireframe(): Promise<DebugCollector> {
+    return this.api.send({
+      name: "command.get_debug_real_physics_wireframe",
+      payload: {},
+    }) as Promise<DebugCollector>;
   }
 
   public async resetWorld(): Promise<void> {
@@ -659,6 +668,22 @@ export class RemoteGameApi {
     },
   };
 
+  public isCelestialBodySurface = {
+    get: (entityId: number): Promise<IsCelestialBodySurfaceComponent> => {
+      return this.api.send({
+        name: "command.get_is_celestial_body_surface",
+        payload: { entityId },
+      }) as Promise<IsCelestialBodySurfaceComponent>;
+    },
+
+    set: async (entityId: number, value: boolean): Promise<void> => {
+      await this.api.send({
+        name: "command.set_is_celestial_body_surface",
+        payload: { entityId, value },
+      });
+    },
+  };
+
   public isPlayer = {
     get: (entityId: number): Promise<IsPlayerComponent> => {
       return this.api.send({
@@ -735,6 +760,7 @@ export const emptyAttachedComponents = {
   simple_physics: null,
   set_physics_kinematics: [],
   glue_to_celestial_body: null,
+  is_celestial_body_surface: false,
   is_player: false,
   mesh: [],
   control_focus: false,

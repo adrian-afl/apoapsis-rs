@@ -4,6 +4,7 @@ use ts_rs::TS;
 
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
 pub struct FirstPersonCameraControlComponent {
+    #[serde(skip, default = "acquire_next_id")]
     pub id: u64,
     pub fov: f64,
 }

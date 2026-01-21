@@ -5,6 +5,7 @@
     "target": "ESNext",
     "outDir": "./dist",
     "baseUrl": "./",
+    "lib": ["DOM", "ESNext", "ES2015.Promise"],
     "declaration": true,
     "removeComments": true,
     "emitDecoratorMetadata": false,

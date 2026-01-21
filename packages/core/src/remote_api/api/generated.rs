@@ -9,6 +9,7 @@ use ecs::components::physics::real_physics_component::RealPhysicsComponent;
 use ecs::components::physics::simple_physics_component::SimplePhysicsComponent;
 use ecs::components::physics::set_physics_kinematics_component::SetPhysicsKinematicsComponent;
 use ecs::components::physics::glue_to_celestial_body_component::GlueToCelestialBodyComponent;
+use ecs::components::physics::is_celestial_body_surface_component::IsCelestialBodySurfaceComponent;
 use ecs::components::player::is_player_component::IsPlayerComponent;
 use ecs::components::rendering::mesh_component::MeshComponent;
 use ecs::components::common::control_focus_component::ControlFocusComponent;
@@ -27,6 +28,7 @@ use crate::remote_api::api::entity_api::remove_entity;
 use crate::remote_api::api::entity_api::get_entity;
 use crate::remote_api::api::entity_api::replace_entity_components;
 use crate::remote_api::api::entity_api::find_all_entities_by_components;
+use crate::remote_api::api::physics_api::get_debug_real_physics_wireframe;
 use crate::remote_api::api::reset_world::reset_world;
 use crate::remote_api::api::serialize_world::serialize_world;
 use crate::remote_api::api::universe_simulation_api::get_all_celestial_body_names;
@@ -764,6 +766,22 @@ pub fn set_is_ground_collider(payload: &str, context: &mut RemoteGameExecutionCo
 
 
 
+pub fn get_is_celestial_body_surface(payload: &str, context: &mut RemoteGameExecutionContext) -> Result<Option<String>, String> {
+    let input: GetComponentInput = serde_json::from_str(payload).map_err(serde_parse_err_map)?;
+    
+    Ok(Some(serde_json::to_string(&context.ecs.find_by_id(input.entity_id).ok_or("Entity not found")?.components.is_celestial_body_surface).map_err(serde_serialize_err_map)?))
+}
+
+pub fn set_is_celestial_body_surface(payload: &str, context: &mut RemoteGameExecutionContext) -> Result<Option<String>, String> {
+    let input: SetBooleanComponentInput = serde_json::from_str(payload).map_err(serde_parse_err_map)?;
+    
+    context.ecs.find_by_id_mut(input.entity_id).ok_or("Entity not found")?.components.is_celestial_body_surface = input.value;
+
+    Ok(None)
+}
+
+
+
 pub fn get_is_player(payload: &str, context: &mut RemoteGameExecutionContext) -> Result<Option<String>, String> {
     let input: GetComponentInput = serde_json::from_str(payload).map_err(serde_parse_err_map)?;
     
@@ -840,6 +858,7 @@ pub fn handle_message_api(
     "command.get_entity" => get_entity(payload, context),
     "command.replace_entity_components" => replace_entity_components(payload, context),
     "command.find_all_entities_by_components" => find_all_entities_by_components(payload, context),
+    "command.get_debug_real_physics_wireframe" => get_debug_real_physics_wireframe(payload, context),
     "command.reset_world" => reset_world(payload, context),
     "command.serialize_world" => serialize_world(payload, context),
     "command.get_all_celestial_body_names" => get_all_celestial_body_names(payload, context),
@@ -907,6 +926,8 @@ pub fn handle_message_api(
     "command.set_camera_focus" => set_camera_focus(payload, context),
     "command.get_is_ground_collider" => get_is_ground_collider(payload, context),
     "command.set_is_ground_collider" => set_is_ground_collider(payload, context),
+    "command.get_is_celestial_body_surface" => get_is_celestial_body_surface(payload, context),
+    "command.set_is_celestial_body_surface" => set_is_celestial_body_surface(payload, context),
     "command.get_is_player" => get_is_player(payload, context),
     "command.set_is_player" => set_is_player(payload, context),
     "command.get_control_focus" => get_control_focus(payload, context),

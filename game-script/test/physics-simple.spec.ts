@@ -4,58 +4,34 @@ import { emptyAttachedComponents } from "../generated/RemoteGameApi";
 import { boot } from "./util/boot";
 import { AttachedComponents } from "../generated/types/AttachedComponents";
 import DVec3 from "../framework/mathModule/logic/linear/DVec3";
+import * as fs from "node:fs";
+import { setInterval } from "node:timers";
 
 describe("physics simple tests", () => {
   // afterAll(() => process.exit(0));
 
   it("can spawn an entity with physics near a planet", async () => {
-    const gameApi = await boot(4321, false);
+    const { gameApi, kill } = await boot(4321, false);
 
     console.log(await gameApi.getAllCelestialBodyNames());
 
-    type AttachedComponentsWithoutIds = {
-      [k in keyof AttachedComponents]: Omit<AttachedComponents[k], "id">;
-    };
-
     function addComponents(
       base: AttachedComponents,
-      news: Partial<AttachedComponentsWithoutIds>,
+      news: Partial<AttachedComponents>,
     ) {
       return { ...base, ...news };
     }
 
     type ComponentsBuilder = {
       build: () => AttachedComponents;
-      add: (
-        components: Partial<AttachedComponentsWithoutIds>,
-      ) => ComponentsBuilder;
+      add: (components: Partial<AttachedComponents>) => ComponentsBuilder;
     };
-
-    function fillInMissingIds(
-      initial: Partial<AttachedComponentsWithoutIds>,
-    ): Partial<AttachedComponents> {
-      return Object.fromEntries(
-        Object.entries(initial).map(([k, v]) => {
-          let newv = v;
-          if (typeof v === "object") {
-            v["id"] = 0;
-          }
-          if (Array.isArray(v)) {
-            newv = v.map((y) => {
-              y["id"] = 0;
-              return y;
-            });
-          }
-          return [k, newv];
-        }),
-      ) as Partial<AttachedComponents>;
-    }
 
     function createBuilder(data: AttachedComponents): ComponentsBuilder {
       return {
         build: () => data,
-        add: (components: Partial<AttachedComponentsWithoutIds>) =>
-          createBuilder({ ...data, ...fillInMissingIds(components) }),
+        add: (components: Partial<AttachedComponents>) =>
+          createBuilder({ ...data, ...components }),
       };
     }
 
@@ -104,7 +80,7 @@ describe("physics simple tests", () => {
     const earthDef = await gameApi.getCelestialBodyDefinition("earth");
     console.log(earthDef);
 
-    const radius = earthDef.terrain.radius + 10.0 * 1000.0; // 400 km over surface
+    const radius = earthDef.terrain.radius + 100.0 * 1000.0; // 400 km over surface
 
     const newPosition = DVec3.fromDecimalVector3d(earthPosition).addVec3(
       DVec3.fromNumbers(0.0, 0.0, -radius),
@@ -135,11 +111,19 @@ describe("physics simple tests", () => {
             mass: "1.0",
             linear_velocity: [0.0, 0.0, 0.0],
           },
-          glue_to_celestial_body: {
-            bodyName: "earth",
-            offset: [0.0, 0.0, -radius],
-            orientation: [1.0, 0.0, 0.0, 1.0],
+          real_physics: {
+            shape_description: {
+              ball: {
+                radius: 1.0,
+              },
+            },
+            override_real_simulation_cutoff: null,
           },
+          // glue_to_celestial_body: {
+          //   bodyName: "earth",
+          //   offset: [0.0, 0.0, -radius],
+          //   orientation: [1.0, 0.0, 0.0, 1.0],
+          // },
         })
         .build(),
     );
@@ -170,8 +154,7 @@ describe("physics simple tests", () => {
         (await gameApi.transform.get(entityId)).position,
       ).distanceTo(DVec3.fromDecimalVector3d(earthPosition)),
     );
-
-    while (true) {
+    setInterval(async () => {
       const altitude = DVec3.fromDecimalVector3d(
         (await gameApi.transform.get(entityId)).position,
       )
@@ -179,13 +162,29 @@ describe("physics simple tests", () => {
         .sub(earthDef.terrain.radius);
 
       await gameApi.uIText.set(labelId, {
-        id: 0,
         color: [1.0, 1.0, 1.0, 1.0],
-        content: altitude.toString(),
+        content: altitude.toString() + " - " + new Date().toISOString(),
         font_size: "Medium",
       });
-      await setTimeout(100.0);
-    }
+    }, 500.0);
+    await setTimeout(10000.0);
+
+    // console.log(await gameApi.getDebugRealPhysicsWireframe());
+    //
+    fs.writeFileSync(
+      "debug-ecs.json",
+      JSON.stringify(await gameApi.serializeWorld(), undefined, 2),
+    );
+    fs.writeFileSync(
+      "points.json",
+      JSON.stringify(
+        await gameApi.getDebugRealPhysicsWireframe(),
+        undefined,
+        2,
+      ),
+    );
+
+    // kill();
 
     // await setTimeout(10 * 1000.0);
   });

@@ -68,6 +68,7 @@ pub enum ShapeDescription {
 
 #[derive(Clone, Debug, Serialize, Deserialize, TS)]
 pub struct RealPhysicsComponent {
+    #[serde(skip, default = "acquire_next_id")]
     pub id: u64,
     pub shape_description: ShapeDescription,
     pub override_real_simulation_cutoff: Option<f64>,

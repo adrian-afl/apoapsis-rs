@@ -1,5 +1,5 @@
 use crate::build_collider::build_collider;
-use crate::real_physics_system::{RealPhysicsSystem, SetRealPhysicsBodyKinematics};
+use crate::real_physics_system::{DebugCollector, RealPhysicsSystem, SetRealPhysicsBodyKinematics};
 use celestial_renderer::geometry::common_icosphere::ICO_LEVEL_SUBDIVISIONS;
 use celestial_renderer::rendering_system::RenderingSystem;
 use dashu_float::DBig;
@@ -270,7 +270,7 @@ impl PhysicsSystem {
         if simple_physics.mass > DBig::ZERO {
             let gravity_impulse = universe_simulation
                 .calculate_gravity_flux(&transform.position)
-                .to_dvec3_with_precision(9)
+                .to_dvec3_with_precision(5)
                 * delta_time;
 
             simple_physics.linear_velocity += gravity_impulse;
@@ -309,11 +309,12 @@ impl PhysicsSystem {
         };
         let should_simulate = relative_position.length() < cutoff;
 
-        let mut exists = self
-            .currently_simulated_bodies
-            .read()
-            .unwrap()
-            .contains_key(&real_physics.id);
+        let mut exists = {
+            self.currently_simulated_bodies
+                .read()
+                .unwrap()
+                .contains_key(&real_physics.id)
+        };
 
         if !should_simulate && exists {
             let mut real_physics_system = self.real_physics_system.write().unwrap();
@@ -398,6 +399,13 @@ impl PhysicsSystem {
         currently_simulated_bodies.remove(&real_physics_component_id);
     }
 
+    pub fn debug_get_world(&mut self) -> DebugCollector {
+        self.real_physics_system
+            .try_write()
+            .unwrap()
+            .debug_get_world()
+    }
+
     fn update_celestial_body_surfaces(
         ecs: &mut ECSWorld,
         universe_simulation: &Simulation,
@@ -412,8 +420,10 @@ impl PhysicsSystem {
 
         let existing_entities =
             ecs.find_all_ids_by_components(&[&Components::IsCelestialBodySurface]);
+        // println!("existing_entities {:?}", existing_entities);
         let mut currently_simulated: HashMap<(String, u16), u64> = HashMap::new();
         for existing_id in existing_entities {
+            // println!("existing_id {existing_id}");
             let existing = &ecs[existing_id];
             // let glue = existing.components.glue_to_celestial_body.as_ref().unwrap();
             let real_physics = existing.components.real_physics.as_ref().unwrap();
@@ -421,6 +431,7 @@ impl PhysicsSystem {
                 ShapeDescription::CelestialBodySurface(cfg) => cfg,
                 _ => panic!("should be CelestialBodySurface"),
             };
+            // println!("detected {} {}", shape.body_name.clone(), shape.index);
             currently_simulated.insert((shape.body_name.clone(), shape.index), existing_id);
         }
 
@@ -430,6 +441,11 @@ impl PhysicsSystem {
                     rendering_system.should_have_physics_terrain_water(&body, segment);
                 let existing_entity_id = currently_simulated.get(&(body.clone(), segment));
                 let already_has_physics = existing_entity_id.is_some();
+
+                // println!(
+                //     "body {}, segment {}, should_have_physics {}, already_has_physics {}",
+                //     body, segment, should_have_physics.0, already_has_physics
+                // );
 
                 // and now, the fun
 
@@ -445,33 +461,18 @@ impl PhysicsSystem {
                     entity.components.is_celestial_body_surface = true;
                     entity.components.real_physics = Some(terrain_physics_data.0.clone());
                     entity.components.glue_to_celestial_body = Some(terrain_physics_data.1.clone());
+                    entity.components.simple_physics =
+                        Some(SimplePhysicsComponent::from_mass(DBig::ONE));
+                    entity.components.transform = Some(TransformComponent::default());
+                    println!("adding {body} {segment}");
+                    ecs.add(entity);
                 } else if !should_have_physics.0 && already_has_physics {
                     // shouldn't have, but has, time to remove it from ECS
                     let existing_entity_id = existing_entity_id.unwrap();
+                    println!("removing {body} {segment}");
                     ecs.remove_by_id(*existing_entity_id);
                 }
             }
-        }
-
-        let existing_entities =
-            ecs.find_all_ids_by_components(&[&Components::IsCelestialBodySurface]);
-        for existing_id in existing_entities {
-            let existing = &ecs[existing_id];
-            let glue = existing.components.glue_to_celestial_body.as_ref().unwrap();
-            let real_physics = existing.components.real_physics.as_ref().unwrap();
-            let shape = match &real_physics.shape_description {
-                ShapeDescription::CelestialBodySurface(cfg) => cfg,
-                _ => panic!("should be CelestialBodySurface"),
-            };
-
-            let physics_data = match shape.surface_type {
-                CelestialBodyColliderSurfaceType::Terrain => {
-                    rendering_system.get_terrain_physics_components(&shape.body_name, shape.index)
-                }
-                CelestialBodyColliderSurfaceType::Water => {
-                    rendering_system.get_water_physics_components(&shape.body_name, shape.index)
-                }
-            };
         }
     }
 
@@ -483,6 +484,7 @@ impl PhysicsSystem {
         delta_time: f64,
     ) {
         // println!("PhysicsSystem / update");
+        Self::update_celestial_body_surfaces(ecs, universe_simulation, rendering_system);
 
         let should_continue = self.phase0(ecs);
         if should_continue {

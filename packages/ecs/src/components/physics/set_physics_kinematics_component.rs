@@ -5,6 +5,7 @@ use ts_rs::TS;
 
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
 pub struct SetPhysicsKinematicsComponent {
+    #[serde(skip, default = "acquire_next_id")]
     pub id: u64,
     // position and orientation can be set by SetBodyTransformComponent (if i already implemented it)
     #[ts(type = "[number, number, number] | null")]

@@ -6,6 +6,7 @@ use ts_rs::TS;
 
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
 pub struct SimplePhysicsComponent {
+    #[serde(skip, default = "acquire_next_id")]
     pub id: u64,
     #[ts(type = "string")]
     pub mass: DBig,

@@ -12,6 +12,7 @@ pub enum OrbitCameraStyle {
 
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
 pub struct ThirdPersonOrbitCameraControlComponent {
+    #[serde(skip, default = "acquire_next_id")]
     pub id: u64,
     pub fov: f64,
     #[ts(type = "[number, number, number]")]

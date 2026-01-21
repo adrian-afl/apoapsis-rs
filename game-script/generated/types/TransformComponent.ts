@@ -2,7 +2,6 @@
 import type { DecimalVector3d } from "./DecimalVector3d.js";
 
 export type TransformComponent = {
-  id: number;
   position: DecimalVector3d;
   orientation: [number, number, number, number];
   scale: [number, number, number];

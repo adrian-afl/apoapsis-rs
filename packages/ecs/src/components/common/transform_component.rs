@@ -6,6 +6,7 @@ use ts_rs::TS;
 
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
 pub struct TransformComponent {
+    #[serde(skip, default = "acquire_next_id")]
     pub id: u64,
     pub position: DecimalVector3d,
     #[ts(type = "[number, number, number, number]")]

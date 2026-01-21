@@ -282,7 +282,7 @@ impl WaterIcosphere {
                             index: base_segment,
                         },
                     ),
-                    override_real_simulation_cutoff: Some(self.loaded_data.radius * 2.0),
+                    override_real_simulation_cutoff: Some(self.loaded_data.radius * 0.5),
                 })
             },
             glue_to_celestial_body_component: if !is_most_detailed_level {

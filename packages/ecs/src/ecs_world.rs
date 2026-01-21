@@ -161,7 +161,6 @@ impl ECSWorld {
         for entity in self.entities.values() {
             if entity.components.has_all(component_types) {
                 found_ids.push(entity.id);
-                break;
             }
         }
         found_ids

@@ -29,6 +29,7 @@ export type AttachedComponents = {
   simple_physics: SimplePhysicsComponent | null;
   set_physics_kinematics: Array<SetPhysicsKinematicsComponent>;
   glue_to_celestial_body: GlueToCelestialBodyComponent | null;
+  is_celestial_body_surface: boolean;
   is_player: boolean;
   mesh: Array<MeshComponent>;
   control_focus: boolean;

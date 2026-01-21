@@ -5,6 +5,7 @@ use ts_rs::TS;
 
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
 pub struct UIBoxComponent {
+    #[serde(skip, default = "acquire_next_id")]
     pub id: u64,
     #[ts(type = "[number, number]")]
     pub size: DVec2,

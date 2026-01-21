@@ -12,6 +12,7 @@ pub enum UIFontSize {
 
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
 pub struct UITextComponent {
+    #[serde(skip, default = "acquire_next_id")]
     pub id: u64,
     pub content: String,
     #[ts(type = "[number, number, number, number]")]

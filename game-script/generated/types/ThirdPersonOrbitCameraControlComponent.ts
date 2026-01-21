@@ -2,7 +2,6 @@
 import type { OrbitCameraStyle } from "./OrbitCameraStyle.js";
 
 export type ThirdPersonOrbitCameraControlComponent = {
-  id: number;
   fov: number;
   initial_offset: [number, number, number];
   initial_orientation: [number, number, number, number];

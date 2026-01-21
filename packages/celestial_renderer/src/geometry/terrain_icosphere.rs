@@ -287,7 +287,11 @@ impl TerrainIcosphere {
         let mut indices: Vec<[u32; 3]> = Vec::new();
         for vertex_i in 0..vertices.len() / 3 {
             let start = indices.len();
-            indices.push([(start + 0) as u32, (start + 1) as u32, (start + 2) as u32]);
+            indices.push([
+                (vertex_i * 3 + 0) as u32,
+                (vertex_i * 3 + 1) as u32,
+                (vertex_i * 3 + 2) as u32,
+            ]);
         }
 
         Ok(IcosphereLoadedGeometry {
@@ -304,7 +308,7 @@ impl TerrainIcosphere {
                             index: base_segment,
                         },
                     ),
-                    override_real_simulation_cutoff: Some(self.loaded_data.radius * 2.0),
+                    override_real_simulation_cutoff: Some(self.loaded_data.radius * 0.5),
                 })
             },
             glue_to_celestial_body_component: if !is_most_detailed_level {

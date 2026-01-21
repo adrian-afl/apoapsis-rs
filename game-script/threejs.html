@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+<script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.182.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.182.0/examples/jsm/"
+      }
+    }
+</script>
+<script type="module">
+    import * as THREE from 'three';
+    import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(90, window.innerWidth / window.innerHeight, 0.1, 10000000);
+
+    // controls.update() must be called after any manual changes to the camera's transform
+    camera.position.set(0, 3, 3);
+    camera.lookAt(0, 0, 0);
+
+    const renderer = new THREE.WebGLRenderer({antialias: true, logarithmicDepthBuffer: true});
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setClearColor(0x111111, 1);
+
+    const geometry = new THREE.BufferGeometry();
+    const material = new THREE.LineBasicMaterial({vertexColors: true});
+
+    const data = await (await fetch("points.json")).json();
+
+    const linepoints = data.lines;
+    const linecolors = data.colors;
+
+    const positions = [];
+    const colors = [];
+
+    for (let i = 0; i < linepoints.length; i++) {
+        positions.push(linepoints[i][0], linepoints[i][1], linepoints[i][2]);
+
+        // colors
+
+        // colors.push(linecolors[Math.floor(i / 2)][1], linecolors[Math.floor(i / 2)][2], linecolors[Math.floor(i / 2)][3]);
+        colors.push(1.0, 1.0, 1.0);
+
+    }
+
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+
+    const line = new THREE.LineSegments(geometry, material);
+    scene.add(line);
+
+    document.body.appendChild(renderer.domElement);
+
+    function animate() {
+        // required if controls.enableDamping or controls.autoRotate are set to true
+        controls.update();
+        renderer.render(scene, camera);
+        // console.log(camera.position, camera.rotation);
+    }
+
+    renderer.setAnimationLoop(animate);
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.zoomSpeed = 10.0;
+    controls.update();
+
+</script>
+</body>
+</html>

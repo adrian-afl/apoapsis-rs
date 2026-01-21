@@ -8,6 +8,7 @@ use ts_rs::TS;
 #[ts(export)]
 #[serde(rename_all = "camelCase")]
 pub struct GlueToCelestialBodyComponent {
+    #[serde(skip, default = "acquire_next_id")]
     pub id: u64,
     pub body_name: String,
     #[ts(type = "[number, number, number]")]

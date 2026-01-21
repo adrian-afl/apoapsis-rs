@@ -12,7 +12,7 @@ use std::sync::Mutex;
 use universe_simulation::simulation::SimulatedBody;
 use vengine_rs::graphics::vertex_buffer::VEVertexBuffer;
 
-pub static ICO_LEVEL_SUBDIVISIONS: [u8; 3] = [4, 5, 6];
+pub static ICO_LEVEL_SUBDIVISIONS: [u8; 3] = [3, 4, 5];
 static ICO_THRESHOLDS: [f64; 2] = [2000000.0, 5000000.0];
 
 pub struct IcosphereLoadedGeometry {

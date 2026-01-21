@@ -5,6 +5,7 @@ use crate::remote_api::api::generated::handle_message_api;
 use celestial_renderer::rendering_system::RenderingSystem;
 use ecs::ecs_world::{ECSWorld, ECSWorldSerializedRepresentation};
 use nats::{IncomingRemoteIOMessage, NATS_CONNECTION, OutgoingRemoteIOMessage, send_event};
+use real_physics_engine::physics_system::PhysicsSystem;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::string::ToString;
@@ -14,6 +15,7 @@ use universe_simulation::simulation::Simulation;
 pub struct RemoteGameExecutionContext<'a> {
     pub ecs: &'a mut ECSWorld,
     pub simulation: &'a mut Simulation,
+    pub physics_system: &'a mut PhysicsSystem,
 }
 
 pub struct RemoteGameMode {
@@ -32,7 +34,7 @@ impl RemoteGameMode {
 }
 
 impl RemoteGameMode {
-    pub fn update(&mut self, simulation: &mut Simulation) {
+    pub fn update(&mut self, simulation: &mut Simulation, physics_system: &mut PhysicsSystem) {
         let mut inbox: VecDeque<IncomingRemoteIOMessage> = {
             let mut guard = NATS_CONNECTION.inbox.lock().unwrap();
             let clone = guard.clone();
@@ -44,8 +46,9 @@ impl RemoteGameMode {
 
             let res = {
                 let mut full_context = RemoteGameExecutionContext {
-                    simulation,
                     ecs: &mut self.ecs,
+                    simulation,
+                    physics_system,
                 };
                 handle_message_api(&message.name, &message.payload, &mut full_context)
             };

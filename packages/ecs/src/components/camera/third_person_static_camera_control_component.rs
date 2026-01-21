@@ -5,6 +5,7 @@ use ts_rs::TS;
 
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
 pub struct ThirdPersonStaticCameraControlComponent {
+    #[serde(skip, default = "acquire_next_id")]
     pub id: u64,
     pub fov: f64,
     #[ts(type = "[number, number, number]")]

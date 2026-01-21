@@ -109,6 +109,7 @@ macro_rules! impl_marker_component {
         #[derive(Clone, Debug, Serialize, Deserialize, TS)]
         #[ts(export)]
         pub struct $type {
+            #[serde(skip, default = "acquire_next_id")]
             pub id: u64,
         }
 

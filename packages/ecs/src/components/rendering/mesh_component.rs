@@ -100,6 +100,7 @@ pub struct MeshDescription {
 
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
 pub struct MeshComponent {
+    #[serde(skip, default = "acquire_next_id")]
     pub id: u64,
     pub description: MeshDescription,
 }

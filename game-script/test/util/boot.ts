@@ -7,12 +7,12 @@ import { waitForEvent } from "./waitForEvent";
 import { OnGameBootReady } from "../../generated/RemoteGameEvents";
 
 export async function boot(port: number, headless?: boolean) {
-  const natsServer = startNATSServer(port);
+  const natsServer = await startNATSServer(port);
   const nats = new NATSTransport(`localhost:${port}`);
   const baseApi = new BaseGameApi((message) => nats.send(message));
   const gameApi = new RemoteGameApi(baseApi);
   nats.setOnReceive((message) => baseApi.receive(message));
-  const gameInstance = startGame(
+  const gameInstance = await startGame(
     "release",
     port,
     headless !== undefined ? headless : true,
@@ -30,5 +30,11 @@ export async function boot(port: number, headless?: boolean) {
   await waitForEvent(baseApi, OnGameBootReady);
   console.log("DONE Waiting for OnGameBootReady event");
 
-  return gameApi;
+  return {
+    gameApi,
+    kill: () => {
+      gameInstance.kill();
+      natsServer.kill();
+    },
+  };
 }

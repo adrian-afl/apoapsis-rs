@@ -59,7 +59,7 @@ pub struct DebugCollector {
 
 impl DebugRenderBackend for DebugCollector {
     fn filter_object(&self, _object: DebugRenderObject) -> bool {
-        false
+        true
     }
 
     fn draw_line(
@@ -114,14 +114,15 @@ impl DebugRenderBackend for DebugCollector {
             a.x *= scale.x;
             a.y *= scale.y;
             a.z *= scale.z;
-
-            let mut b = (transform * vertex[1]);
-            b.x *= scale.x;
-            b.y *= scale.y;
-            b.z *= scale.z;
-
             self.lines.push([a.x, a.y, a.z]);
-            self.lines.push([b.x, b.y, b.z]);
+
+            if vertex.len() > 1 {
+                let mut b = (transform * vertex[1]);
+                b.x *= scale.x;
+                b.y *= scale.y;
+                b.z *= scale.z;
+                self.lines.push([b.x, b.y, b.z]);
+            }
             self.colors.push(color);
         }
     }
