@@ -1,6 +1,8 @@
 use crate::geometry::mesh_drawer::MESH_DRAWER_VERTEX_ATTRIBUTES;
+use crate::geometry::terrain_icosphere::TerrainIcosphere;
+use crate::geometry::water_icosphere::WaterIcosphere;
 use crate::renderer::Renderer;
-use crate::scene::celestial_hierarchy::CelestialHierarchy;
+use crate::scene::celestial_hierarchy::{CelestialHierarchy, RenderedBody};
 use crate::scene::material::{ColorOrTexture, Material, ScaledTexture, ValueOrTexture};
 use crate::scene::mesh::Mesh;
 use common_util::profile;
@@ -129,16 +131,20 @@ impl RenderingSystem {
         body_name: &str,
         base_index: u16,
     ) -> (bool, bool) {
-        let rendered_body = self.celestial_hierarchy.get_rendered_body(&body_name)?;
+        let rendered_body = self.celestial_hierarchy.get_rendered_body(&body_name);
+        if rendered_body.is_none() {
+            return (false, false);
+        }
+        let rendered_body = rendered_body.unwrap();
         (
-            rendered_body
-                .terrain_icosphere
-                .as_ref()?
-                .should_have_physics(base_index),
-            rendered_body
-                .water_icosphere
-                .as_ref()?
-                .should_have_physics(base_index),
+            match rendered_body.terrain_icosphere.as_ref() {
+                None => false,
+                Some(some) => some.should_have_physics(base_index),
+            },
+            match rendered_body.water_icosphere.as_ref() {
+                None => false,
+                Some(some) => some.should_have_physics(base_index),
+            },
         )
     }
 

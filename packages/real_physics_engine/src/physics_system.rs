@@ -417,7 +417,7 @@ impl PhysicsSystem {
             let existing = &ecs[existing_id];
             // let glue = existing.components.glue_to_celestial_body.as_ref().unwrap();
             let real_physics = existing.components.real_physics.as_ref().unwrap();
-            let shape = match real_physics.shape_description {
+            let shape = match &real_physics.shape_description {
                 ShapeDescription::CelestialBodySurface(cfg) => cfg,
                 _ => panic!("should be CelestialBodySurface"),
             };
@@ -445,7 +445,7 @@ impl PhysicsSystem {
                     entity.components.is_celestial_body_surface = true;
                     entity.components.real_physics = Some(terrain_physics_data.0.clone());
                     entity.components.glue_to_celestial_body = Some(terrain_physics_data.1.clone());
-                } else if !should_have_physics && already_has_physics {
+                } else if !should_have_physics.0 && already_has_physics {
                     // shouldn't have, but has, time to remove it from ECS
                     let existing_entity_id = existing_entity_id.unwrap();
                     ecs.remove_by_id(*existing_entity_id);
@@ -459,7 +459,7 @@ impl PhysicsSystem {
             let existing = &ecs[existing_id];
             let glue = existing.components.glue_to_celestial_body.as_ref().unwrap();
             let real_physics = existing.components.real_physics.as_ref().unwrap();
-            let shape = match real_physics.shape_description {
+            let shape = match &real_physics.shape_description {
                 ShapeDescription::CelestialBodySurface(cfg) => cfg,
                 _ => panic!("should be CelestialBodySurface"),
             };

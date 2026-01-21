@@ -3,6 +3,11 @@ use glam::{DQuat, DVec3};
 use rapier3d_f64::na::{Quaternion, SMatrix};
 use rapier3d_f64::prelude::*;
 
+use rapier3d_f64::pipeline::DebugRenderPipeline;
+use rapier3d_f64::pipeline::DebugRenderStyle;
+use serde::{Deserialize, Serialize};
+use ts_rs::TS;
+
 pub struct RealPhysicsSystem {
     gravity: SMatrix<f64, 3, 1>,
     integration_parameters: IntegrationParameters,
@@ -16,6 +21,7 @@ pub struct RealPhysicsSystem {
     query_pipeline: QueryPipeline,
     rigid_body_set: RigidBodySet,
     collider_set: ColliderSet,
+    debug_render_pipeline: DebugRenderPipeline,
 }
 
 pub struct RealPhysicsBodyKinematics {
@@ -41,6 +47,84 @@ pub struct RealPhysicsColliderKinematics {
 pub struct SetRealPhysicsColliderKinematics {
     pub position: Option<DVec3>,
     pub orientation: Option<DQuat>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[ts(export)]
+#[serde(rename_all = "camelCase")]
+pub struct DebugCollector {
+    lines: Vec<[f64; 3]>,
+    colors: Vec<[f32; 4]>,
+}
+
+impl DebugRenderBackend for DebugCollector {
+    fn filter_object(&self, _object: DebugRenderObject) -> bool {
+        false
+    }
+
+    fn draw_line(
+        &mut self,
+        object: DebugRenderObject,
+        a: Point<f64>,
+        b: Point<f64>,
+        color: [f32; 4],
+    ) {
+        self.lines.push([a.x, a.y, a.z]);
+        self.lines.push([b.x, b.y, b.z]);
+        self.colors.push(color);
+    }
+
+    fn draw_polyline(
+        &mut self,
+        object: DebugRenderObject,
+        vertices: &[Point<f64>],
+        indices: &[[u32; 2]],
+        transform: &Isometry<f64>,
+        scale: &Vector<f64>,
+        color: [f32; 4],
+    ) {
+        for index in indices {
+            let mut a = (transform * vertices[index[0] as usize]);
+            a.x *= scale.x;
+            a.y *= scale.y;
+            a.z *= scale.z;
+
+            let mut b = (transform * vertices[index[1] as usize]);
+            b.x *= scale.x;
+            b.y *= scale.y;
+            b.z *= scale.z;
+
+            self.lines.push([a.x, a.y, a.z]);
+            self.lines.push([b.x, b.y, b.z]);
+            self.colors.push(color);
+        }
+    }
+
+    fn draw_line_strip(
+        &mut self,
+        object: DebugRenderObject,
+        vertices: &[Point<f64>],
+        transform: &Isometry<f64>,
+        scale: &Vector<f64>,
+        color: [f32; 4],
+        closed: bool,
+    ) {
+        for vertex in vertices.chunks(2) {
+            let mut a = (transform * vertex[0]);
+            a.x *= scale.x;
+            a.y *= scale.y;
+            a.z *= scale.z;
+
+            let mut b = (transform * vertex[1]);
+            b.x *= scale.x;
+            b.y *= scale.y;
+            b.z *= scale.z;
+
+            self.lines.push([a.x, a.y, a.z]);
+            self.lines.push([b.x, b.y, b.z]);
+            self.colors.push(color);
+        }
+    }
 }
 
 impl RealPhysicsSystem {
@@ -86,7 +170,26 @@ impl RealPhysicsSystem {
             multibody_joint_set,
             ccd_solver,
             query_pipeline,
+            debug_render_pipeline: DebugRenderPipeline::default(),
         }
+    }
+
+    pub fn debug_get_world(&mut self) -> DebugCollector {
+        let mut collector = DebugCollector {
+            lines: vec![],
+            colors: vec![],
+        };
+
+        self.debug_render_pipeline.render(
+            &mut collector,
+            &self.rigid_body_set,
+            &self.collider_set,
+            &self.impulse_joint_set,
+            &self.multibody_joint_set,
+            &self.narrow_phase,
+        );
+
+        collector
     }
 
     pub fn step(&mut self, delta: f64) {

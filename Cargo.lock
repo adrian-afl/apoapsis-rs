@@ -2684,7 +2684,9 @@ dependencies = [
  "math",
  "rapier3d-f64",
  "rayon",
+ "serde",
  "thiserror 2.0.11",
+ "ts-rs",
  "universe_simulation",
 ]
 
