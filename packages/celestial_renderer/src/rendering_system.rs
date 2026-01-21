@@ -124,6 +124,24 @@ impl RenderingSystem {
             .get_physics_components(base_index)
     }
 
+    pub fn should_have_physics_terrain_water(
+        &self,
+        body_name: &str,
+        base_index: u16,
+    ) -> (bool, bool) {
+        let rendered_body = self.celestial_hierarchy.get_rendered_body(&body_name)?;
+        (
+            rendered_body
+                .terrain_icosphere
+                .as_ref()?
+                .should_have_physics(base_index),
+            rendered_body
+                .water_icosphere
+                .as_ref()?
+                .should_have_physics(base_index),
+        )
+    }
+
     pub fn get_terrain_distance_from_center(
         &self,
         universe: &Simulation,

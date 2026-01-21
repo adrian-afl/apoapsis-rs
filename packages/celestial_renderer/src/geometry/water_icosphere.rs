@@ -232,6 +232,15 @@ impl WaterIcosphere {
         }
     }
 
+    pub fn should_have_physics(&self, base_index: u16) -> bool {
+        let locked = self.currently_loaded.lock().unwrap();
+        let loaded = locked.get(&base_index);
+        match loaded {
+            None => false,
+            Some(loaded) => loaded.collider_builder.is_some(),
+        }
+    }
+
     fn load_geometry(
         &self,
         toolkit: &VEToolkit,
