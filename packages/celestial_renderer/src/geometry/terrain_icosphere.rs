@@ -20,6 +20,8 @@ use planet_generator_library::interpolated_biome_data::LoadedBiomeData;
 use planet_generator_library::load_binary_maps::{
     get_terrain_maps_resolution, load_binary_biome_map, load_binary_terrain_map,
 };
+use rapier3d_f64::math::Point;
+use rapier3d_f64::prelude::ColliderBuilder;
 use rayon::iter::ParallelIterator;
 use rayon::prelude::IntoParallelRefIterator;
 use renderer_common::errors::RenderingError;
@@ -134,6 +136,35 @@ impl TerrainIcosphere {
         })
     }
 
+    pub fn get_physics_components(
+        &self,
+        base_index: u16,
+    ) -> Option<(
+        RealPhysicsComponent,
+        GlueToCelestialBodyComponent,
+        ColliderBuilder,
+    )> {
+        let locked = self.currently_loaded.lock().unwrap();
+        let loaded = locked.get(&base_index);
+        match loaded {
+            None => None,
+            Some(loaded) => {
+                if loaded.collider_builder.is_none() {
+                    return None;
+                }
+                Some((
+                    loaded.real_physics_component.as_ref().unwrap().clone(),
+                    loaded
+                        .glue_to_celestial_body_component
+                        .as_ref()
+                        .unwrap()
+                        .clone(),
+                    loaded.collider_builder.as_ref().unwrap().clone(),
+                ))
+            }
+        }
+    }
+
     pub fn preload_lowest_quality(
         &mut self,
         toolkit: &VEToolkit,
@@ -195,6 +226,33 @@ impl TerrainIcosphere {
         stage.end_render_pass(command_buffer);
     }
 
+    /*
+    How the physics should be loaded
+
+    There are 2 processess going on, physics in general working every frame, and this preload thing
+    This is probably good idea to only enable physics at the most detailed LOD level
+
+    The problem is this streaming of LOD levels is happening every frame and stuff can get loaded and unloaded at any moment
+
+    so there are 2 options, 2 directions:
+
+        1. Let the renderer tell physics when to move the bodies
+            - This can reuse existing ECS infrastructure
+            - would need to check every frame for preloads that are loaded with highest detail level
+            - in case new one appears, its added to ECS with a reference to renderer collider - not simple to pull it from there
+
+            Risks:
+            - Getting collider data from renderer to physics when the collider is being built is going to be weird
+            - Maybe caching can be added but its another layer of bullshit
+            - It looks like the systems should be decoupled in a way to offer similar api to the one TS uses
+                - for example, emitting an event to the whole game to manage the colliders etc, and get data too
+                - like a command to get the collider data and something responsds to it
+                - it might be increasibly likely that handling this on TS side will just be easier as its already decoupled
+
+        2. Let the physics system check for actions to do based on what renderer is rendering
+            - Not really ECS reuse but can be done as well
+     */
+
     fn load_geometry(
         &self,
         toolkit: &VEToolkit,
@@ -202,6 +260,8 @@ impl TerrainIcosphere {
         level: u8,
     ) -> Result<IcosphereLoadedGeometry, RenderingError> {
         let subdivisions = ICO_LEVEL_SUBDIVISIONS[level as usize - 1];
+
+        let is_most_detailed_level = level as usize == ICO_LEVEL_SUBDIVISIONS.len(); // 1, 2, 3, len == 3 so len must eq 3
 
         let segment = self.generator.generate_terrain(
             base_segment,
@@ -223,25 +283,44 @@ impl TerrainIcosphere {
 
         Ok(IcosphereLoadedGeometry {
             vertex_buffer,
-            real_physics_component: RealPhysicsComponent {
-                id: acquire_next_id(),
-                shape_description: ShapeDescription::CelestialBodySurface(
-                    CelestialBodySurfaceColliderDescription {
-                        body_name: self.loaded_data.body_name.clone(),
-                        surface_type: CelestialBodyColliderSurfaceType::Terrain,
-                        index: base_segment,
-                    },
-                ),
-                override_real_simulation_cutoff: Some(self.loaded_data.radius * 2.0),
+            real_physics_component: if !is_most_detailed_level {
+                None
+            } else {
+                Some(RealPhysicsComponent {
+                    id: acquire_next_id(),
+                    shape_description: ShapeDescription::CelestialBodySurface(
+                        CelestialBodySurfaceColliderDescription {
+                            body_name: self.loaded_data.body_name.clone(),
+                            surface_type: CelestialBodyColliderSurfaceType::Terrain,
+                            index: base_segment,
+                        },
+                    ),
+                    override_real_simulation_cutoff: Some(self.loaded_data.radius * 2.0),
+                })
             },
-            glue_to_celestial_body_component: GlueToCelestialBodyComponent {
-                body_name: self.loaded_data.body_name.clone(),
-                id: acquire_next_id(),
-                offset: get_icosphere_segment_displacement(
-                    &self.loaded_data.metadata,
-                    base_segment as usize,
-                ),
-                orientation: DQuat::IDENTITY,
+            glue_to_celestial_body_component: if !is_most_detailed_level {
+                None
+            } else {
+                Some(GlueToCelestialBodyComponent {
+                    body_name: self.loaded_data.body_name.clone(),
+                    id: acquire_next_id(),
+                    offset: get_icosphere_segment_displacement(
+                        &self.loaded_data.metadata,
+                        base_segment as usize,
+                    ),
+                    orientation: DQuat::IDENTITY,
+                })
+            },
+            collider_builder: if !is_most_detailed_level {
+                None
+            } else {
+                Some(
+                    ColliderBuilder::trimesh(
+                        vertices.iter().map(|x| Point::new(x.x, x.y, x.z)).collect(),
+                        indices,
+                    )
+                    .unwrap(),
+                )
             },
             level,
         })

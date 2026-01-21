@@ -75,6 +75,7 @@ impl CelestialHierarchy {
                         TerrainIcosphere::new(
                             &self.toolkit,
                             self.generator.clone(),
+                            &closest_hierarchy_body.body.name,
                             TerrainData {
                                 radius: terrain.radius,
                                 dir_path: terrain.icosphere_path.clone(),
@@ -91,6 +92,7 @@ impl CelestialHierarchy {
                         WaterIcosphere::new(
                             &self.toolkit,
                             self.generator.clone(),
+                            &closest_hierarchy_body.body.name,
                             WaterData {
                                 radius: water.radius,
                                 water_color: water.color,

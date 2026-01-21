@@ -1,8 +1,14 @@
-use ecs::components::physics::real_physics_component::ShapeDescription;
+use celestial_renderer::rendering_system::RenderingSystem;
+use ecs::components::physics::real_physics_component::{
+    CelestialBodyColliderSurfaceType, ShapeDescription,
+};
 use rapier3d_f64::math::Point;
 use rapier3d_f64::prelude::ColliderBuilder;
 
-pub fn build_collider(shape_description: &ShapeDescription) -> ColliderBuilder {
+pub fn build_collider(
+    shape_description: &ShapeDescription,
+    rendering_system: &RenderingSystem,
+) -> ColliderBuilder {
     match shape_description {
         ShapeDescription::Ball(ball_description) => ColliderBuilder::ball(ball_description.radius),
         ShapeDescription::Box(box_description) => ColliderBuilder::cuboid(
@@ -26,5 +32,20 @@ pub fn build_collider(shape_description: &ShapeDescription) -> ColliderBuilder {
             trimesh_description.indices.clone(),
         )
         .unwrap(),
+        ShapeDescription::CelestialBodySurface(celestial_body_surface_description) => {
+            let data = match celestial_body_surface_description.surface_type {
+                CelestialBodyColliderSurfaceType::Terrain => rendering_system
+                    .get_terrain_physics_components(
+                        &celestial_body_surface_description.body_name,
+                        celestial_body_surface_description.index,
+                    ),
+                CelestialBodyColliderSurfaceType::Water => rendering_system
+                    .get_water_physics_components(
+                        &celestial_body_surface_description.body_name,
+                        celestial_body_surface_description.index,
+                    ),
+            };
+            data.unwrap().2
+        }
     }
 }

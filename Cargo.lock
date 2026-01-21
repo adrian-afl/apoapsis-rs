@@ -2676,6 +2676,7 @@ dependencies = [
 name = "real_physics_engine"
 version = "0.1.0"
 dependencies = [
+ "celestial_renderer",
  "common_util",
  "dashu-float",
  "ecs",

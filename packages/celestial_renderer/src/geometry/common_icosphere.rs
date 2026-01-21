@@ -3,6 +3,7 @@ use ecs::components::physics::real_physics_component::RealPhysicsComponent;
 use glam::{DMat4, DVec3, Vec3};
 use math::decimal_vector_3d::DecimalVector3d;
 use planet_generator_library::generate_icosphere::IcosphereMetadataItem;
+use rapier3d_f64::geometry::ColliderBuilder;
 use rayon::iter::IndexedParallelIterator;
 use rayon::iter::ParallelIterator;
 use rayon::prelude::IntoParallelRefIterator;
@@ -16,8 +17,9 @@ static ICO_THRESHOLDS: [f64; 2] = [2000000.0, 5000000.0];
 
 pub struct IcosphereLoadedGeometry {
     pub vertex_buffer: VEVertexBuffer,
-    pub real_physics_component: RealPhysicsComponent,
-    pub glue_to_celestial_body_component: GlueToCelestialBodyComponent,
+    pub collider_builder: Option<ColliderBuilder>,
+    pub real_physics_component: Option<RealPhysicsComponent>,
+    pub glue_to_celestial_body_component: Option<GlueToCelestialBodyComponent>,
     pub level: u8,
 }
 
