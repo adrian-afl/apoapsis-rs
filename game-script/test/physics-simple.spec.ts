@@ -161,6 +161,8 @@ describe("physics simple tests", () => {
         .distanceTo(DVec3.fromDecimalVector3d(earthPosition))
         .sub(earthDef.terrain.radius);
 
+      console.log(altitude);
+
       await gameApi.uIText.set(labelId, {
         color: [1.0, 1.0, 1.0, 1.0],
         content: altitude.toString() + " - " + new Date().toISOString(),
