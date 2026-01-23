@@ -4,11 +4,11 @@ use std::ops::Deref;
 use crate::remote_api::api::generated::handle_message_api;
 use celestial_renderer::rendering_system::RenderingSystem;
 use ecs::ecs_world::{ECSWorld, ECSWorldSerializedRepresentation};
-use nats::{IncomingRemoteIOMessage, OutgoingRemoteIOMessage, TCP_CONTROL_SERVER, send_event};
 use real_physics_engine::physics_system::PhysicsSystem;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::string::ToString;
+use tcpapi::{IncomingRemoteIOMessage, OutgoingRemoteIOMessage, TCP_CONTROL_SERVER, send_event};
 use ts_rs::TS;
 use universe_simulation::simulation::Simulation;
 

@@ -7,8 +7,8 @@ pub struct GlobalConfig {
     #[arg(long, default_value_t = false)]
     pub headless: bool,
 
-    #[arg(short, long, default_value = "nats://localhost:4222")]
-    pub nats_address: String,
+    #[arg(short, long, default_value_t = 7878)]
+    pub port: u16,
 }
 
 pub static GLOBAL_CONFIG: LazyLock<GlobalConfig> = LazyLock::new(GlobalConfig::parse);

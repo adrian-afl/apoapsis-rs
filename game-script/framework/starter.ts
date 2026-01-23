@@ -50,26 +50,15 @@ async function startProcess(
   return result;
 }
 
-export function startNATSServer(port: number): Promise<ProcessStartResult> {
-  return startProcess("blue", "nats-server.exe", "../nats-server", [
-    "--port",
-    port.toString(),
-    "--config",
-    "config.conf",
-  ]);
-}
-
 export function startGame(
   mode: "release" | "debug",
-  natsPort: number,
+  port: number,
   headless: boolean,
 ): Promise<ProcessStartResult> {
   return startProcess(
     "green",
     `target/${mode}/planetdraw-rs.exe`,
     `../`,
-    headless
-      ? ["--headless", "--nats-address", `nats://localhost:${natsPort}`]
-      : ["--nats-address", `nats://localhost:${natsPort}`],
+    headless ? ["--headless", "--port", `${port}`] : ["--port", `${port}`],
   );
 }

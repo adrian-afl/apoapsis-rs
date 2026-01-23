@@ -1,11 +1,11 @@
 use crate::app::GameWindowApp;
 use config::GLOBAL_CONFIG;
 use core::game::Game;
-use nats::send_event;
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
+use tcpapi::send_event;
 use ts_rs::TS;
 use vengine_rs::core::toolkit::{App, VEToolkit};
 use winit::dpi::PhysicalSize;
@@ -38,7 +38,7 @@ fn main() {
 
         loop {
             game.update();
-            thread::sleep(Duration::from_millis(10));
+            thread::sleep(Duration::from_millis(16));
         }
     } else {
         println!("Window loop starting...");

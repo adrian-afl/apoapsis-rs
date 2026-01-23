@@ -44,7 +44,6 @@ export class Startup extends AbstractBaseEvent {}
 
 export const eventsConstructors = {
   on_remote_game_mode_initialized: () => new OnRemoteGameModeInitialized(),
-  on_nats_connected: () => new OnNatsConnected(),
   on_game_boot_ready: (input: OnGameBootReadyEventData) =>
     new OnGameBootReady(input),
   startup: () => new Startup(),

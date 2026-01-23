@@ -1,21 +1,14 @@
-import { describe, it, afterAll, expect } from "vitest";
-import { NATSTransport } from "../framework/natsTransport.js";
-import { setTimeout } from "node:timers/promises";
-import { startGame, startNATSServer } from "../framework/starter";
-import { RemoteGameApi } from "../generated/RemoteGameApi";
-import { BaseGameApi } from "../framework/BaseGameApi";
+import { describe, expect, it } from "vitest";
 import { boot } from "./util/boot";
 
 describe("test", () => {
   // afterAll(() => process.exit(0));
 
   it("has comms two sides", async () => {
-    const { gameApi, kill } = await boot(7878, true);
+    const { gameApi, kill } = await boot(4343, true);
 
     console.time("timer");
     await gameApi.resetWorld();
-
-    console.log(8);
 
     const serializedBefore = await gameApi.serializeWorld();
     // assert.strictEqual(serializedBefore.entities.length, 0);
@@ -24,10 +17,10 @@ describe("test", () => {
     await gameApi.isPlayer.set(entityId, true);
 
     const serializedAfter = await gameApi.serializeWorld();
-    // assert.strictEqual(serializedAfter.entities.length, 1);
-    // assert.strictEqual(await gameApi.isPlayer.get(entityId), true);
-
     console.timeEnd("timer");
+
+    expect(serializedAfter.entities.length).toStrictEqual(1);
+    expect(await gameApi.isPlayer.get(entityId)).toStrictEqual(true);
   });
 
   it("Just adds entity successfully", async () => {
