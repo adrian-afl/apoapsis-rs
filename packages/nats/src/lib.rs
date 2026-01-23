@@ -1,9 +1,10 @@
+pub mod lib_tcp;
+
 use async_nats::client::traits::Publisher;
-use async_nats::message::OutboundMessage;
-use async_nats::{ConnectOptions, HeaderMap};
-use config::GLOBAL_CONFIG;
 use futures_util::StreamExt;
 use std::collections::VecDeque;
+use std::io::{BufRead, Read, Write};
+use std::net::{TcpListener, TcpStream};
 use std::sync::{Arc, LazyLock, Mutex};
 use std::thread;
 use std::time::Duration;
@@ -22,12 +23,13 @@ pub struct OutgoingRemoteIOMessage {
     pub success: bool,
 }
 
-pub struct NATSConnection {
+pub struct TCPControlServer {
     pub outbox: Arc<Mutex<VecDeque<OutgoingRemoteIOMessage>>>,
     pub inbox: Arc<Mutex<VecDeque<IncomingRemoteIOMessage>>>,
+    pub current_stream: Arc<Mutex<Option<TcpStream>>>,
 }
 
-pub static NATS_CONNECTION: LazyLock<NATSConnection> = LazyLock::new(|| {
+pub static TCP_CONTROL_SERVER: LazyLock<TCPControlServer> = LazyLock::new(|| {
     let outbox: Arc<Mutex<VecDeque<OutgoingRemoteIOMessage>>> =
         Arc::new(Mutex::new(VecDeque::new()));
     let inbox: Arc<Mutex<VecDeque<IncomingRemoteIOMessage>>> =
@@ -42,11 +44,170 @@ pub static NATS_CONNECTION: LazyLock<NATSConnection> = LazyLock::new(|| {
         success: true,
     });
 
-    connect_nats();
+    let current_stream = Arc::new(Mutex::new(None));
 
-    println!("NATS CONNECTED");
+    let server = TCPControlServer {
+        inbox: inbox.clone(),
+        outbox: outbox.clone(),
+        current_stream: current_stream.clone(),
+    };
 
-    NATSConnection { inbox, outbox }
+    {
+        let current_stream = current_stream.clone();
+        thread::spawn(move || {
+            println!("TCP transmit loop starting...");
+            loop {
+                thread::sleep(Duration::from_millis(3));
+                {
+                    {
+                        let stream = current_stream.lock().unwrap();
+                        if stream.is_none() {
+                            continue;
+                        }
+                    }
+                    let mut outbox = outbox.lock().unwrap();
+                    while !outbox.is_empty() {
+                        let message = outbox.pop_back().unwrap();
+                        let tmp = format!(
+                            "{}\n{}\n{}\0",
+                            &message.name,
+                            &message.payload,
+                            if message.success { "ok" } else { "error" },
+                        );
+                        let bytes = tmp.as_bytes();
+                        let stream = current_stream.lock().unwrap();
+                        stream
+                            .as_ref()
+                            .unwrap()
+                            .write_all(bytes)
+                            .expect("TCP transmit failed");
+                    }
+                }
+            }
+        });
+    }
+    {
+        let current_stream = current_stream.clone();
+        thread::spawn(move || {
+            println!("TCP receive loop starting...");
+            let mut buffer_big: Vec<u8> = Vec::new();
+            let mut buffer_small: [u8; 1024] = [0u8; 1024];
+            loop {
+                thread::sleep(Duration::from_millis(3));
+                // println!("TCP receive A...");
+                {
+                    let mut stream = current_stream.lock().unwrap();
+                    if stream.is_none() {
+                        thread::sleep(Duration::from_millis(10));
+                        continue;
+                    }
+                }
+                /*
+                read until 0 is encountered
+                */
+
+                // println!("TCP receive B...");
+                let n = {
+                    // println!("A");
+                    let mut stream = current_stream.lock().unwrap();
+                    // println!("B");
+                    let mut stream = stream.as_mut().unwrap();
+                    // println!("C");
+                    stream.read(&mut buffer_small)
+                };
+                // println!("D");
+                match n {
+                    Ok(n) => {
+                        if n > 0 {
+                            // println!(" >>>>> {n}");
+                            buffer_big.extend(&buffer_small[0..n]);
+                        }
+                        if n == 0 {
+                            //println!("Zero");
+                            continue;
+                        }
+                    }
+                    Err(e) => {
+                        // println!(" >>>>> {}", e);
+                        continue;
+                    }
+                }
+
+                if buffer_big.len() > 0 {
+                    let mut remaining = Vec::new();
+                    let mut enumerated: Vec<_> = buffer_big
+                        .split(|x| *x == 0x00u8)
+                        .into_iter()
+                        .enumerate()
+                        .collect();
+
+                    let len = enumerated.len();
+
+                    for (i, slice) in enumerated {
+                        if i == 0 && slice.len() == 0 {
+                            // first slice empty means first byte as 0x00, so it can be ignored
+                            continue;
+                        }
+                        if i == len - 1 {
+                            // last one always to be used as remainder
+                            // if can be empty which is very happy situation when the message ended at the read end
+                            // if there are leftover it will contain it and it becomes the start of next received data
+                            remaining.extend_from_slice(slice);
+                            continue;
+                        }
+                        let mut message_items = slice.split(|x| *x == 0x0Au8);
+                        // println!("{:?}", message_items);
+                        let name =
+                            String::from_utf8_lossy(message_items.next().unwrap()).to_string();
+                        let reply_to =
+                            String::from_utf8_lossy(message_items.next().unwrap()).to_string();
+                        let payload =
+                            String::from_utf8_lossy(message_items.next().unwrap()).to_string();
+
+                        let mut inbox = TCP_CONTROL_SERVER.inbox.lock().unwrap();
+                        inbox.push_front(IncomingRemoteIOMessage {
+                            name,
+                            reply_to: if reply_to.len() > 0 {
+                                Some(reply_to)
+                            } else {
+                                None
+                            },
+                            payload,
+                        })
+                    }
+                    buffer_big = remaining;
+                }
+            }
+        });
+    }
+    {
+        let current_stream = current_stream.clone();
+        thread::spawn(move || {
+            println!("TCP stream set loop starting...");
+            let listener = TcpListener::bind("0.0.0.0:7878").unwrap();
+            for stream in listener.incoming() {
+                let stream = stream.unwrap();
+                stream.set_nonblocking(true).expect("TODO: panic message");
+
+                // stream
+                //     .set_read_timeout(Some(Duration::from_millis(5)))
+                //     .expect("TODO: panic message");
+                //
+                // stream
+                //     .set_write_timeout(Some(Duration::from_millis(5)))
+                //     .expect("TODO: panic message");
+
+                let mut current = current_stream.lock().unwrap();
+                println!("TCP stream connected");
+                *current = Some(stream);
+                println!("Stream set {:?}...", *current);
+            }
+        });
+    }
+
+    println!("TCP LISTENING");
+
+    server
 });
 
 // @api_event on_nats_connected()
@@ -54,7 +215,7 @@ pub static NATS_CONNECTION: LazyLock<NATSConnection> = LazyLock::new(|| {
 #[macro_export]
 macro_rules! send_event {
     ($name:expr) => {{
-        $crate::NATS_CONNECTION
+        $crate::TCP_CONTROL_SERVER
             .outbox
             .lock()
             .unwrap()
@@ -65,7 +226,7 @@ macro_rules! send_event {
             })
     }};
     ($name:expr, $payload:expr) => {{
-        $crate::NATS_CONNECTION
+        $crate::TCP_CONTROL_SERVER
             .outbox
             .lock()
             .unwrap()
@@ -75,79 +236,4 @@ macro_rules! send_event {
                 success: true,
             })
     }};
-}
-
-fn connect_nats() {
-    println!("Connecting to NATS...");
-    println!("Connecting from a new thread...");
-    let rt = Arc::new(
-        tokio::runtime::Builder::new_current_thread()
-            .enable_all()
-            .build()
-            .unwrap(),
-    );
-
-    let client = rt
-        .block_on(async_nats::connect_with_options(
-            GLOBAL_CONFIG.nats_address.clone(),
-            ConnectOptions::new().no_echo(),
-        ))
-        .unwrap();
-
-    println!("Connected to NATS, subscribing to all...");
-
-    let mut subscription = rt.block_on(client.subscribe(">")).unwrap();
-
-    {
-        let rt = rt.clone();
-        thread::spawn(move || {
-            println!("NATS transmit loop starting...");
-            loop {
-                {
-                    let mut outbox = NATS_CONNECTION.outbox.lock().unwrap();
-                    while !outbox.is_empty() {
-                        let message = outbox.pop_back().unwrap();
-                        // println!("OUTGOING {:?}", message);
-                        let mut headers = HeaderMap::new();
-                        headers.insert("status", if message.success { "ok" } else { "error" });
-                        rt.block_on(client.publish_message(OutboundMessage {
-                            subject: message.name.into(),
-                            reply: None, // server doesn't expect responses from the client
-                            payload: message.payload.into(),
-                            headers: Some(headers),
-                        }))
-                        .unwrap();
-                    }
-                }
-                thread::sleep(Duration::from_millis(10));
-            }
-        });
-    }
-    {
-        let rt = rt.clone();
-        thread::spawn(move || {
-            println!("NATS receive loop starting...");
-            loop {
-                if let Some(message) = rt.block_on(subscription.next()) {
-                    // println!("INCOMING {:?}", message);
-                    let mut inbox = NATS_CONNECTION.inbox.lock().unwrap();
-                    inbox.push_front(IncomingRemoteIOMessage {
-                        name: message.subject.into_string(),
-                        payload: String::from_utf8(Vec::from(message.payload))
-                            .expect("utf8 parse failed"),
-                        reply_to: message.reply.map(|x| x.to_string()),
-                    })
-                }
-                //thread::sleep(Duration::from_millis(10));
-            }
-        });
-    }
-
-    println!("NATS connected and set up.");
-
-    // You need to drop subscripions in async context, as they do spawn tasks to clean themselves up.
-    // rt.block_on(async {
-    //     drop(subscription);
-    //     drop(client);
-    // });
 }

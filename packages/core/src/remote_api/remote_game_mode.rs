@@ -4,7 +4,7 @@ use std::ops::Deref;
 use crate::remote_api::api::generated::handle_message_api;
 use celestial_renderer::rendering_system::RenderingSystem;
 use ecs::ecs_world::{ECSWorld, ECSWorldSerializedRepresentation};
-use nats::{IncomingRemoteIOMessage, NATS_CONNECTION, OutgoingRemoteIOMessage, send_event};
+use nats::{IncomingRemoteIOMessage, OutgoingRemoteIOMessage, TCP_CONTROL_SERVER, send_event};
 use real_physics_engine::physics_system::PhysicsSystem;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -36,7 +36,7 @@ impl RemoteGameMode {
 impl RemoteGameMode {
     pub fn update(&mut self, simulation: &mut Simulation, physics_system: &mut PhysicsSystem) {
         let mut inbox: VecDeque<IncomingRemoteIOMessage> = {
-            let mut guard = NATS_CONNECTION.inbox.lock().unwrap();
+            let mut guard = TCP_CONTROL_SERVER.inbox.lock().unwrap();
             let clone = guard.clone();
             guard.clear();
             clone
@@ -55,7 +55,7 @@ impl RemoteGameMode {
 
             match res {
                 Ok(result) => {
-                    NATS_CONNECTION
+                    TCP_CONTROL_SERVER
                         .outbox
                         .lock()
                         .unwrap()
@@ -67,7 +67,7 @@ impl RemoteGameMode {
                 }
                 Err(error) => {
                     eprintln!("Error while processing a message: {}", error);
-                    NATS_CONNECTION
+                    TCP_CONTROL_SERVER
                         .outbox
                         .lock()
                         .unwrap()

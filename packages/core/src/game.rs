@@ -194,14 +194,16 @@ impl Game {
             );
         });
 
-        profile!("physics_system update", {
-            self.physics_system.update(
-                stage_ecs,
-                &self.universe_simulation,
-                self.rendering_system.as_ref().unwrap(), // TODO how to do it without rendering
-                stage_ecs.time_counter.delta_time,
-            );
-        });
+        if let Some(ref mut rendering_system) = self.rendering_system {
+            profile!("physics_system update", {
+                self.physics_system.update(
+                    stage_ecs,
+                    &self.universe_simulation,
+                    rendering_system, // TODO how to do it without rendering
+                    stage_ecs.time_counter.delta_time,
+                );
+            });
+        }
 
         profile!("camera_system update", {
             self.camera_system

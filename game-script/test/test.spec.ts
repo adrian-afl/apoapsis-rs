@@ -10,7 +10,7 @@ describe("test", () => {
   // afterAll(() => process.exit(0));
 
   it("has comms two sides", async () => {
-    const gameApi = await boot(4321);
+    const { gameApi, kill } = await boot(7878, true);
 
     console.time("timer");
     await gameApi.resetWorld();

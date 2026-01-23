@@ -11,7 +11,7 @@ describe("physics simple tests", () => {
   // afterAll(() => process.exit(0));
 
   it("can spawn an entity with physics near a planet", async () => {
-    const { gameApi, kill } = await boot(4321, false);
+    const { gameApi, kill } = await boot(7878, false);
 
     console.log(await gameApi.getAllCelestialBodyNames());
 
