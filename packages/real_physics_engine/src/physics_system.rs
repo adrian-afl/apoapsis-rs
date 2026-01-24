@@ -15,6 +15,7 @@ use ecs::entity::Entity;
 use glam::{DQuat, DVec3};
 use math::decimal_vector_3d::DecimalVector3d;
 use math::sin_cos::f64_to_dbig;
+use rapier3d_f64::dynamics::CoefficientCombineRule;
 use rapier3d_f64::prelude::{RigidBodyBuilder, RigidBodyHandle};
 use rayon::iter::IntoParallelRefIterator;
 use rayon::iter::ParallelIterator;
@@ -141,7 +142,7 @@ impl PhysicsSystem {
                             let relative_position = (&transform.position
                                 - &self.player_temporary_data.position)
                                 .to_dvec3_with_precision(10);
-                            let mut relative_linear_velocity = simple_physics.linear_velocity
+                            let relative_linear_velocity = simple_physics.linear_velocity
                                 - self.player_temporary_data.linear_velocity;
 
                             {
@@ -168,7 +169,13 @@ impl PhysicsSystem {
                                 .set_body_kinematics(
                                     simulated_object.rigid_body,
                                     SetRealPhysicsBodyKinematics {
-                                        linear_velocity: Some(relative_linear_velocity),
+                                        linear_velocity: Some(
+                                            if simple_physics.mass > DBig::ZERO {
+                                                relative_linear_velocity
+                                            } else {
+                                                DVec3::ZERO
+                                            },
+                                        ),
                                         angular_velocity: None,
                                         position: Some(relative_position),
                                         orientation: None,
@@ -384,11 +391,21 @@ impl PhysicsSystem {
     ) {
         // let mass_f64 = simple_physics.mass.eq(&DBig::ZERO);
         // remember somehow to do it in future
-        let rigid_body_builder =
-            RigidBodyBuilder::dynamic().additional_mass(simple_physics.mass.to_f64().unwrap());
+        let rigid_body_builder = match simple_physics.mass != DBig::ZERO {
+            true => RigidBodyBuilder::dynamic()
+                .ccd_enabled(false)
+                .additional_mass(simple_physics.mass.to_f64().unwrap()),
+            false => RigidBodyBuilder::dynamic()
+                .ccd_enabled(false)
+                .additional_mass(999999.0),
+            // false => RigidBodyBuilder::fixed().ccd_enabled(false),
+        };
         let body_collider_tuple = real_physics_system.add_body_with_collider(
             rigid_body_builder.build(),
-            build_collider(&real_physics.shape_description, rendering_system).build(),
+            build_collider(&real_physics.shape_description, rendering_system)
+                .restitution(0.2)
+                .restitution_combine_rule(CoefficientCombineRule::Average)
+                .build(),
         );
 
         let simulated = SimulatedBody {

@@ -63,14 +63,11 @@ pub static TCP_CONTROL_SERVER: LazyLock<TCPControlServer> = LazyLock::new(|| {
                             if message.success { "ok" } else { "error" },
                         );
                         let bytes = tmp.as_bytes();
-                        let stream = current_stream.lock().unwrap();
 
                         let mut cursor: usize = 0;
                         let end = bytes.len();
-                        loop {
-                            if cursor >= end {
-                                break;
-                            }
+                        while cursor < end {
+                            let stream = current_stream.lock().unwrap();
                             let write_res = stream.as_ref().unwrap().write(bytes);
                             match write_res {
                                 Ok(n) => cursor += n,

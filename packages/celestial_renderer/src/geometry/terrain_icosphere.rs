@@ -21,7 +21,7 @@ use planet_generator_library::load_binary_maps::{
     get_terrain_maps_resolution, load_binary_biome_map, load_binary_terrain_map,
 };
 use rapier3d_f64::math::Point;
-use rapier3d_f64::prelude::ColliderBuilder;
+use rapier3d_f64::prelude::{ColliderBuilder, TriMeshFlags};
 use rayon::iter::ParallelIterator;
 use rayon::prelude::IntoParallelRefIterator;
 use renderer_common::errors::RenderingError;
@@ -305,7 +305,7 @@ impl TerrainIcosphere {
                             index: base_segment,
                         },
                     ),
-                    override_real_simulation_cutoff: Some(self.loaded_data.radius * 0.5),
+                    override_real_simulation_cutoff: Some(self.loaded_data.radius * 0.23),
                 })
             },
             glue_to_celestial_body_component: if !is_most_detailed_level {
@@ -325,11 +325,13 @@ impl TerrainIcosphere {
                 None
             } else {
                 Some(
-                    ColliderBuilder::trimesh(
+                    ColliderBuilder::trimesh_with_flags(
                         vertices.iter().map(|x| Point::new(x.x, x.y, x.z)).collect(),
                         indices,
+                        TriMeshFlags::FIX_INTERNAL_EDGES,
                     )
-                    .unwrap(),
+                    .unwrap()
+                    .contact_skin(10.0),
                 )
             },
             level,

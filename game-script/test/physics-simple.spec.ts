@@ -82,7 +82,7 @@ describe("physics simple tests", () => {
     const earthDef = await gameApi.getCelestialBodyDefinition("earth");
     console.log(earthDef);
 
-    const radius = earthDef.terrain.radius + 42.9 * 1000.0;
+    const radius = earthDef.terrain.radius + 37.55 * 1000.0;
 
     const newPosition = DVec3.fromDecimalVector3d(earthPosition).addVec3(
       DVec3.fromNumbers(100000.0, 0.0, -radius),
@@ -118,8 +118,10 @@ describe("physics simple tests", () => {
           },
           real_physics: {
             shape_description: {
-              ball: {
-                radius: 1.0,
+              box: {
+                sizeX: 1.0,
+                sizeY: 1.0,
+                sizeZ: 1.0,
               },
             },
             override_real_simulation_cutoff: null,
@@ -132,56 +134,56 @@ describe("physics simple tests", () => {
         })
         .build(),
     );
-
-    const { id: testBoxEID } = await gameApi.addEntity({
-      components: buildComponents()
-        .add({
-          transform: {
-            orientation: quatStr(new Quaternion().identity()),
-            position: newPosition
-              .addVec3(DVec3.fromNumbers(10.0, 0.0, 10.0))
-              .toDecimalVector3d(),
-            scale: [1.0, 1.0, 1.0],
-          },
-          simple_physics: {
-            angular_velocity: [0.0, 0.0, 0.0],
-            mass: "1.0",
-            linear_velocity: [0.0, 0.0, 0.0],
-          },
-          real_physics: {
-            shape_description: {
-              ball: {
-                radius: 1.0,
-              },
-            },
-            override_real_simulation_cutoff: null,
-          },
-          mesh: [
-            {
-              description: {
-                geometryPath: "media/smoothbox.pnut.raw",
-                material: {
-                  color: {
-                    color: [1.0, 1.0, 1.0],
-                  },
-                  roughness: {
-                    value: 1.0,
-                  },
-                  metalness: {
-                    value: 0.0,
-                  },
-                  emission: {
-                    color: [1.0, 0.0, 0.0],
-                  },
-                  bump: null,
-                  normal: null,
-                },
-              },
-            },
-          ],
-        })
-        .build(),
-    });
+    //
+    // const { id: testBoxEID } = await gameApi.addEntity({
+    //   components: buildComponents()
+    //     .add({
+    //       transform: {
+    //         orientation: quatStr(new Quaternion().identity()),
+    //         position: newPosition
+    //           .addVec3(DVec3.fromNumbers(10.0, 0.0, 10.0))
+    //           .toDecimalVector3d(),
+    //         scale: [1.0, 1.0, 1.0],
+    //       },
+    //       simple_physics: {
+    //         angular_velocity: [0.0, 0.0, 0.0],
+    //         mass: "1.0",
+    //         linear_velocity: [0.0, 0.0, 0.0],
+    //       },
+    //       real_physics: {
+    //         shape_description: {
+    //           ball: {
+    //             radius: 1.0,
+    //           },
+    //         },
+    //         override_real_simulation_cutoff: null,
+    //       },
+    //       mesh: [
+    //         {
+    //           description: {
+    //             geometryPath: "media/smoothbox.pnut.raw",
+    //             material: {
+    //               color: {
+    //                 color: [1.0, 1.0, 1.0],
+    //               },
+    //               roughness: {
+    //                 value: 1.0,
+    //               },
+    //               metalness: {
+    //                 value: 0.0,
+    //               },
+    //               emission: {
+    //                 color: [1.0, 0.0, 0.0],
+    //               },
+    //               bump: null,
+    //               normal: null,
+    //             },
+    //           },
+    //         },
+    //       ],
+    //     })
+    //     .build(),
+    // });
 
     const { id: labelId } = await gameApi.addEntity({
       components: buildComponents()
@@ -210,8 +212,8 @@ describe("physics simple tests", () => {
     //   ).distanceTo(DVec3.fromDecimalVector3d(earthPosition)),
     // );
     setInterval(async () => {
-      const transform = await gameApi.transform.get(testBoxEID);
-      const simple_physics = await gameApi.simplePhysics.get(testBoxEID);
+      const transform = await gameApi.transform.get(playerEID);
+      const simple_physics = await gameApi.simplePhysics.get(playerEID);
       const altitude = await gameApi.getRealAltitudeOverCelestialBody(
         "earth",
         transform.position,
