@@ -193,6 +193,7 @@ impl RealPhysicsSystem {
     }
 
     pub fn step(&mut self, delta: f64) {
+        // dbg!(delta);
         self.integration_parameters.dt = delta;
         self.integration_parameters.max_ccd_substeps = 1;
         self.physics_pipeline.step(
@@ -319,7 +320,7 @@ impl RealPhysicsSystem {
                     );
                 }
                 if data.wake_up {
-                    body.wake_up(false) // strong??
+                    body.wake_up(true) // strong??
                 }
                 Ok(())
             }
@@ -401,6 +402,10 @@ impl RealPhysicsSystem {
                 Ok(())
             }
         }
+    }
+
+    pub fn set_global_gravity(&mut self, gravity: DVec3) -> () {
+        self.gravity = vector![gravity.x, gravity.y, gravity.z];
     }
 
     pub fn raycast(&self, camera_relative_origin: DVec3, direction: DVec3) -> Option<f64> {

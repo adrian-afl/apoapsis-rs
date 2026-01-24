@@ -9,6 +9,7 @@ pub struct TimeCounter {
     pub last_time: f64,
     pub total_time: f64,
     pub delta_time: f64,
+    pub avg_delta_time: f64,
 }
 
 impl Default for TimeCounter {
@@ -23,6 +24,7 @@ impl TimeCounter {
             last_time: 0.0,
             total_time: 0.0,
             delta_time: 0.0,
+            avg_delta_time: 0.0,
         }
     }
 
@@ -38,6 +40,7 @@ impl TimeCounter {
             let delta_time = now - self.last_time;
             self.last_time = now;
             self.delta_time = delta_time;
+            self.avg_delta_time = self.avg_delta_time * 0.95 + 0.05 * delta_time;
             self.total_time += delta_time;
         }
     }

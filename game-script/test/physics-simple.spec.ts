@@ -8,6 +8,7 @@ import * as fs from "node:fs";
 import { setInterval } from "node:timers";
 import Decimal from "decimal.js";
 import { Quaternion } from "@aeroflightlabs/linear-math";
+import { DecimalVector3d } from "../generated/types/DecimalVector3d";
 
 describe("physics simple tests", () => {
   // afterAll(() => process.exit(0));
@@ -82,7 +83,7 @@ describe("physics simple tests", () => {
     const earthDef = await gameApi.getCelestialBodyDefinition("earth");
     console.log(earthDef);
 
-    const radius = earthDef.terrain.radius + 37.55 * 1000.0;
+    const radius = earthDef.terrain.radius + 37.52 * 1000.0;
 
     const newPosition = DVec3.fromDecimalVector3d(earthPosition).addVec3(
       DVec3.fromNumbers(100000.0, 0.0, -radius),
@@ -90,6 +91,9 @@ describe("physics simple tests", () => {
 
     const quatStr = (x: Quaternion) =>
       [x.x, x.y, x.z, x.w] as [number, number, number, number];
+
+    const decvec3Arr = (x: DecimalVector3d) =>
+      [x.x, x.y, x.z] as [number, number, number];
 
     await gameApi.replaceEntityComponents(
       playerEID,
@@ -112,9 +116,14 @@ describe("physics simple tests", () => {
             should_advance: false,
           },
           simple_physics: {
-            angular_velocity: [0.0, 0.0, 0.0],
+            angular_velocity: [1.0, 1.0, 1.0],
             mass: "1.0",
-            linear_velocity: [0.0, 0.0, 0.0],
+            linear_velocity: DVec3.fromDecimalVector3d(
+              await gameApi.getCelestialBodySurfaceVelocity(
+                "earth",
+                DVec3.fromNumbers(100000.0, 0.0, -radius).toDecimalVector3d(),
+              ),
+            ).asNumbers(),
           },
           real_physics: {
             shape_description: {
@@ -224,19 +233,25 @@ describe("physics simple tests", () => {
           .normalized()
           .mulScalar(new Decimal(3.0))
           .asNumbers(),
-        DVec3.fromNumbersArray(simple_physics.linear_velocity)
+        DVec3.fromDecimalVector3d(earthPosition)
+          .subVec3(newPosition)
           .normalized()
           .asNumbers(),
       );
 
-      console.log(altitude, simple_physics.linear_velocity, raycast);
+      console.log(
+        altitude,
+        transform.position,
+        simple_physics.linear_velocity,
+        raycast,
+      );
 
       await gameApi.uIText.set(labelId, {
         color: [1.0, 1.0, 1.0, 1.0],
         content: altitude.terrain.toString() + " - " + new Date().toISOString(),
         font_size: "Medium",
       });
-    }, 500.0);
+    }, 100.0);
     await setTimeout(10000.0);
 
     fs.writeFileSync(
