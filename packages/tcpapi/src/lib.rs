@@ -64,11 +64,21 @@ pub static TCP_CONTROL_SERVER: LazyLock<TCPControlServer> = LazyLock::new(|| {
                         );
                         let bytes = tmp.as_bytes();
                         let stream = current_stream.lock().unwrap();
-                        stream
-                            .as_ref()
-                            .unwrap()
-                            .write_all(bytes)
-                            .expect("TCP transmit failed");
+
+                        let mut cursor: usize = 0;
+                        let end = bytes.len();
+                        loop {
+                            if cursor >= end {
+                                break;
+                            }
+                            let write_res = stream.as_ref().unwrap().write(bytes);
+                            match write_res {
+                                Ok(n) => cursor += n,
+                                Err(_) => {
+                                    thread::sleep(Duration::from_millis(1));
+                                }
+                            }
+                        }
                     }
                 }
             }
