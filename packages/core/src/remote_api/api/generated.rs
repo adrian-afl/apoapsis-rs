@@ -29,6 +29,7 @@ use crate::remote_api::api::entity_api::get_entity;
 use crate::remote_api::api::entity_api::replace_entity_components;
 use crate::remote_api::api::entity_api::find_all_entities_by_components;
 use crate::remote_api::api::physics_api::get_debug_real_physics_wireframe;
+use crate::remote_api::api::physics_api::raycast_real_physics;
 use crate::remote_api::api::reset_world::reset_world;
 use crate::remote_api::api::serialize_world::serialize_world;
 use crate::remote_api::api::universe_simulation_api::get_all_celestial_body_names;
@@ -860,6 +861,7 @@ pub fn handle_message_api(
     "command.replace_entity_components" => replace_entity_components(payload, context),
     "command.find_all_entities_by_components" => find_all_entities_by_components(payload, context),
     "command.get_debug_real_physics_wireframe" => get_debug_real_physics_wireframe(payload, context),
+    "command.raycast_real_physics" => raycast_real_physics(payload, context),
     "command.reset_world" => reset_world(payload, context),
     "command.serialize_world" => serialize_world(payload, context),
     "command.get_all_celestial_body_names" => get_all_celestial_body_names(payload, context),

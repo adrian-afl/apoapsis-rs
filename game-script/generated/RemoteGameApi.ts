@@ -28,11 +28,14 @@ import { ObjectWithID } from "./types/ObjectWithID.js";
 import { Entity } from "./types/Entity.js";
 import { AttachedComponents } from "./types/AttachedComponents.js";
 import { DebugCollector } from "./types/DebugCollector.js";
+import { DVec3 } from "./types/DVec3.js";
 import { DecimalVector3d } from "./types/DecimalVector3d.js";
 import { BodyCelestialBodyDefinition } from "./types/BodyCelestialBodyDefinition.js";
 import { DecimalMatrix3d } from "./types/DecimalMatrix3d.js";
 import { GetAltitudeResult } from "./types/GetAltitudeResult.js";
 import { BaseGameApi } from "../framework/BaseGameApi.js";
+
+type DVec3 = [number, number, number];
 
 export class RemoteGameApi {
   private readonly api: BaseGameApi;
@@ -95,6 +98,16 @@ export class RemoteGameApi {
       name: "command.get_debug_real_physics_wireframe",
       payload: {},
     }) as Promise<DebugCollector>;
+  }
+
+  public async raycastRealPhysics(
+    point: DVec3,
+    direction: DVec3,
+  ): Promise<number | null> {
+    return this.api.send({
+      name: "command.raycast_real_physics",
+      payload: { point, direction },
+    }) as Promise<number | null>;
   }
 
   public async resetWorld(): Promise<void> {

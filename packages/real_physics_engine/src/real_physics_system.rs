@@ -109,20 +109,19 @@ impl DebugRenderBackend for DebugCollector {
         color: [f32; 4],
         closed: bool,
     ) {
-        for vertex in vertices.chunks(2) {
-            let mut a = (transform * vertex[0]);
-            a.x *= scale.x;
-            a.y *= scale.y;
-            a.z *= scale.z;
-            self.lines.push([a.x, a.y, a.z]);
+        let len = vertices.len();
+        for i in 0..len - 1 {
+            let mut v = transform * vertices[i];
+            v.x *= scale.x;
+            v.y *= scale.y;
+            v.z *= scale.z;
+            self.lines.push([v.x, v.y, v.z]);
 
-            if vertex.len() > 1 {
-                let mut b = (transform * vertex[1]);
-                b.x *= scale.x;
-                b.y *= scale.y;
-                b.z *= scale.z;
-                self.lines.push([b.x, b.y, b.z]);
-            }
+            let mut v = transform * vertices[i + 1];
+            v.x *= scale.x;
+            v.y *= scale.y;
+            v.z *= scale.z;
+            self.lines.push([v.x, v.y, v.z]);
             self.colors.push(color);
         }
     }
@@ -385,5 +384,41 @@ impl RealPhysicsSystem {
                 Ok(())
             }
         }
+    }
+
+    pub fn apply_force(
+        &mut self,
+        body_handle: RigidBodyHandle,
+        force: DVec3,
+        wake_up: bool,
+    ) -> Result<(), PhysicsError> {
+        match self.rigid_body_set.get_mut(body_handle) {
+            None => Err(PhysicsError::RigidBodyNotFound),
+            Some(body) => {
+                body.reset_forces(wake_up);
+                body.add_force(vector![force.x, force.y, force.z], wake_up);
+                Ok(())
+            }
+        }
+    }
+
+    pub fn raycast(&self, camera_relative_origin: DVec3, direction: DVec3) -> Option<f64> {
+        let result = self.query_pipeline.cast_ray(
+            &self.rigid_body_set,
+            &self.collider_set,
+            &Ray::new(
+                Point::new(
+                    camera_relative_origin.x,
+                    camera_relative_origin.y,
+                    camera_relative_origin.z,
+                ),
+                Vector::new(direction.x, direction.y, direction.z),
+            ),
+            f64::MAX,
+            false,
+            QueryFilter::default(),
+        );
+
+        result.map(|x| x.1)
     }
 }

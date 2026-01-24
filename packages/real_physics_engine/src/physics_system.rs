@@ -178,17 +178,12 @@ impl PhysicsSystem {
                                 .unwrap();
 
                             if simple_physics.mass > DBig::ZERO {
-                                let gravity_impulse = universe_simulation
+                                let gravity_force = universe_simulation
                                     .calculate_gravity_flux(&transform.position)
-                                    .to_dvec3_with_precision(5)
-                                    * delta_time;
+                                    .to_dvec3_with_precision(5);
 
                                 real_physics_system
-                                    .apply_impulse(
-                                        simulated_object.rigid_body,
-                                        gravity_impulse,
-                                        true,
-                                    )
+                                    .apply_force(simulated_object.rigid_body, gravity_force, true)
                                     .unwrap();
                             }
 
@@ -437,6 +432,13 @@ impl PhysicsSystem {
             .try_write()
             .unwrap()
             .debug_get_world()
+    }
+
+    pub fn raycast_real(&self, camera_relative_origin: DVec3, direction: DVec3) -> Option<f64> {
+        self.real_physics_system
+            .try_write()
+            .unwrap()
+            .raycast(camera_relative_origin, direction)
     }
 
     fn update_celestial_body_surfaces(

@@ -6,6 +6,8 @@ import { AttachedComponents } from "../generated/types/AttachedComponents";
 import DVec3 from "../framework/mathModule/logic/linear/DVec3";
 import * as fs from "node:fs";
 import { setInterval } from "node:timers";
+import Decimal from "decimal.js";
+import { Quaternion } from "@aeroflightlabs/linear-math";
 
 describe("physics simple tests", () => {
   // afterAll(() => process.exit(0));
@@ -80,11 +82,14 @@ describe("physics simple tests", () => {
     const earthDef = await gameApi.getCelestialBodyDefinition("earth");
     console.log(earthDef);
 
-    const radius = earthDef.terrain.radius + 40.9 * 1000.0;
+    const radius = earthDef.terrain.radius + 42.9 * 1000.0;
 
     const newPosition = DVec3.fromDecimalVector3d(earthPosition).addVec3(
-      DVec3.fromNumbers(0.0, 0.0, -radius),
+      DVec3.fromNumbers(100000.0, 0.0, -radius),
     );
+
+    const quatStr = (x: Quaternion) =>
+      [x.x, x.y, x.z, x.w] as [number, number, number, number];
 
     await gameApi.replaceEntityComponents(
       playerEID,
@@ -92,7 +97,7 @@ describe("physics simple tests", () => {
         .add({
           camera_focus: true,
           transform: {
-            orientation: [1.0, 0.0, 0.0, 1.0],
+            orientation: quatStr(new Quaternion().identity()),
             position: newPosition.toDecimalVector3d(),
             scale: [1.0, 1.0, 1.0],
           },
@@ -132,9 +137,9 @@ describe("physics simple tests", () => {
       components: buildComponents()
         .add({
           transform: {
-            orientation: [1.0, 0.0, 0.0, 1.0],
+            orientation: quatStr(new Quaternion().identity()),
             position: newPosition
-              .addVec3(DVec3.fromNumbers(-100.0, 0.0, 0.0))
+              .addVec3(DVec3.fromNumbers(10.0, 0.0, 10.0))
               .toDecimalVector3d(),
             scale: [1.0, 1.0, 1.0],
           },
@@ -212,7 +217,17 @@ describe("physics simple tests", () => {
         transform.position,
       );
 
-      console.log(altitude, simple_physics.linear_velocity);
+      const raycast = await gameApi.raycastRealPhysics(
+        DVec3.fromNumbersArray(simple_physics.linear_velocity)
+          .normalized()
+          .mulScalar(new Decimal(3.0))
+          .asNumbers(),
+        DVec3.fromNumbersArray(simple_physics.linear_velocity)
+          .normalized()
+          .asNumbers(),
+      );
+
+      console.log(altitude, simple_physics.linear_velocity, raycast);
 
       await gameApi.uIText.set(labelId, {
         color: [1.0, 1.0, 1.0, 1.0],

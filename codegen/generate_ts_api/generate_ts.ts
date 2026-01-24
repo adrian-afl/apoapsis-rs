@@ -36,6 +36,8 @@ console.log(`${componentsMetadata.map((x) => x.importTs).join("\n")}
 ${apiExportImports.join("\n")}
 import { BaseGameApi } from "../framework/BaseGameApi.js";
 
+type DVec3 = [number, number, number];
+
 export class RemoteGameApi {
   private readonly api: BaseGameApi;
   
