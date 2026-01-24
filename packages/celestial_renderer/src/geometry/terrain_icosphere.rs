@@ -285,13 +285,10 @@ impl TerrainIcosphere {
 
         let vertices = segment.1;
         let mut indices: Vec<[u32; 3]> = Vec::new();
+        let mut i = 0;
         for vertex_i in 0..vertices.len() / 3 {
-            let start = indices.len();
-            indices.push([
-                (vertex_i * 3 + 0) as u32,
-                (vertex_i * 3 + 1) as u32,
-                (vertex_i * 3 + 2) as u32,
-            ]);
+            indices.push([(i + 0) as u32, (i + 1) as u32, (i + 2) as u32]);
+            i += 3;
         }
 
         Ok(IcosphereLoadedGeometry {

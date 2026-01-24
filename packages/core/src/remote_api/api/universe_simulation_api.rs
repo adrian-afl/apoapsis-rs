@@ -55,8 +55,9 @@ pub fn get_celestial_body_definition(
 }
 
 // @api_command get_celestial_body_surface_velocity(name: string, point: DecimalVector3d): DecimalVector3d
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(export)]
 struct GetCelestialBodySurfaceVelocityInput {
     name: String,
     point: DecimalVector3d,
@@ -113,17 +114,16 @@ pub fn get_celestial_body_satellites(
     Ok(Some(json!(sats).to_string()))
 }
 
-// @api_command get_altitude_over_celestial_body(name: string, point: DecimalVector3d): string
-#[derive(Clone, Debug, Deserialize, Serialize)]
+// @api_command get_approximate_altitude_over_celestial_body(name: string, point: DecimalVector3d): string
+#[derive(Clone, Debug, Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(export)]
 struct GetAltitudeOverCelestialBodyInput {
     name: String,
     point: DecimalVector3d,
 }
 
-// TODO remember to use rendering_system here for precise measurement if its available
-// now its just using the radiuses
-pub fn get_altitude_over_celestial_body(
+pub fn get_approximate_altitude_over_celestial_body(
     payload: &str,
     context: &mut RemoteGameExecutionContext,
 ) -> Result<Option<String>, String> {
@@ -150,6 +150,28 @@ pub fn get_altitude_over_celestial_body(
     Ok(Some(
         json!(body.position.distance_to(&input.point) - f64_to_dbig(radius)).to_string(),
     ))
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+struct GetRealAltitudeOverCelestialBodyResult {
+    pub terrain: Option<f64>,
+    pub atmosphere: Option<f64>,
+    pub water: Option<f64>,
+}
+
+// @api_command get_real_altitude_over_celestial_body(name: string, point: DecimalVector3d): GetAltitudeResult
+pub fn get_real_altitude_over_celestial_body(
+    payload: &str,
+    context: &mut RemoteGameExecutionContext,
+) -> Result<Option<String>, String> {
+    let input: GetAltitudeOverCelestialBodyInput =
+        serde_json::from_str(payload).map_err(serde_parse_err_map)?;
+    let body = context.simulation.get_body(&input.name);
+    let altitude = context.rendering_system.get_altitude(&body, &input.point);
+
+    Ok(Some(json!(altitude).to_string()))
 }
 
 // @api_command get_closest_celestial_body(point: DecimalVector3d): string

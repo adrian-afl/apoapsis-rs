@@ -16,6 +16,7 @@ pub struct RemoteGameExecutionContext<'a> {
     pub ecs: &'a mut ECSWorld,
     pub simulation: &'a mut Simulation,
     pub physics_system: &'a mut PhysicsSystem,
+    pub rendering_system: &'a mut RenderingSystem,
 }
 
 pub struct RemoteGameMode {
@@ -34,7 +35,12 @@ impl RemoteGameMode {
 }
 
 impl RemoteGameMode {
-    pub fn update(&mut self, simulation: &mut Simulation, physics_system: &mut PhysicsSystem) {
+    pub fn update(
+        &mut self,
+        simulation: &mut Simulation,
+        physics_system: &mut PhysicsSystem,
+        rendering_system: &mut RenderingSystem,
+    ) {
         let mut inbox: VecDeque<IncomingRemoteIOMessage> = {
             let mut guard = TCP_CONTROL_SERVER.inbox.lock().unwrap();
             let clone = guard.clone();
@@ -49,6 +55,7 @@ impl RemoteGameMode {
                     ecs: &mut self.ecs,
                     simulation,
                     physics_system,
+                    rendering_system,
                 };
                 handle_message_api(&message.name, &message.payload, &mut full_context)
             };

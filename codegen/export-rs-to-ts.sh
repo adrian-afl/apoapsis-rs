@@ -26,6 +26,8 @@ cd ../universe_simulation
 cargo test export_bindings
 cd ../real_physics_engine
 cargo test export_bindings
+cd ../celestial_renderer
+cargo test export_bindings
 
 cd ../../codegen/generate_ts_api
 cd types

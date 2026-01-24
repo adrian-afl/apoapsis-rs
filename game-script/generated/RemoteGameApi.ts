@@ -31,6 +31,7 @@ import { DebugCollector } from "./types/DebugCollector.js";
 import { DecimalVector3d } from "./types/DecimalVector3d.js";
 import { BodyCelestialBodyDefinition } from "./types/BodyCelestialBodyDefinition.js";
 import { DecimalMatrix3d } from "./types/DecimalMatrix3d.js";
+import { GetAltitudeResult } from "./types/GetAltitudeResult.js";
 import { BaseGameApi } from "../framework/BaseGameApi.js";
 
 export class RemoteGameApi {
@@ -168,14 +169,24 @@ export class RemoteGameApi {
     }) as Promise<string[]>;
   }
 
-  public async getAltitudeOverCelestialBody(
+  public async getApproximateAltitudeOverCelestialBody(
     name: string,
     point: DecimalVector3d,
   ): Promise<string> {
     return this.api.send({
-      name: "command.get_altitude_over_celestial_body",
+      name: "command.get_approximate_altitude_over_celestial_body",
       payload: { name, point },
     }) as Promise<string>;
+  }
+
+  public async getRealAltitudeOverCelestialBody(
+    name: string,
+    point: DecimalVector3d,
+  ): Promise<GetAltitudeResult> {
+    return this.api.send({
+      name: "command.get_real_altitude_over_celestial_body",
+      payload: { name, point },
+    }) as Promise<GetAltitudeResult>;
   }
 
   public async getClosestCelestialBody(

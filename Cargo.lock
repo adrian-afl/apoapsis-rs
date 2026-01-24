@@ -414,6 +414,8 @@ dependencies = [
  "rapier3d-f64",
  "rayon",
  "renderer_common",
+ "serde",
+ "ts-rs",
  "ui_renderer",
  "universe_simulation",
  "vengine-rs",

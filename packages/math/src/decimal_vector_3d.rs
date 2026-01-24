@@ -63,6 +63,19 @@ impl DecimalVector3d {
         self.z = v.z.clone();
     }
 
+    pub fn clamp_f64(&mut self, min: f64, max: f64) {
+        self.x = self.x.clone().max(f64_to_dbig(min)).min(f64_to_dbig(max));
+        self.y = self.y.clone().max(f64_to_dbig(min)).min(f64_to_dbig(max));
+        self.z = self.z.clone().max(f64_to_dbig(min)).min(f64_to_dbig(max));
+    }
+
+    pub fn clamp(&mut self, min: DBig, max: DBig) {
+        // weird
+        self.x = self.x.clone().max(min.clone()).min(max.clone());
+        self.y = self.y.clone().max(min.clone()).min(max.clone());
+        self.z = self.z.clone().max(min.clone()).min(max.clone());
+    }
+
     pub fn from_str(x: &str, y: &str, z: &str) -> DecimalVector3d {
         DecimalVector3d {
             x: DBig::from_str(x).unwrap(),

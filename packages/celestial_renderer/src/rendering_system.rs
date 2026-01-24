@@ -20,8 +20,10 @@ use rayon::iter::ParallelIterator;
 use rayon::prelude::{IntoParallelRefIterator, IntoParallelRefMutIterator};
 use renderer_common::camera::Camera;
 use renderer_common::errors::RenderingError;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, RwLock};
+use ts_rs::TS;
 use ui_renderer::ui_system::UISystem;
 use universe_simulation::simulation::{SimulatedBody, Simulation};
 use vengine_rs::core::toolkit::VEToolkit;
@@ -35,6 +37,9 @@ pub struct RenderingSystem {
     rendering_cutoff: f64,
 }
 
+#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
 pub struct GetAltitudeResult {
     pub terrain: Option<f64>,
     pub atmosphere: Option<f64>,

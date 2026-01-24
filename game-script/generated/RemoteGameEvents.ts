@@ -30,8 +30,6 @@ export abstract class AbstractBaseEvent {
 
 export class OnRemoteGameModeInitialized extends AbstractBaseEvent {}
 
-export class OnNatsConnected extends AbstractBaseEvent {}
-
 export class OnGameBootReady extends AbstractBaseEvent {
   public readonly data: OnGameBootReadyEventData;
   public constructor(input: OnGameBootReadyEventData) {

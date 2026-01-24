@@ -74,8 +74,9 @@ impl CelestialBodyBuffer {
 
         offset += write_mat4(ptr, offset, body.orientation.as_dmat4());
 
-        let translation_camera_space = &body.position - camera_position;
-        // println!("{translation_camera_space}");
+        let mut translation_camera_space = &body.position - camera_position;
+        // dbg!(&translation_camera_space.to_string());
+        translation_camera_space.clamp_f64(-69634000000.0, 69634000000.0);
         offset += write_vec3_zero(
             ptr,
             offset,

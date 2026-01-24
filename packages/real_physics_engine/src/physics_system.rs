@@ -14,6 +14,7 @@ use ecs::ecs_world::ECSWorld;
 use ecs::entity::Entity;
 use glam::{DQuat, DVec3};
 use math::decimal_vector_3d::DecimalVector3d;
+use math::sin_cos::f64_to_dbig;
 use rapier3d_f64::prelude::{RigidBodyBuilder, RigidBodyHandle};
 use rayon::iter::IntoParallelRefIterator;
 use rayon::iter::ParallelIterator;
@@ -140,7 +141,7 @@ impl PhysicsSystem {
                             let relative_position = (&transform.position
                                 - &self.player_temporary_data.position)
                                 .to_dvec3_with_precision(10);
-                            let relative_linear_velocity = simple_physics.linear_velocity
+                            let mut relative_linear_velocity = simple_physics.linear_velocity
                                 - self.player_temporary_data.linear_velocity;
 
                             {
@@ -150,6 +151,15 @@ impl PhysicsSystem {
                                 simulated_object.phase_1_relative_linear_velocity =
                                     relative_linear_velocity;
                             } // unlocks
+
+                            // match real_physics.shape_description {
+                            //     ShapeDescription::CelestialBodySurface(_) => (),
+                            //     _ => {
+                            //         dbg!(relative_position.to_string());
+                            //         dbg!(relative_linear_velocity.to_string());
+                            //         dbg!(real_physics.id);
+                            //     }
+                            // }
 
                             let map = self.currently_simulated_bodies.read().unwrap();
                             let simulated_object = map.get(&id).unwrap();
@@ -166,6 +176,21 @@ impl PhysicsSystem {
                                     },
                                 )
                                 .unwrap();
+
+                            if simple_physics.mass > DBig::ZERO {
+                                let gravity_impulse = universe_simulation
+                                    .calculate_gravity_flux(&transform.position)
+                                    .to_dvec3_with_precision(5)
+                                    * delta_time;
+
+                                real_physics_system
+                                    .apply_impulse(
+                                        simulated_object.rigid_body,
+                                        gravity_impulse,
+                                        true,
+                                    )
+                                    .unwrap();
+                            }
 
                             // this is suspicious
                             transform.position = &transform.position
@@ -300,14 +325,22 @@ impl PhysicsSystem {
         simple_physics: &SimplePhysicsComponent,
         real_physics: &RealPhysicsComponent,
     ) -> Option<u64> {
-        let relative_position =
-            (&transform.position - &self.player_temporary_data.position).to_dvec3_with_precision(7);
+        // println!(
+        //     "{}",
+        //     (&transform.position - &self.player_temporary_data.position)
+        // );
+        let relative_position = (&transform.position - &self.player_temporary_data.position);
 
         let cutoff = match real_physics.override_real_simulation_cutoff {
             None => self.real_simulation_cutoff,
             Some(cutoff) => cutoff,
         };
-        let should_simulate = relative_position.length() < cutoff;
+        let should_simulate = relative_position.length() < f64_to_dbig(cutoff);
+
+        // if should_simulate {
+        //     dbg!(simple_physics.id);
+        //     dbg!(should_simulate);
+        // }
 
         let mut exists = {
             self.currently_simulated_bodies
@@ -462,7 +495,7 @@ impl PhysicsSystem {
                     entity.components.real_physics = Some(terrain_physics_data.0.clone());
                     entity.components.glue_to_celestial_body = Some(terrain_physics_data.1.clone());
                     entity.components.simple_physics =
-                        Some(SimplePhysicsComponent::from_mass(DBig::ONE));
+                        Some(SimplePhysicsComponent::from_mass(DBig::ZERO));
                     entity.components.transform = Some(TransformComponent::default());
                     println!("adding {body} {segment}");
                     ecs.add(entity);

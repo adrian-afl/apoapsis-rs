@@ -38,7 +38,8 @@ use crate::remote_api::api::universe_simulation_api::get_celestial_body_surface_
 use crate::remote_api::api::universe_simulation_api::get_celestial_body_orientation;
 use crate::remote_api::api::universe_simulation_api::get_celestial_body_parent;
 use crate::remote_api::api::universe_simulation_api::get_celestial_body_satellites;
-use crate::remote_api::api::universe_simulation_api::get_altitude_over_celestial_body;
+use crate::remote_api::api::universe_simulation_api::get_approximate_altitude_over_celestial_body;
+use crate::remote_api::api::universe_simulation_api::get_real_altitude_over_celestial_body;
 use crate::remote_api::api::universe_simulation_api::get_closest_celestial_body;
 use crate::remote_api::api::universe_simulation_api::get_gravity_flux;
 use ecs::ecs_world::ECSWorld;
@@ -868,7 +869,8 @@ pub fn handle_message_api(
     "command.get_celestial_body_orientation" => get_celestial_body_orientation(payload, context),
     "command.get_celestial_body_parent" => get_celestial_body_parent(payload, context),
     "command.get_celestial_body_satellites" => get_celestial_body_satellites(payload, context),
-    "command.get_altitude_over_celestial_body" => get_altitude_over_celestial_body(payload, context),
+    "command.get_approximate_altitude_over_celestial_body" => get_approximate_altitude_over_celestial_body(payload, context),
+    "command.get_real_altitude_over_celestial_body" => get_real_altitude_over_celestial_body(payload, context),
     "command.get_closest_celestial_body" => get_closest_celestial_body(payload, context),
     "command.get_gravity_flux" => get_gravity_flux(payload, context),
     "command.get_universe_clock" => get_universe_clock(payload, context),
