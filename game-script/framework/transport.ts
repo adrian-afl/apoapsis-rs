@@ -132,7 +132,6 @@ export class TCPTransport implements RemoteApiTransport {
       if (this.outQueue.length === 0) {
         break;
       }
-      console.log(this.outQueue.length);
       let bigmsg = this.outQueue.join("");
       this.outQueue = [];
       await new Promise<void>(async (resolve, reject) => {
@@ -140,7 +139,6 @@ export class TCPTransport implements RemoteApiTransport {
           await promises.setTimeout(1);
         }
         let abort = setTimeout(() => {
-          console.log("DED");
           reject(new Error(`Timed out waiting for write to complete`));
         }, 5000);
         this.connection.write(bigmsg, (e) => {

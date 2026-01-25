@@ -89,9 +89,7 @@ export class DebugDisplay {
   }
 
   public async debug(key: string, value: string) {
-    if (this.debugValues[key]) {
-      await this.debugValues[key].setLabel(`[${key}]: ${value}`);
-    } else {
+    if (!this.debugValues[key]) {
       this.debugValues[key] = new Label(this.gameApi);
       const allKeys = Object.keys(this.debugValues);
       await Promise.all([
@@ -101,5 +99,6 @@ export class DebugDisplay {
         ),
       ]);
     }
+    await this.debugValues[key].setLabel(`[${key}]: ${value}`);
   }
 }

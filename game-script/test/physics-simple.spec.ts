@@ -278,6 +278,8 @@ describe("physics simple tests", () => {
 
     await debugDisplay.debug("Altitude", "123.0");
     await debugDisplay.debug("Raycast", "123.0");
+    await debugDisplay.debug("LinVel", "123.0");
+    await debugDisplay.debug("Now", "123.0");
 
     const main = async () => {
       const [transform, simple_physics] = await Promise.all([
@@ -309,7 +311,7 @@ describe("physics simple tests", () => {
       // );
       await Promise.all([
         debugDisplay.debug("Altitude", dec(altitude).toFixed(4)),
-        debugDisplay.debug("Raycast", raycast.toFixed(4)),
+        debugDisplay.debug("Raycast", raycast ? raycast.toFixed(4) : "null"),
         debugDisplay.debug(
           "LinVel",
           DVec3.fromNumbersArray(simple_physics.linear_velocity).toString(4),
@@ -322,14 +324,15 @@ describe("physics simple tests", () => {
       //   content: altitude.toString(),
       //   font_size: "Medium",
       // });
-
-      console.log("main fin");
+      //
+      // console.log("main fin");
 
       global.setTimeout(async () => {
         await main();
-      }, 100);
+      }, 1);
     };
 
+    await setTimeout(1000.0);
     void main();
 
     await setTimeout(1000000.0);
