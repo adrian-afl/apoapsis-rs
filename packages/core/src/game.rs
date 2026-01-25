@@ -60,6 +60,8 @@ pub struct Game {
     ui_cursor_system: Option<UICursorSystem>,
     ui_raycast_system: Option<UIRaycastSystem>,
     ui_raycast_result: Vec<UIRaycastResultItem>,
+
+    debug_mode_value: f64,
 }
 
 impl Game {
@@ -114,6 +116,8 @@ impl Game {
 
             remote_game_mode,
             current_camera: Camera::new(),
+
+            debug_mode_value: 0.0,
         }
     }
 
@@ -161,6 +165,8 @@ impl Game {
 
             remote_game_mode,
             current_camera: Camera::new(),
+
+            debug_mode_value: 1.0,
         }
     }
 
@@ -317,6 +323,7 @@ impl Game {
                             &self.universe_simulation,
                             &self.current_camera,
                             ui_system,
+                            self.debug_mode_value,
                         );
                     });
                 },

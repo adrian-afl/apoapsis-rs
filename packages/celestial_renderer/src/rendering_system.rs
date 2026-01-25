@@ -276,6 +276,7 @@ impl RenderingSystem {
         universe_simulation: &Simulation,
         camera: &Camera,
         ui_system: &UISystem,
+        debug_mode_value: f64,
     ) {
         // println!("RenderingSystem / update");
 
@@ -414,6 +415,7 @@ impl RenderingSystem {
                 &mut self.celestial_hierarchy,
                 camera,
                 &ecs.time_counter,
+                debug_mode_value,
             );
 
             // println!("RenderingSystem / End");

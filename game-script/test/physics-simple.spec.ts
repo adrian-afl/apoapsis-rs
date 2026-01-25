@@ -119,7 +119,7 @@ describe("physics simple tests", () => {
           // },
           third_person_orbit_camera_control: {
             style: "Absolute",
-            initial_offset: [0.0, 0.0, -5.0],
+            initial_offset: [0.0, 0.0, -50.0],
             initial_orientation: [1.0, 0.0, 0.0, 1.0],
             fov: 70.0,
           },

@@ -93,11 +93,12 @@ pub fn update_icosphere_matrices(
     metadata: &Vec<IcosphereMetadataItem>,
     part_matrices: &mut Vec<DMat4>,
 ) {
-    let relative_camera_position = &simulated_body.position - camera_position;
+    let translation_camera_space = &simulated_body.position - camera_position;
+    let dvec_translation_camera_space = translation_camera_space.to_dvec3_with_precision(6);
 
+    let world_translation_matrix = DMat4::from_translation(dvec_translation_camera_space);
     let rotation_matrix = simulated_body.orientation.as_dmat4().inverse();
-    let world_translation_matrix =
-        DMat4::from_translation(relative_camera_position.to_dvec3_with_precision(6));
+
     let pre_final_matrix = world_translation_matrix * rotation_matrix;
 
     for i in 0..metadata.len() {

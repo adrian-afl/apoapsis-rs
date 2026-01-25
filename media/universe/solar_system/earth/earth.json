@@ -68,12 +68,12 @@
       }
     ]
   },
-  "water": {
-    "icospherePath": "media/universe/solar_system/earth/data",
-    "color": [0, 0.3, 0.6],
-    "radius": 6378000,
-    "wavesHeight": 2
-  },
+  //  "water": {
+  //    "icospherePath": "media/universe/solar_system/earth/data",
+  //    "color": [0, 0.3, 0.6],
+  //    "radius": 6378000,
+  //    "wavesHeight": 2
+  //  },
   "atmosphere": {
     "seed": 12.0,
     "start": 6398000,

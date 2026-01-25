@@ -39,7 +39,12 @@ impl CommonBuffer {
 
     vec4 elapsed_zero_zero_zero;
     */
-    pub fn update(&mut self, camera: &Camera, elapsed: f64) -> Result<(), RenderingError> {
+    pub fn update(
+        &mut self,
+        camera: &Camera,
+        elapsed: f64,
+        debug_mode_value: f64,
+    ) -> Result<(), RenderingError> {
         let ptr = self.staging_buffer.map()? as *mut f32;
 
         let mut offset = 0;
@@ -54,7 +59,8 @@ impl CommonBuffer {
         offset += write_vec3_zero(ptr, offset, frustum_cone.top_right);
         offset += write_vec3_zero(ptr, offset, frustum_cone.bottom_right);
 
-        write_float(ptr, offset, elapsed);
+        offset += write_float(ptr, offset, elapsed);
+        write_float(ptr, offset, debug_mode_value);
 
         Ok(())
     }

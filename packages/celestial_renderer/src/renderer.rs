@@ -387,10 +387,11 @@ impl Renderer {
         celestial_hierarchy: &mut CelestialHierarchy,
         camera: &Camera,
         time_counter: &TimeCounter,
+        debug_mode_value: f64,
     ) -> Result<(), RenderingError> {
         profile!("common_buffer update", {
             self.common_buffer
-                .update(camera, time_counter.total_time)
+                .update(camera, time_counter.total_time, debug_mode_value)
                 .expect("Failed to update common_buffer");
         });
 
@@ -411,7 +412,7 @@ impl Renderer {
 
         let mut swapchain = self.toolkit.swapchain.lock().unwrap();
 
-        let mut any_updates = true;
+        let mut any_updates = true; // TODO
 
         for (i, body) in celestial_bodies.iter_mut().enumerate() {
             let is_closest = i == 0;
