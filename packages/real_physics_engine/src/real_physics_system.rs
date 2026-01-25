@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
 pub struct RealPhysicsSystem {
-    gravity: SMatrix<f64, 3, 1>,
+    gravity: Vector,
     integration_parameters: IntegrationParameters,
     physics_pipeline: PhysicsPipeline,
     island_manager: IslandManager,
@@ -18,7 +18,6 @@ pub struct RealPhysicsSystem {
     impulse_joint_set: ImpulseJointSet,
     multibody_joint_set: MultibodyJointSet,
     ccd_solver: CCDSolver,
-    query_pipeline: QueryPipeline,
     rigid_body_set: RigidBodySet,
     collider_set: ColliderSet,
     debug_render_pipeline: DebugRenderPipeline,
@@ -62,13 +61,7 @@ impl DebugRenderBackend for DebugCollector {
         true
     }
 
-    fn draw_line(
-        &mut self,
-        object: DebugRenderObject,
-        a: Point<f64>,
-        b: Point<f64>,
-        color: [f32; 4],
-    ) {
+    fn draw_line(&mut self, object: DebugRenderObject, a: Vector, b: Vector, color: [f32; 4]) {
         self.lines.push([a.x, a.y, a.z]);
         self.lines.push([b.x, b.y, b.z]);
         self.colors.push(color);
@@ -77,10 +70,10 @@ impl DebugRenderBackend for DebugCollector {
     fn draw_polyline(
         &mut self,
         object: DebugRenderObject,
-        vertices: &[Point<f64>],
+        vertices: &[Vector],
         indices: &[[u32; 2]],
-        transform: &Isometry<f64>,
-        scale: &Vector<f64>,
+        transform: &Pose,
+        scale: Vector,
         color: [f32; 4],
     ) {
         for index in indices {
@@ -103,9 +96,9 @@ impl DebugRenderBackend for DebugCollector {
     fn draw_line_strip(
         &mut self,
         object: DebugRenderObject,
-        vertices: &[Point<f64>],
-        transform: &Isometry<f64>,
-        scale: &Vector<f64>,
+        vertices: &[Vector],
+        transform: &Pose,
+        scale: Vector,
         color: [f32; 4],
         closed: bool,
     ) {
@@ -144,7 +137,7 @@ impl RealPhysicsSystem {
         // let ball_body_handle = rigid_body_set.insert(rigid_body);
         // collider_set.insert_with_parent(collider, ball_body_handle, &mut rigid_body_set);
 
-        let gravity = vector![0.0, 0.0, 0.0]; // REMEMBER ABOUT THIS
+        let gravity = Vector::new(0.0, 0.0, 0.0); // REMEMBER ABOUT THIS
         let integration_parameters = IntegrationParameters::default();
         let physics_pipeline = PhysicsPipeline::new();
         let island_manager = IslandManager::new();
@@ -153,7 +146,12 @@ impl RealPhysicsSystem {
         let impulse_joint_set = ImpulseJointSet::new();
         let multibody_joint_set = MultibodyJointSet::new();
         let ccd_solver = CCDSolver::new();
-        let query_pipeline = QueryPipeline::new();
+        let query_pipeline = broad_phase.as_query_pipeline(
+            narrow_phase.query_dispatcher(),
+            &rigid_body_set,
+            &collider_set,
+            QueryFilter::default(),
+        );
         let _physics_hooks = ();
         let _event_handler = ();
 
@@ -169,7 +167,6 @@ impl RealPhysicsSystem {
             impulse_joint_set,
             multibody_joint_set,
             ccd_solver,
-            query_pipeline,
             debug_render_pipeline: DebugRenderPipeline::default(),
         }
     }
@@ -197,7 +194,7 @@ impl RealPhysicsSystem {
         self.integration_parameters.dt = delta;
         self.integration_parameters.max_ccd_substeps = 1;
         self.physics_pipeline.step(
-            &self.gravity,
+            self.gravity,
             &self.integration_parameters,
             &mut self.island_manager,
             &mut self.broad_phase,
@@ -207,7 +204,6 @@ impl RealPhysicsSystem {
             &mut self.impulse_joint_set,
             &mut self.multibody_joint_set,
             &mut self.ccd_solver,
-            Some(&mut self.query_pipeline),
             // TODO events, especially collision!
             &(), //&self.physics_hooks,
             &(), //&self.event_handler,
@@ -258,17 +254,22 @@ impl RealPhysicsSystem {
         match self.rigid_body_set.get(body_handle) {
             None => Err(PhysicsError::RigidBodyNotFound),
             Some(body) => {
-                let translation = body.translation();
-                let orientation = body.rotation();
+                // let translation = body.translation();
+                let position = body.position();
+                // let orientation = body.rotation();
                 let linear_velocity = body.linvel();
                 let angular_velocity = body.angvel();
                 Ok(RealPhysicsBodyKinematics {
-                    position: DVec3::new(translation.x, translation.y, translation.z),
+                    position: DVec3::new(
+                        position.translation.x,
+                        position.translation.y,
+                        position.translation.z,
+                    ),
                     orientation: DQuat::from_xyzw(
-                        orientation.i,
-                        orientation.j,
-                        orientation.k,
-                        orientation.w,
+                        position.rotation.x,
+                        position.rotation.y,
+                        position.rotation.z,
+                        position.rotation.w,
                     ),
                     linear_velocity: DVec3::new(
                         linear_velocity.x,
@@ -294,28 +295,24 @@ impl RealPhysicsSystem {
             None => Err(PhysicsError::RigidBodyNotFound),
             Some(body) => {
                 if let Some(position) = data.position {
-                    body.set_translation(vector![position.x, position.y, position.z], false);
+                    body.set_translation(Vector::new(position.x, position.y, position.z), false);
                 }
                 if let Some(orientation) = data.orientation {
                     body.set_rotation(
-                        Rotation::from_quaternion(Quaternion::new(
-                            orientation.w,
-                            orientation.x,
-                            orientation.y,
-                            orientation.z,
-                        )),
+                        Quaternion::new(orientation.w, orientation.x, orientation.y, orientation.z)
+                            .into(),
                         false,
                     );
                 }
                 if let Some(linear_velocity) = data.linear_velocity {
                     body.set_linvel(
-                        vector![linear_velocity.x, linear_velocity.y, linear_velocity.z],
+                        Vector::new(linear_velocity.x, linear_velocity.y, linear_velocity.z),
                         false,
                     );
                 }
                 if let Some(angular_velocity) = data.angular_velocity {
                     body.set_angvel(
-                        vector![angular_velocity.x, angular_velocity.y, angular_velocity.z],
+                        Vector::new(angular_velocity.x, angular_velocity.y, angular_velocity.z),
                         false,
                     );
                 }
@@ -339,9 +336,9 @@ impl RealPhysicsSystem {
                 Ok(RealPhysicsColliderKinematics {
                     position: DVec3::new(translation.x, translation.y, translation.z),
                     orientation: DQuat::from_xyzw(
-                        orientation.i,
-                        orientation.j,
-                        orientation.k,
+                        orientation.x,
+                        orientation.y,
+                        orientation.z,
                         orientation.w,
                     ),
                 })
@@ -358,15 +355,13 @@ impl RealPhysicsSystem {
             None => Err(PhysicsError::ColliderNotFound),
             Some(collider) => {
                 if let Some(position) = data.position {
-                    collider.set_translation(vector![position.x, position.y, position.z]);
+                    collider.set_translation(Vector::new(position.x, position.y, position.z));
                 }
                 if let Some(orientation) = data.orientation {
-                    collider.set_rotation(Rotation::from_quaternion(Quaternion::new(
-                        orientation.w,
-                        orientation.x,
-                        orientation.y,
-                        orientation.z,
-                    )));
+                    collider.set_rotation(
+                        Quaternion::new(orientation.w, orientation.x, orientation.y, orientation.z)
+                            .into(),
+                    );
                 };
                 Ok(())
             }
@@ -382,7 +377,7 @@ impl RealPhysicsSystem {
         match self.rigid_body_set.get_mut(body_handle) {
             None => Err(PhysicsError::RigidBodyNotFound),
             Some(body) => {
-                body.apply_impulse(vector![impulse.x, impulse.y, impulse.z], wake_up);
+                body.apply_impulse(Vector::new(impulse.x, impulse.y, impulse.z), wake_up);
                 Ok(())
             }
         }
@@ -398,22 +393,26 @@ impl RealPhysicsSystem {
             None => Err(PhysicsError::RigidBodyNotFound),
             Some(body) => {
                 body.reset_forces(wake_up);
-                body.add_force(vector![force.x, force.y, force.z], wake_up);
+                body.add_force(Vector::new(force.x, force.y, force.z), wake_up);
                 Ok(())
             }
         }
     }
 
     pub fn set_global_gravity(&mut self, gravity: DVec3) -> () {
-        self.gravity = vector![gravity.x, gravity.y, gravity.z];
+        self.gravity = Vector::new(gravity.x, gravity.y, gravity.z);
     }
 
     pub fn raycast(&self, camera_relative_origin: DVec3, direction: DVec3) -> Option<f64> {
-        let result = self.query_pipeline.cast_ray(
+        let query_pipeline = self.broad_phase.as_query_pipeline(
+            self.narrow_phase.query_dispatcher(),
             &self.rigid_body_set,
             &self.collider_set,
+            QueryFilter::default(),
+        );
+        let result = query_pipeline.cast_ray(
             &Ray::new(
-                Point::new(
+                Vector::new(
                     camera_relative_origin.x,
                     camera_relative_origin.y,
                     camera_relative_origin.z,
@@ -422,7 +421,6 @@ impl RealPhysicsSystem {
             ),
             f64::MAX,
             false,
-            QueryFilter::default(),
         );
 
         result.map(|x| x.1)

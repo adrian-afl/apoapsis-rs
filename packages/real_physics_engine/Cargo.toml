@@ -12,7 +12,7 @@ common_util = { workspace = true }
 
 thiserror = { workspace = true }
 glam = { workspace = true }
-rapier3d-f64 = { workspace = true, features = ["simd-stable", "debug-render"] }
+rapier3d-f64 = { workspace = true, features = ["debug-render"] }
 rayon = { workspace = true }
 dashu-float = { workspace = true }
 serde = { version = "1.0.228", features = ["derive"] }

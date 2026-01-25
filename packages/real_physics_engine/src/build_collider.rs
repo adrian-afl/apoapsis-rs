@@ -2,7 +2,7 @@ use celestial_renderer::rendering_system::RenderingSystem;
 use ecs::components::physics::real_physics_component::{
     CelestialBodyColliderSurfaceType, ShapeDescription,
 };
-use rapier3d_f64::math::Point;
+use rapier3d_f64::math::Vector;
 use rapier3d_f64::prelude::ColliderBuilder;
 
 pub fn build_collider(
@@ -27,7 +27,7 @@ pub fn build_collider(
             trimesh_description
                 .vertices
                 .iter()
-                .map(|x| Point::new(x.x, x.y, x.z))
+                .map(|x| Vector::new(x.x, x.y, x.z))
                 .collect(),
             trimesh_description.indices.clone(),
         )

@@ -1,6 +1,7 @@
 use crate::sin_cos::f64_to_dbig;
-use dashu_float::DBig;
 use dashu_float::ops::SquareRoot;
+use dashu_float::round::mode::HalfEven;
+use dashu_float::{DBig, FBig};
 use glam::DVec3;
 use serde::{Deserialize, Serialize};
 use std::fmt;
@@ -85,10 +86,20 @@ impl DecimalVector3d {
     }
 
     pub fn from_f64(x: f64, y: f64, z: f64) -> DecimalVector3d {
+        let x: FBig<dashu_float::round::mode::HalfAway> = FBig::try_from(x).unwrap();
+        let x = x.with_precision(16).value().to_decimal().value();
+        let y: FBig<dashu_float::round::mode::HalfAway> = FBig::try_from(y).unwrap();
+        let y = y.with_precision(16).value().to_decimal().value();
+        let z: FBig<dashu_float::round::mode::HalfAway> = FBig::try_from(z).unwrap();
+        let z = z.with_precision(16).value().to_decimal().value();
+
         DecimalVector3d {
-            x: DBig::from_str(x.to_string().as_str()).unwrap(),
-            y: DBig::from_str(y.to_string().as_str()).unwrap(),
-            z: DBig::from_str(z.to_string().as_str()).unwrap(),
+            // x: DBig::from_str(x.to_string().as_str()).unwrap(),
+            // y: DBig::from_str(y.to_string().as_str()).unwrap(),
+            // z: DBig::from_str(z.to_string().as_str()).unwrap(),
+            x,
+            y,
+            z,
         }
     }
 

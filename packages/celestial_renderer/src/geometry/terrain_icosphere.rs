@@ -20,7 +20,7 @@ use planet_generator_library::interpolated_biome_data::LoadedBiomeData;
 use planet_generator_library::load_binary_maps::{
     get_terrain_maps_resolution, load_binary_biome_map, load_binary_terrain_map,
 };
-use rapier3d_f64::math::Point;
+use rapier3d_f64::math::Vector;
 use rapier3d_f64::prelude::{ColliderBuilder, TriMeshFlags};
 use rayon::iter::ParallelIterator;
 use rayon::prelude::IntoParallelRefIterator;
@@ -326,12 +326,16 @@ impl TerrainIcosphere {
             } else {
                 Some(
                     ColliderBuilder::trimesh_with_flags(
-                        vertices.iter().map(|x| Point::new(x.x, x.y, x.z)).collect(),
+                        vertices
+                            .iter()
+                            .map(|x| Vector::new(x.x, x.y, x.z))
+                            .collect(),
                         indices,
                         TriMeshFlags::FIX_INTERNAL_EDGES,
                     )
                     .unwrap()
-                    .contact_skin(10.0),
+                    .contact_skin(1.0)
+                    .friction(1.0),
                 )
             },
             level,

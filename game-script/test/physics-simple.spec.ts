@@ -118,19 +118,20 @@ describe("physics simple tests", () => {
           simple_physics: {
             angular_velocity: [1.0, 1.0, 1.0],
             mass: "1.0",
-            linear_velocity: DVec3.fromDecimalVector3d(
-              await gameApi.getCelestialBodySurfaceVelocity(
-                "earth",
-                DVec3.fromNumbers(100000.0, 0.0, -radius).toDecimalVector3d(),
-              ),
-            ).asNumbers(),
+            linear_velocity: [0.0, 0.0, 0.0],
+            // linear_velocity: DVec3.fromDecimalVector3d(
+            //   await gameApi.getCelestialBodySurfaceVelocity(
+            //     "earth",
+            //     DVec3.fromNumbers(100000.0, 0.0, -radius).toDecimalVector3d(),
+            //   ),
+            // ).asNumbers(),
           },
           real_physics: {
             shape_description: {
               box: {
-                sizeX: 1.0,
-                sizeY: 1.0,
-                sizeZ: 1.0,
+                sizeX: 3.0,
+                sizeY: 3.0,
+                sizeZ: 3.0,
               },
             },
             override_real_simulation_cutoff: null,

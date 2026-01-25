@@ -21,11 +21,7 @@
       {
         "id": 0,
         "name": "snow",
-        "color": [
-          1,
-          1,
-          1
-        ],
+        "color": [1, 1, 1],
         "roughness": 0.2,
         "erosionStrength": 1.1,
         "depositionStrength": 1.1,
@@ -41,11 +37,7 @@
       {
         "id": 1,
         "name": "ice",
-        "color": [
-          0.90,
-          0.96,
-          1
-        ],
+        "color": [0.9, 0.96, 1],
         "roughness": 0.05,
         "erosionStrength": 0.1,
         "depositionStrength": 1,
@@ -61,11 +53,7 @@
       {
         "id": 2,
         "name": "bare",
-        "color": [
-          0.5,
-          0.4,
-          0.3
-        ],
+        "color": [0.5, 0.4, 0.3],
         "roughness": 0.05,
         "erosionStrength": 2.0,
         "depositionStrength": 1,
@@ -82,11 +70,7 @@
   },
   "water": {
     "icospherePath": "media/universe/solar_system/earth/data",
-    "color": [
-      0,
-      0.3,
-      0.6
-    ],
+    "color": [0, 0.3, 0.6],
     "radius": 6378000,
     "wavesHeight": 2
   },
@@ -97,17 +81,9 @@
     "rayleighHeight": 100000,
     "mieDensity": 0.011632,
     "mieHeight": 15000,
-    "mieColor": [
-      1.0,
-      1.0,
-      1.0
-    ],
+    "mieColor": [1.0, 1.0, 1.0],
     "clouds": {
-      "color": [
-        1.0,
-        1.0,
-        1.0
-      ],
+      "color": [1.0, 1.0, 1.0],
       "minHeight": 1500,
       "maxHeight": 22500
     }
@@ -118,7 +94,8 @@
       "y": "1.0",
       "z": "0.0"
     },
-    "rotationPeriod": 86400,
+    //    "rotationPeriod": 86400,
+    "rotationPeriod": 864000000,
     "mass": "5972190000000000000000000",
     "motion": {
       "Orbiting": {
@@ -131,9 +108,7 @@
         "orbit_period": "31558118.4"
       }
     },
-    "satellitePaths": [
-      "media/universe/solar_system/earth/moon/moon.json"
-    ]
+    "satellitePaths": ["media/universe/solar_system/earth/moon/moon.json"]
   },
   "generatorConfig": {
     "outDir": "data",

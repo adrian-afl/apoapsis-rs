@@ -20,7 +20,7 @@ use planet_generator_library::load_binary_maps::{
     get_water_maps_resolution, load_binary_water_map,
 };
 use rapier3d_f64::geometry::ColliderBuilder;
-use rapier3d_f64::math::Point;
+use rapier3d_f64::math::Vector;
 use rayon::iter::ParallelIterator;
 use rayon::prelude::IntoParallelRefIterator;
 use renderer_common::errors::RenderingError;
@@ -303,7 +303,10 @@ impl WaterIcosphere {
             } else {
                 Some(
                     ColliderBuilder::trimesh(
-                        vertices.iter().map(|x| Point::new(x.x, x.y, x.z)).collect(),
+                        vertices
+                            .iter()
+                            .map(|x| Vector::new(x.x, x.y, x.z))
+                            .collect(),
                         indices,
                     )
                     .unwrap(),

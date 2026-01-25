@@ -1,5 +1,5 @@
-use dashu_float::DBig;
 use dashu_float::ops::Abs;
+use dashu_float::{DBig, FBig};
 use std::ops::Deref;
 use std::str::FromStr;
 use std::sync::LazyLock;
@@ -46,11 +46,13 @@ pub fn cos(x: DBig, precision: i64) -> DBig {
 }
 
 pub fn dbig_to_f64(v: &DBig) -> f64 {
-    f64::from_str(v.to_string().as_str()).unwrap()
+    v.to_f64().value()
+    // f64::from_str(v.to_string().as_str()).unwrap()
 }
 
 pub fn f64_to_dbig(v: f64) -> DBig {
-    DBig::from_str(v.to_string().as_str()).unwrap()
+    let v: FBig<dashu_float::round::mode::HalfAway> = FBig::try_from(v).unwrap();
+    v.with_precision(16).value().to_decimal().value()
 }
 
 #[cfg(test)]
@@ -66,11 +68,14 @@ mod tests {
         for i in -10..10 {
             for f in -10..10 {
                 let v = i as f64 + (f as f64) / 10.0;
-                let dec = DBig::from_str(v.to_string().as_str()).unwrap();
+                let dec = f64_to_dbig(v);
                 let sin_dec = sin(dec, 32);
                 let sin_ref = v.sin();
-                // println!("sin({v}) resulted in {sin_dec}, reference is {sin_ref}");
-                assert!((dbig_to_f64(&sin_dec) - sin_ref).abs() < 0.0000000000001);
+                println!(
+                    "sin({v}) resulted in {sin_dec}, diff is {}",
+                    (dbig_to_f64(&sin_dec) - sin_ref).abs()
+                );
+                assert!((dbig_to_f64(&sin_dec) - sin_ref).abs() < 0.0000000001);
             }
         }
     }
@@ -80,11 +85,14 @@ mod tests {
         for i in -10..10 {
             for f in -10..10 {
                 let v = i as f64 + (f as f64) / 10.0;
-                let dec = DBig::from_str(v.to_string().as_str()).unwrap();
+                let dec = f64_to_dbig(v);
                 let cos_dec = cos(dec, 32);
                 let cos_ref = v.cos();
-                // println!("sin({v}) resulted in {sin_dec}, reference is {sin_ref}");
-                assert!((dbig_to_f64(&cos_dec) - cos_ref).abs() < 0.0000000000001);
+                println!(
+                    "cos({v}) resulted in {cos_dec}, diff is {}",
+                    (dbig_to_f64(&cos_dec) - cos_ref).abs()
+                );
+                assert!((dbig_to_f64(&cos_dec) - cos_ref).abs() < 0.0000000001);
             }
         }
     }

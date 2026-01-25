@@ -1,6 +1,7 @@
 use crate::body_definitions::{BodyCelestialBodyDefinition, BodyMotion};
 use dashu_float::DBig;
 use dashu_float::ops::SquareRoot;
+use glam::{DQuat, DVec3};
 use math::decimal_matrix_3d::DecimalMatrix3d;
 use math::decimal_vector_3d::DecimalVector3d;
 use math::sin_cos::PIMUL2;
@@ -18,6 +19,11 @@ pub struct SimulatedBody {
     pub position: DecimalVector3d,
     pub velocity: DecimalVector3d,
     pub orientation: DecimalMatrix3d,
+
+    pub position_relative_to_camera_f64: DVec3,
+    pub orientation_f64: DQuat,
+    pub velocity_f64: DVec3,
+
     parent: Option<i32>, // -1 means no
     satellites: Vec<i32>,
 }
@@ -58,6 +64,9 @@ impl Simulation {
             position: DecimalVector3d::zero(),
             velocity: DecimalVector3d::zero(),
             orientation: DecimalMatrix3d::identity(),
+            velocity_f64: DVec3::ZERO,
+            position_relative_to_camera_f64: DVec3::ZERO,
+            orientation_f64: DQuat::IDENTITY,
         };
         simulated_body.body.dynamics.rotation_axis.normalize();
         match &mut simulated_body.body.dynamics.motion {
@@ -208,6 +217,10 @@ impl Simulation {
             let orientation = Self::get_body_orientation(time, body_immutable);
 
             let body = self.get_mut_body_by_id(item).unwrap();
+            body.position_relative_to_camera_f64 = (&position - camera_position).to_dvec3();
+            body.velocity_f64 = velocity.to_dvec3();
+            body.orientation_f64 = orientation.as_dquat();
+
             body.position = position;
             body.velocity = velocity;
             body.orientation = orientation;
@@ -257,6 +270,16 @@ impl Simulation {
         let body = self.get_body_by_name(body_name).unwrap();
         let axis = &body.body.dynamics.rotation_axis;
         let angular_body_vel = &*PIMUL2 / body.body.dynamics.rotation_period;
+        let angular_velocity_vector = axis * angular_body_vel;
+        angular_velocity_vector.cross(relative_point)
+    }
+
+    pub fn get_surface_velocity_f64(&self, body_name: &str, relative_point: DVec3) -> DVec3 {
+        let body = self.get_body_by_name(body_name).unwrap();
+        let axis = body.body.dynamics.rotation_axis.to_dvec3();
+        let angular_body_vel = (&*PIMUL2 / body.body.dynamics.rotation_period)
+            .to_f64()
+            .value();
         let angular_velocity_vector = axis * angular_body_vel;
         angular_velocity_vector.cross(relative_point)
     }
