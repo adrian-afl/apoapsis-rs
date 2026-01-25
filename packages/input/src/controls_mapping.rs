@@ -1,13 +1,16 @@
 use crate::controls::ControlEvent;
 use common_util::strip_json_line_comments::strip_json_line_comments;
 use gilrs::Button;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
+use ts_rs::TS;
 use winit::event::MouseButton;
 use winit::keyboard::{KeyCode, PhysicalKey};
+use winit::platform::scancode::PhysicalKeyExtScancode;
 
-#[derive(Clone, Debug, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize)]
+#[derive(Clone, Debug, Ord, PartialOrd, Eq, PartialEq, Hash, Serialize, Deserialize, TS)]
+#[ts(export)]
 pub enum ControlMapItem {
     Pause,
     MenuClickPrimary,
@@ -122,7 +125,12 @@ impl ControlsMapping {
         result
     }
 
-    pub fn map_keyboard_event(&self, key: PhysicalKey, state: bool) -> Vec<ControlEvent> {
+    pub fn map_keyboard_event(
+        &self,
+        key: PhysicalKey,
+        state: bool,
+        text: &str,
+    ) -> Vec<ControlEvent> {
         // println!("{:?}", key);
         let mut result = vec![];
         match key {
@@ -136,6 +144,16 @@ impl ControlsMapping {
                             false => ControlEvent::ControlRelease(control_map_item.clone()),
                         });
                     }
+                }
+
+                if let Some(scancode) = key.to_scancode() {
+                    result.push(match state {
+                        true => ControlEvent::RawKeyDown(scancode),
+                        false => ControlEvent::RawKeyUp(scancode),
+                    });
+                }
+                if text.len() > 0 {
+                    result.push(ControlEvent::RawText(text.to_owned()));
                 }
             }
             PhysicalKey::Unidentified(_) => (),

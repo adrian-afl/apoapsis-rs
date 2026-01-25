@@ -12,7 +12,10 @@ use rayon::join;
 use real_physics_engine::physics_system::PhysicsSystem;
 use renderer_common::camera::Camera;
 use renderer_common::resolution_config::ResolutionConfig;
+use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
+use tcpapi::send_event;
+use ts_rs::TS;
 use ui_renderer::ui_cursor_system::UICursorSystem;
 use ui_renderer::ui_raycast_system::{UIRaycastResultItem, UIRaycastSystem};
 use ui_renderer::ui_system::UISystem;
@@ -21,6 +24,18 @@ use universe_simulation::simulation::Simulation;
 use universe_simulation::universe_simulation_updater_system::UniverseSimulationUpdaterSystem;
 use vengine_rs::core::toolkit::VEToolkit;
 use winit::window::{CursorIcon, Window};
+
+#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[ts(export)]
+pub struct OnGameBootReadyEventData {
+    pub headless: bool,
+}
+
+// @api_event on_control_activate(ControlMapItem)
+// @api_event on_control_release(ControlMapItem)
+// @api_event on_raw_key_down(number)
+// @api_event on_raw_key_up(number)
+// @api_event on_raw_input_text(string)
 
 pub struct Game {
     // toolkit: Arc<VEToolkit>,
@@ -165,6 +180,7 @@ impl Game {
             self.remote_game_mode.ecs.time_counter.update_time();
             if let Some(ref mut controls) = self.controls {
                 controls.update_gamepad_helper();
+                let control_events = controls.get_new_events();
 
                 if controls
                     .get_new_events()
@@ -174,6 +190,26 @@ impl Game {
                     && let Some(ref mut rendering_system) = self.rendering_system
                 {
                     rendering_system.recreate_stages().unwrap();
+                }
+
+                for event in control_events {
+                    match event {
+                        ControlEvent::ControlActivate(v) => {
+                            send_event!("on_control_activate", v);
+                        }
+                        ControlEvent::ControlRelease(v) => {
+                            send_event!("on_control_release", v);
+                        }
+                        ControlEvent::RawKeyDown(v) => {
+                            send_event!("on_raw_key_down", v);
+                        }
+                        ControlEvent::RawKeyUp(v) => {
+                            send_event!("on_raw_key_up", v);
+                        }
+                        ControlEvent::RawText(v) => {
+                            send_event!("on_raw_input_text", v);
+                        }
+                    }
                 }
             }
         });

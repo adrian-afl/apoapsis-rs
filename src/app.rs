@@ -3,6 +3,7 @@ use glam::DVec2;
 use std::sync::{Arc, Mutex};
 use vengine_rs::core::toolkit::{App, VEToolkit};
 use winit::event::{DeviceEvent, DeviceId, ElementState, KeyEvent, MouseScrollDelta, WindowEvent};
+use winit::keyboard::SmolStr;
 use winit::window::Window;
 
 pub struct GameWindowApp {
@@ -33,8 +34,17 @@ impl App for GameWindowApp {
                         state,
                         physical_key,
                         repeat,
+                        text,
                         ..
                     } => {
+                        let text = match text {
+                            None => "",
+                            Some(ref x) => {
+                                let clone = x.as_str().clone();
+                                clone.trim();
+                                clone
+                            }
+                        };
                         if !repeat {
                             controls.on_key(
                                 physical_key,
@@ -42,6 +52,7 @@ impl App for GameWindowApp {
                                     ElementState::Pressed => true,
                                     ElementState::Released => false,
                                 },
+                                text,
                             )
                         }
                     }

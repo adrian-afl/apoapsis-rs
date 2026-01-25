@@ -2,6 +2,8 @@ import {
   emptyAttachedComponents,
   RemoteGameApi,
 } from "../generated/RemoteGameApi";
+import { BaseGameApi } from "../framework/BaseGameApi";
+import { OnRawInputText, OnRawKeyDown } from "../generated/RemoteGameEvents";
 
 class Label {
   public gameApi: RemoteGameApi;
@@ -58,10 +60,19 @@ class Label {
 export class DebugDisplay {
   public gameApi: RemoteGameApi;
   private debugValues: Record<string, Label>;
+
   private consoleLabels: Label[];
   private consoleStrings: string[];
 
-  public constructor(gameApi: RemoteGameApi) {
+  private promptString = "";
+  private promptLabel: Label;
+  private promptShown: boolean;
+
+  public constructor(
+    gameApi: RemoteGameApi,
+    baseApi: BaseGameApi,
+    onPrompt: (text: string) => void | Promise<void>,
+  ) {
     this.gameApi = gameApi;
     this.debugValues = {};
     this.consoleLabels = [];
@@ -75,6 +86,51 @@ export class DebugDisplay {
         await this.consoleLabels[i].setPosition(0.01, 0.01 + 0.03 * i);
       }
     })();
+
+    this.promptLabel = new Label(gameApi);
+    this.promptLabel.setPosition(0.01, 0.33);
+
+    const tildeKey = 41;
+    const backspaceKey = 14;
+    const enterKey = 28;
+    baseApi.subscribe(OnRawKeyDown, async (x) => {
+      if (x.data === tildeKey) {
+        this.promptShown = !this.promptShown;
+        if (this.promptShown) {
+          this.promptString = "";
+          await this.promptLabel.setLabel("$: ");
+        } else {
+          await this.promptLabel.setLabel("");
+        }
+      } else if (this.promptShown) {
+        if (x.data === backspaceKey) {
+          this.promptString = this.promptString.substring(
+            0,
+            this.promptString.length - 1,
+          );
+          await this.promptLabel.setLabel(`$: ${this.promptString}`);
+        } else if (x.data === enterKey) {
+          onPrompt(this.promptString);
+          await this.println(`>>> ${this.promptString}`);
+          this.promptShown = false;
+          await this.promptLabel.setLabel("");
+        }
+      }
+    });
+
+    baseApi.subscribe(OnRawInputText, async (x) => {
+      console.log({
+        value: x.data,
+        test: x.data.match(/^[A-Za-z0-9 \\\/.,()[\]\-=+!@#$%^&*]+$/),
+      });
+      if (
+        this.promptShown &&
+        x.data.match(/^[A-Za-z0-9 \\\/.,()[\]\-=+!@#$%^&*]+$/) !== null
+      ) {
+        this.promptString += x.data;
+        await this.promptLabel.setLabel(`$: ${this.promptString}`);
+      }
+    });
   }
 
   public async println(line: string) {

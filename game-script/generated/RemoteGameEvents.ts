@@ -22,11 +22,52 @@ import { UITextureComponent } from "./types/UITextureComponent.js";
 import { UITextComponent } from "./types/UITextComponent.js";
 import { UIIsRaycastableComponent } from "./types/UIIsRaycastableComponent.js";
 import { UIRequireFreeCursorComponent } from "./types/UIRequireFreeCursorComponent.js";
+import { ControlMapItem } from "./types/ControlMapItem.js";
 import { OnPhysicsCollisionEventData } from "./types/OnPhysicsCollisionEventData.js";
 import { OnGameBootReadyEventData } from "./types/OnGameBootReadyEventData.js";
 
 export abstract class AbstractBaseEvent {
   public eventName = this.constructor.name;
+}
+
+export class OnControlActivate extends AbstractBaseEvent {
+  public readonly data: ControlMapItem;
+  public constructor(input: ControlMapItem) {
+    super();
+    this.data = input;
+  }
+}
+
+export class OnControlRelease extends AbstractBaseEvent {
+  public readonly data: ControlMapItem;
+  public constructor(input: ControlMapItem) {
+    super();
+    this.data = input;
+  }
+}
+
+export class OnRawKeyDown extends AbstractBaseEvent {
+  public readonly data: number;
+  public constructor(input: number) {
+    super();
+    this.data = input;
+  }
+}
+
+export class OnRawKeyUp extends AbstractBaseEvent {
+  public readonly data: number;
+  public constructor(input: number) {
+    super();
+    this.data = input;
+  }
+}
+
+export class OnRawInputText extends AbstractBaseEvent {
+  public readonly data: string;
+  public constructor(input: string) {
+    super();
+    this.data = input;
+  }
 }
 
 export class OnRemoteGameModeInitialized extends AbstractBaseEvent {}
@@ -50,6 +91,11 @@ export class OnGameBootReady extends AbstractBaseEvent {
 export class Startup extends AbstractBaseEvent {}
 
 export const eventsConstructors = {
+  on_control_activate: (input: ControlMapItem) => new OnControlActivate(input),
+  on_control_release: (input: ControlMapItem) => new OnControlRelease(input),
+  on_raw_key_down: (input: number) => new OnRawKeyDown(input),
+  on_raw_key_up: (input: number) => new OnRawKeyUp(input),
+  on_raw_input_text: (input: string) => new OnRawInputText(input),
   on_remote_game_mode_initialized: () => new OnRemoteGameModeInitialized(),
   on_physics_collision_event: (input: OnPhysicsCollisionEventData) =>
     new OnPhysicsCollisionEvent(input),

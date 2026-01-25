@@ -11,3 +11,4 @@ serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 glam = { workspace = true }
 gilrs = { workspace = true, features = ["serde-serialize"] }
+ts-rs = { workspace = true }

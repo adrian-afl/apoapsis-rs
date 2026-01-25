@@ -1,4 +1,4 @@
-import { describe, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { setTimeout } from "node:timers/promises";
 import { emptyAttachedComponents } from "../generated/RemoteGameApi";
 import { boot } from "./util/boot";
@@ -9,7 +9,13 @@ import { setInterval } from "node:timers";
 import Decimal from "decimal.js";
 import { Quaternion } from "@aeroflightlabs/linear-math";
 import { DecimalVector3d } from "../generated/types/DecimalVector3d";
-import { OnPhysicsCollisionEvent } from "../generated/RemoteGameEvents";
+import {
+  OnControlActivate,
+  OnControlRelease,
+  OnPhysicsCollisionEvent,
+  OnRawInputText,
+  OnRawKeyDown,
+} from "../generated/RemoteGameEvents";
 import { DebugDisplay } from "../script/debugDisplay";
 import { dec } from "../framework/mathModule/decimalHelpers";
 
@@ -258,7 +264,34 @@ describe("physics simple tests", () => {
       console.log(e);
     });
 
-    const debugDisplay = new DebugDisplay(gameApi);
+    baseApi.subscribe(OnControlActivate, (e) => {
+      console.log(e);
+    });
+
+    baseApi.subscribe(OnControlRelease, (e) => {
+      console.log(e);
+    });
+
+    baseApi.subscribe(OnRawKeyDown, (e) => {
+      console.log(e);
+    });
+
+    baseApi.subscribe(OnRawKeyDown, (e) => {
+      console.log(e);
+    });
+
+    baseApi.subscribe(OnRawInputText, (e) => {
+      console.log(e);
+    });
+
+    const handlePrompt = (text: string) => {
+      if (text === "exit") {
+        kill();
+        expect.fail("exited");
+      }
+    };
+
+    const debugDisplay = new DebugDisplay(gameApi, baseApi, handlePrompt);
 
     await debugDisplay.println("Hello world");
     await debugDisplay.println("Another line");

@@ -1242,6 +1242,7 @@ dependencies = [
  "glam 0.29.2",
  "serde",
  "serde_json",
+ "ts-rs",
  "winit",
 ]
 

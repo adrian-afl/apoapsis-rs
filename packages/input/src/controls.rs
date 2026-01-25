@@ -1,16 +1,23 @@
 use crate::controls_mapping::{ControlMapItem, ControlsMapping};
 use crate::mouse_input::MouseInput;
 use gilrs::{Event, EventType, Gamepad, GamepadId, Gilrs};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
+use ts_rs::TS;
 use winit::event::MouseButton;
-use winit::keyboard::PhysicalKey;
+use winit::keyboard::{KeyCode, PhysicalKey};
 use winit::window::Window;
 
-#[derive(Clone, Debug, Ord, PartialOrd, Eq, PartialEq)]
+#[derive(Clone, Debug, Ord, PartialOrd, Eq, PartialEq, Deserialize, Serialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
 pub enum ControlEvent {
     ControlActivate(ControlMapItem),
     ControlRelease(ControlMapItem),
+    RawKeyDown(u32),
+    RawKeyUp(u32),
+    RawText(String),
 }
 
 pub struct Controls {
@@ -55,8 +62,8 @@ impl Controls {
         }
     }
 
-    pub fn on_key(&mut self, key: PhysicalKey, state: bool) {
-        let mapped = self.mapping.map_keyboard_event(key, state);
+    pub fn on_key(&mut self, key: PhysicalKey, state: bool, text: &str) {
+        let mapped = self.mapping.map_keyboard_event(key, state, text);
         for event in mapped {
             self.handle_control_event(event);
         }
@@ -100,15 +107,19 @@ impl Controls {
     }
 
     fn handle_control_event(&mut self, event: ControlEvent) {
-        let (item, state) = match &event {
-            ControlEvent::ControlActivate(item) => (item, true),
-            ControlEvent::ControlRelease(item) => (item, false),
+        let item_state = match &event {
+            ControlEvent::ControlActivate(item) => Some((item, true)),
+            ControlEvent::ControlRelease(item) => Some((item, false)),
+            _ => None,
         };
-        match self.controls_state.get_mut(item) {
-            None => {
-                self.controls_state.insert(item.clone(), state);
+        if let Some(item_state) = item_state {
+            let (item, state) = item_state;
+            match self.controls_state.get_mut(item) {
+                None => {
+                    self.controls_state.insert(item.clone(), state);
+                }
+                Some(current) => *current = state,
             }
-            Some(current) => *current = state,
         }
         self.new_events.push(event);
     }
