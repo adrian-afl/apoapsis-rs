@@ -264,7 +264,7 @@ impl RealPhysicsSystem {
     pub fn step(&mut self, delta: f64) {
         // dbg!(delta);
         self.integration_parameters.dt = delta;
-        self.integration_parameters.max_ccd_substeps = 1;
+        self.integration_parameters.max_ccd_substeps = 8;
         self.physics_pipeline.step(
             self.gravity,
             &self.integration_parameters,

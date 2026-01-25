@@ -138,14 +138,14 @@ void main() {
     );
     
     vec3 atmosphereAdditive = rayleighMieResult.rayleigh 
-            + sun * (1.0 - step(0.001, geometryHit));
+            + sun * (1.0 - step(0.00001, geometryHit));
     vec4 atmosphereAlpha = vec4(
             vec3(
                 mix(resultClouds, rayleighMieResult.mie.rgb, rayleighMieResult.mie.a)
             ),
             min(1.0, cloudsResult.coverage + rayleighMieResult.mie.a)
     );
-    float hitsGeometry = step(0.001, geometryHit);
+    float hitsGeometry = step(0.00001, geometryHit);
     vec3 meshFinal = meshIncoming * hitsGeometry;
 
     imageStore(outAdditiveRGB, iUV, vec4(atmosphereAdditive.rgb, 0.0));

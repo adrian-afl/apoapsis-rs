@@ -17,7 +17,7 @@ export interface GameApiOutgoingMessage {
 
 export type GameApiTransmitter = (
   message: GameApiOutgoingMessage & { replyTo: string },
-) => void;
+) => Promise<void>;
 
 export type Constructor<T> = new (...args: any[]) => T;
 
@@ -82,12 +82,19 @@ export class BaseGameApi {
     }
   }
 
-  public send(message: GameApiOutgoingMessage): Promise<unknown> {
+  public async send(message: GameApiOutgoingMessage): Promise<unknown> {
     const replyTo = `replyTo/${crypto.randomUUID()}`;
-    return new Promise<unknown>((resolve, reject) => {
+    const promise = new Promise<unknown>((resolve, reject) => {
       this.waitingForReply.set(replyTo, { resolve, reject });
-      this.transmitter({ ...message, replyTo });
+      setTimeout(() => {
+        reject(
+          new Error(`Timed out waiting for command reply: ${message.name}`),
+        );
+      }, 5000);
     });
+    await this.transmitter({ ...message, replyTo });
+
+    return promise;
   }
 
   public subscribe<T extends AbstractBaseEvent>(

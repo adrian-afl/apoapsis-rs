@@ -300,7 +300,7 @@ impl RenderingSystem {
         let mut new_meshes: Vec<(u64, Mesh)> = profile!("rendering_system update / new_meshes", {
             entities
                 .par_iter()
-                .filter_map(|entity| {
+                .map(|entity| {
                     let entity = &ecs[*entity];
                     // println!("RenderingSystem / Parallel {}", entity.id);
                     let transform_component = entity.components.transform.as_ref().unwrap();
@@ -308,12 +308,10 @@ impl RenderingSystem {
 
                     let existing_ids = existing_ids.clone();
 
-                    let mut new_mesh = None;
+                    let mut new_meshes = Vec::new();
 
                     for mesh_component in mesh_components {
-                        let mut exists = existing_ids.contains(&mesh_component.id);
-
-                        if !exists {
+                        if !existing_ids.contains(&mesh_component.id) {
                             // println!("RenderingSystem / For mesh component {}", mesh_component.id);
                             let relative_position =
                                 &transform_component.position - &camera.position;
@@ -327,15 +325,15 @@ impl RenderingSystem {
                                         println!("Failed to create a mesh! Reason: {}", err)
                                     }
                                     Ok(mesh) => {
-                                        new_mesh = Some((mesh_component.id, mesh));
-                                        exists = true;
+                                        new_meshes.push((mesh_component.id, mesh));
                                     }
                                 }
                             }
                         }
                     }
-                    new_mesh
+                    new_meshes
                 })
+                .flatten()
                 .collect()
         });
 

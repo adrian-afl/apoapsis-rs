@@ -461,7 +461,7 @@ impl PhysicsSystem {
         let body_collider_tuple = real_physics_system.add_body_with_collider(
             rigid_body,
             build_collider(&real_physics.shape_description, rendering_system)
-                .restitution(0.8)
+                .restitution(0.1)
                 .restitution_combine_rule(CoefficientCombineRule::Min)
                 .active_events(ActiveEvents::all())
                 .active_collision_types(ActiveCollisionTypes::all())
@@ -588,13 +588,13 @@ impl PhysicsSystem {
         }
     }
 
-    pub fn update(
+    pub fn update_part_1(
         &mut self,
         ecs: &mut ECSWorld,
         universe_simulation: &Simulation,
         rendering_system: &RenderingSystem,
         delta_time: f64,
-    ) {
+    ) -> bool {
         let mut context = PhysicsUpdateContext {
             ecs,
             universe_simulation,
@@ -612,12 +612,33 @@ impl PhysicsSystem {
             profile!("phase1", {
                 self.phase1(&mut context);
             });
-            profile!("real_physics_system step", {
-                self.real_physics_system.write().unwrap().step(delta_time);
-            });
-            profile!("phase2", {
-                self.phase2(&mut context);
-            });
         }
+
+        should_continue
+    }
+
+    pub fn update_part_2_physics_step(&mut self, delta_time: f64) {
+        profile!("real_physics_system step", {
+            self.real_physics_system.write().unwrap().step(delta_time);
+        });
+    }
+
+    pub fn update_part_3(
+        &mut self,
+        ecs: &mut ECSWorld,
+        universe_simulation: &Simulation,
+        rendering_system: &RenderingSystem,
+        delta_time: f64,
+    ) {
+        let mut context = PhysicsUpdateContext {
+            ecs,
+            universe_simulation,
+            rendering_system,
+            delta_time,
+        };
+
+        profile!("phase2", {
+            self.phase2(&mut context);
+        });
     }
 }

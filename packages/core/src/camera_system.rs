@@ -85,7 +85,7 @@ impl CameraSystem {
                     camera.set_perspective(
                         first_person_component.fov * (PI / 180.0),
                         4.0 / 3.0,
-                        0.1,
+                        0.01,
                         9999999999.0,
                     );
 
@@ -128,7 +128,7 @@ impl CameraSystem {
                     camera.set_perspective(
                         camcontrol.fov * (PI / 180.0),
                         4.0 / 3.0,
-                        0.1,
+                        0.01,
                         9999999999.0,
                     );
 

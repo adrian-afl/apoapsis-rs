@@ -22,3 +22,4 @@ serde_json = { workspace = true }
 vengine-rs = { workspace = true }
 winit = { workspace = true, features = ["rwh_06", "serde"] }
 glam = { workspace = true }
+rayon = { workspace = true }

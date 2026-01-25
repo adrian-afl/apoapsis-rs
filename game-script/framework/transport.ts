@@ -3,6 +3,7 @@ import {
   GameApiOutgoingMessage,
 } from "./BaseGameApi.js";
 import * as net from "node:net";
+import { clearTimeout, promises } from "node:timers";
 
 export interface RemoteApiTransport {
   connect(): Promise<void>;
@@ -29,10 +30,19 @@ export class TCPTransport implements RemoteApiTransport {
   async connect(): Promise<void> {
     const [host, port] = this.host.split(":");
     const client = await new Promise<net.Socket>((resolve) => {
-      const c = net.createConnection({ host, port: parseInt(port) }, () => {
-        console.log("connected to server!");
-        resolve(c);
-      });
+      const c = net.createConnection(
+        {
+          host,
+          port: parseInt(port),
+          keepAlive: true,
+          allowHalfOpen: true,
+          noDelay: true,
+        },
+        () => {
+          console.log("connected to server!");
+          resolve(c);
+        },
+      );
     });
 
     this.connection = client;
@@ -42,7 +52,7 @@ export class TCPTransport implements RemoteApiTransport {
     client.on("data", (data) => {
       // console.log("RECS", data.toString("utf-8"));
       bigBuffer.push(...data);
-      while (true) {
+      while (bigBuffer.length > 0) {
         const indexOf0 = bigBuffer.indexOf(0x00);
         if (indexOf0 === -1) {
           // not found
@@ -85,7 +95,12 @@ export class TCPTransport implements RemoteApiTransport {
     this.connection?.resetAndDestroy();
   }
 
-  send(message: GameApiOutgoingMessage & { replyTo: string }): void {
+  private outQueue: string[] = [];
+  private loopActive: boolean = false;
+
+  async send(
+    message: GameApiOutgoingMessage & { replyTo: string },
+  ): Promise<void> {
     if (!this.connection) {
       throw new Error("not connected to server");
     }
@@ -97,13 +112,47 @@ export class TCPTransport implements RemoteApiTransport {
     //       : message.payload.toString()
     //   }\0`,
     // );
-    this.connection.write(
+    this.outQueue.push(
       `${message.name}\n${message.replyTo}\n${
         typeof message.payload === "object"
           ? JSON.stringify(message.payload)
           : message.payload.toString()
       }\0`,
     );
+    if (this.loopActive) {
+      return;
+    }
+    this.loopActive = true;
+    void this.flushQueue();
     // this.connection.end();
+  }
+
+  private async flushQueue() {
+    while (true) {
+      if (this.outQueue.length === 0) {
+        break;
+      }
+      console.log(this.outQueue.length);
+      let bigmsg = this.outQueue.join("");
+      this.outQueue = [];
+      await new Promise<void>(async (resolve, reject) => {
+        while (!this.connection.writable) {
+          await promises.setTimeout(1);
+        }
+        let abort = setTimeout(() => {
+          console.log("DED");
+          reject(new Error(`Timed out waiting for write to complete`));
+        }, 5000);
+        this.connection.write(bigmsg, (e) => {
+          clearTimeout(abort);
+          if (e) {
+            reject(e);
+          } else {
+            resolve();
+          }
+        });
+      });
+    }
+    this.loopActive = false;
   }
 }

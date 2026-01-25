@@ -8,6 +8,7 @@ use ecs::components::ui::ui_text_component::UIFontSize;
 use glam::DVec2;
 use input::controls::{ControlEvent, Controls};
 use input::controls_mapping::ControlMapItem;
+use rayon::join;
 use real_physics_engine::physics_system::PhysicsSystem;
 use renderer_common::camera::Camera;
 use renderer_common::resolution_config::ResolutionConfig;
@@ -200,8 +201,8 @@ impl Game {
         });
 
         if let Some(ref mut rendering_system) = self.rendering_system {
-            profile!("physics_system update", {
-                self.physics_system.update(
+            profile!("physics_system update part 1", {
+                self.physics_system.update_part_1(
                     stage_ecs,
                     &self.universe_simulation,
                     rendering_system, // TODO how to do it without rendering
@@ -271,12 +272,31 @@ impl Game {
         if let Some(ref mut rendering_system) = self.rendering_system
             && let Some(ref ui_system) = self.ui_system
         {
-            profile!("rendering_system update", {
-                rendering_system.update(
+            let dt = stage_ecs.time_counter.delta_time;
+            join(
+                || {
+                    profile!("rendering_system update", {
+                        rendering_system.update(
+                            stage_ecs,
+                            &self.universe_simulation,
+                            &self.current_camera,
+                            ui_system,
+                        );
+                    });
+                },
+                || {
+                    profile!("physics_system update part 2", {
+                        self.physics_system.update_part_2_physics_step(dt);
+                    });
+                },
+            );
+
+            profile!("physics_system update part 3", {
+                self.physics_system.update_part_3(
                     stage_ecs,
                     &self.universe_simulation,
-                    &self.current_camera,
-                    ui_system,
+                    rendering_system, // TODO how to do it without rendering
+                    stage_ecs.time_counter.delta_time,
                 );
             });
         }

@@ -10,6 +10,8 @@ import Decimal from "decimal.js";
 import { Quaternion } from "@aeroflightlabs/linear-math";
 import { DecimalVector3d } from "../generated/types/DecimalVector3d";
 import { OnPhysicsCollisionEvent } from "../generated/RemoteGameEvents";
+import { DebugDisplay } from "../script/debugDisplay";
+import { dec } from "../framework/mathModule/decimalHelpers";
 
 describe("physics simple tests", () => {
   // afterAll(() => process.exit(0));
@@ -84,7 +86,7 @@ describe("physics simple tests", () => {
     const earthDef = await gameApi.getCelestialBodyDefinition("earth");
     console.log(earthDef);
 
-    const radius = earthDef.terrain.radius + 37.52 * 1000.0;
+    const radius = earthDef.terrain.radius + 37.51 * 1000.0;
 
     const newPosition = DVec3.fromDecimalVector3d(earthPosition).addVec3(
       DVec3.fromNumbers(100000.0, 0.0, -radius),
@@ -136,9 +138,9 @@ describe("physics simple tests", () => {
           real_physics: {
             shape_description: {
               box: {
-                sizeX: 3.0,
-                sizeY: 3.0,
-                sizeZ: 3.0,
+                sizeX: 1.0,
+                sizeY: 1.0,
+                sizeZ: 1.0,
               },
             },
             override_real_simulation_cutoff: null,
@@ -150,6 +152,27 @@ describe("physics simple tests", () => {
                 material: {
                   color: {
                     color: [1.0, 1.0, 1.0],
+                  },
+                  roughness: {
+                    value: 1.0,
+                  },
+                  metalness: {
+                    value: 0.0,
+                  },
+                  emission: {
+                    color: [1.0, 0.0, 0.0],
+                  },
+                  bump: null,
+                  normal: null,
+                },
+              },
+            },
+            {
+              description: {
+                geometryPath: "media/axes.pnut.raw",
+                material: {
+                  color: {
+                    color: [1.0, 0.0, 1.0],
                   },
                   roughness: {
                     value: 1.0,
@@ -225,27 +248,6 @@ describe("physics simple tests", () => {
     //     .build(),
     // });
 
-    const { id: labelId } = await gameApi.addEntity({
-      components: buildComponents()
-        .add({
-          ui_text: {
-            color: [1.0, 1.0, 1.0, 1.0],
-            content: "Keke",
-            font_size: "Medium",
-          },
-          ui_box: {
-            orientation: 0,
-            z_index: 1,
-            position: [0.5, 0.5],
-            size: [0.1, 0.1],
-          },
-          ui_color: {
-            color: [0.0, 0.0, 0.0, 0.0],
-          },
-        })
-        .build(),
-    });
-
     // console.log(
     //   DVec3.fromDecimalVector3d(
     //     (await gameApi.transform.get(entityId)).position,
@@ -256,24 +258,48 @@ describe("physics simple tests", () => {
       console.log(e);
     });
 
-    setInterval(async () => {
-      const transform = await gameApi.transform.get(playerEID);
-      const simple_physics = await gameApi.simplePhysics.get(playerEID);
-      const altitude = await gameApi.getRealAltitudeOverCelestialBody(
-        "earth",
-        transform.position,
-      );
+    const debugDisplay = new DebugDisplay(gameApi);
 
-      const raycast = await gameApi.raycastRealPhysics(
-        DVec3.fromNumbersArray(simple_physics.linear_velocity)
-          .normalized()
-          .mulScalar(new Decimal(3.0))
-          .asNumbers(),
-        DVec3.fromDecimalVector3d(earthPosition)
-          .subVec3(newPosition)
-          .normalized()
-          .asNumbers(),
-      );
+    await debugDisplay.println("Hello world");
+    await debugDisplay.println("Another line");
+    await debugDisplay.println("Test!!!!!!!");
+
+    await debugDisplay.println("Hello world");
+    await debugDisplay.println("Another line");
+    await debugDisplay.println("Test!!!!!!!");
+
+    await debugDisplay.println("Hello world");
+    await debugDisplay.println("Another line");
+    await debugDisplay.println("Test!!!!!!!");
+
+    await debugDisplay.println("Hello world");
+    await debugDisplay.println("Another line");
+    await debugDisplay.println("Test!!!!!!!");
+
+    await debugDisplay.debug("Altitude", "123.0");
+    await debugDisplay.debug("Raycast", "123.0");
+
+    const main = async () => {
+      const [transform, simple_physics] = await Promise.all([
+        gameApi.transform.get(playerEID),
+        gameApi.simplePhysics.get(playerEID),
+      ]);
+      const [altitude, raycast] = await Promise.all([
+        gameApi.getApproximateAltitudeOverCelestialBody(
+          "earth",
+          transform.position,
+        ),
+        gameApi.raycastRealPhysics(
+          DVec3.fromNumbersArray(simple_physics.linear_velocity)
+            .normalized()
+            .mulScalar(new Decimal(3.0))
+            .asNumbers(),
+          DVec3.fromDecimalVector3d(earthPosition)
+            .subVec3(newPosition)
+            .normalized()
+            .asNumbers(),
+        ),
+      ]);
 
       // console.log(
       //   altitude,
@@ -281,29 +307,48 @@ describe("physics simple tests", () => {
       //   simple_physics.linear_velocity,
       //   raycast,
       // );
+      await Promise.all([
+        debugDisplay.debug("Altitude", dec(altitude).toFixed(4)),
+        debugDisplay.debug("Raycast", raycast.toFixed(4)),
+        debugDisplay.debug(
+          "LinVel",
+          DVec3.fromNumbersArray(simple_physics.linear_velocity).toString(4),
+        ),
+        debugDisplay.debug("Now", new Date().toLocaleString()),
+      ]);
 
-      await gameApi.uIText.set(labelId, {
-        color: [1.0, 1.0, 1.0, 1.0],
-        content: altitude.terrain.toString(),
-        font_size: "Medium",
-      });
-    }, 100.0);
-    await setTimeout(10000.0);
+      // await gameApi.uIText.set(labelId, {
+      //   color: [1.0, 1.0, 1.0, 1.0],
+      //   content: altitude.toString(),
+      //   font_size: "Medium",
+      // });
 
-    fs.writeFileSync(
-      "debug-ecs.json",
-      JSON.stringify(await gameApi.serializeWorld(), undefined, 2),
-    );
-    fs.writeFileSync(
-      "points.json",
-      JSON.stringify(
-        await gameApi.getDebugRealPhysicsWireframe(),
-        undefined,
-        2,
-      ),
-    );
+      console.log("main fin");
+
+      global.setTimeout(async () => {
+        await main();
+      }, 100);
+    };
+
+    void main();
 
     await setTimeout(1000000.0);
+
+    //
+    // fs.writeFileSync(
+    //   "debug-ecs.json",
+    //   JSON.stringify(await gameApi.serializeWorld(), undefined, 2),
+    // );
+    // fs.writeFileSync(
+    //   "points.json",
+    //   JSON.stringify(
+    //     await gameApi.getDebugRealPhysicsWireframe(),
+    //     undefined,
+    //     2,
+    //   ),
+    // );
+    //
+    // await setTimeout(1000000.0);
 
     // console.log(await gameApi.getDebugRealPhysicsWireframe());
     //
