@@ -76,7 +76,9 @@ pub enum ControlMapItem {
     DebugMoreExposure,
     DebugLessExposure,
 
-    DebugMouseLeft,
+    MouseLeft,
+    MouseRight,
+    MouseMiddle,
 }
 
 #[derive(Debug, Clone, Deserialize)]

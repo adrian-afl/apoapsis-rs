@@ -32,7 +32,13 @@
     const geometry = new THREE.BufferGeometry();
     const material = new THREE.LineBasicMaterial({vertexColors: true});
 
-    const data = await (await fetch("points.json")).json();
+    const data = await (await fetch("http://localhost:9999/remote/get_debug_real_physics_wireframe", {
+        method: "POST",
+        body: "{}",
+        headers: {
+            "content-type": "application/json"
+        }
+    })).json();
 
     const linepoints = data.lines;
     const linecolors = data.colors;

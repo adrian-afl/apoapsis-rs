@@ -47,4 +47,6 @@ export type ControlMapItem =
   | "DebugZoomOut"
   | "DebugMoreExposure"
   | "DebugLessExposure"
-  | "DebugMouseLeft";
+  | "MouseLeft"
+  | "MouseRight"
+  | "MouseMiddle";

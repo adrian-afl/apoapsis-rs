@@ -28,7 +28,9 @@
     "FlightTranslateBackwards": "KeyS"
   },
   "mouse_buttons": {
-    "DebugMouseLeft": "Left"
+    "MouseLeft": "Left",
+    "MouseRight": "Right",
+    "MouseMiddle": "Middle"
   },
   "gamepad_buttons": {
     "Start": "Start",

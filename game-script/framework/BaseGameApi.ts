@@ -3,6 +3,8 @@ import {
   eventsConstructors,
   AbstractBaseEvent,
 } from "../generated/RemoteGameEvents";
+import fastify from "fastify";
+import * as fs from "node:fs";
 
 export interface GameApiIncomingMessage {
   name: string;
@@ -57,6 +59,29 @@ export class BaseGameApi {
         reject: (payload: unknown) => void | Promise<void>;
       }
     >();
+
+    const server = fastify();
+
+    server.post("/remote/:command", async (request, reply) => {
+      const { command } = request.params as { command: string };
+      return this.send({
+        name: "command." + command,
+        payload: request.body,
+      });
+    });
+
+    server.get("/", async (request, reply) => {
+      reply.header("content-type", "text/html");
+      reply.send(fs.readFileSync("./threejs.html"));
+    });
+
+    server.listen({ port: 9999 }, (err, address) => {
+      if (err) {
+        console.error(err);
+        process.exit(1);
+      }
+      console.log(`Fastify Debug Server listening at ${address}`);
+    });
   }
 
   public receive(message: GameApiIncomingMessage): void {
