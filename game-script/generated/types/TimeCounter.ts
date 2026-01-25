@@ -4,4 +4,5 @@ export type TimeCounter = {
   lastTime: number;
   totalTime: number;
   deltaTime: number;
+  avgDeltaTime: number;
 };

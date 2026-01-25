@@ -25,6 +25,7 @@ export async function boot(port: number, headless?: boolean) {
 
   return {
     gameApi,
+    baseApi,
     kill: () => {
       gameInstance.kill();
     },

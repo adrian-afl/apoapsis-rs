@@ -22,6 +22,7 @@ import { UITextureComponent } from "./types/UITextureComponent.js";
 import { UITextComponent } from "./types/UITextComponent.js";
 import { UIIsRaycastableComponent } from "./types/UIIsRaycastableComponent.js";
 import { UIRequireFreeCursorComponent } from "./types/UIRequireFreeCursorComponent.js";
+import { OnPhysicsCollisionEventData } from "./types/OnPhysicsCollisionEventData.js";
 import { OnGameBootReadyEventData } from "./types/OnGameBootReadyEventData.js";
 
 export abstract class AbstractBaseEvent {
@@ -29,6 +30,14 @@ export abstract class AbstractBaseEvent {
 }
 
 export class OnRemoteGameModeInitialized extends AbstractBaseEvent {}
+
+export class OnPhysicsCollisionEvent extends AbstractBaseEvent {
+  public readonly data: OnPhysicsCollisionEventData;
+  public constructor(input: OnPhysicsCollisionEventData) {
+    super();
+    this.data = input;
+  }
+}
 
 export class OnGameBootReady extends AbstractBaseEvent {
   public readonly data: OnGameBootReadyEventData;
@@ -42,6 +51,8 @@ export class Startup extends AbstractBaseEvent {}
 
 export const eventsConstructors = {
   on_remote_game_mode_initialized: () => new OnRemoteGameModeInitialized(),
+  on_physics_collision_event: (input: OnPhysicsCollisionEventData) =>
+    new OnPhysicsCollisionEvent(input),
   on_game_boot_ready: (input: OnGameBootReadyEventData) =>
     new OnGameBootReady(input),
   startup: () => new Startup(),

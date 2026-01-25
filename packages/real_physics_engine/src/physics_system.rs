@@ -17,6 +17,8 @@ use glam::{DQuat, DVec3};
 use math::decimal_vector_3d::DecimalVector3d;
 use math::sin_cos::f64_to_dbig;
 use rapier3d_f64::dynamics::CoefficientCombineRule;
+use rapier3d_f64::geometry::ActiveCollisionTypes;
+use rapier3d_f64::pipeline::ActiveEvents;
 use rapier3d_f64::prelude::{RigidBodyBuilder, RigidBodyHandle};
 use rayon::iter::IntoParallelRefIterator;
 use rayon::iter::ParallelIterator;
@@ -157,6 +159,7 @@ impl PhysicsSystem {
 
                     let handle_or_none = self.handle_real_physics_simulation_start_stop(
                         context.rendering_system,
+                        entity.id,
                         transform,
                         simple_physics,
                         real_physics,
@@ -382,6 +385,7 @@ impl PhysicsSystem {
     fn handle_real_physics_simulation_start_stop(
         &self,
         rendering_system: &RenderingSystem,
+        entity_id: u64,
         transform: &TransformComponent,
         simple_physics: &SimplePhysicsComponent,
         real_physics: &RealPhysicsComponent,
@@ -421,6 +425,7 @@ impl PhysicsSystem {
                 rendering_system,
                 &mut real_physics_system,
                 &mut currently_simulated_bodies,
+                entity_id,
                 transform,
                 simple_physics,
                 real_physics,
@@ -435,6 +440,7 @@ impl PhysicsSystem {
         rendering_system: &RenderingSystem,
         real_physics_system: &mut RealPhysicsSystem,
         currently_simulated_bodies: &mut HashMap<u64, SimulatedBody>,
+        entity_id: u64,
         transform: &TransformComponent,
         simple_physics: &SimplePhysicsComponent,
         real_physics: &RealPhysicsComponent,
@@ -450,11 +456,15 @@ impl PhysicsSystem {
                 .additional_mass(999999.0),
             // false => RigidBodyBuilder::fixed().ccd_enabled(false),
         };
+        let mut rigid_body = rigid_body_builder.build();
+        rigid_body.user_data = entity_id as u128;
         let body_collider_tuple = real_physics_system.add_body_with_collider(
-            rigid_body_builder.build(),
+            rigid_body,
             build_collider(&real_physics.shape_description, rendering_system)
                 .restitution(0.8)
                 .restitution_combine_rule(CoefficientCombineRule::Min)
+                .active_events(ActiveEvents::all())
+                .active_collision_types(ActiveCollisionTypes::all())
                 .build(),
         );
 

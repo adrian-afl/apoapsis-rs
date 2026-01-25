@@ -9,12 +9,13 @@ import { setInterval } from "node:timers";
 import Decimal from "decimal.js";
 import { Quaternion } from "@aeroflightlabs/linear-math";
 import { DecimalVector3d } from "../generated/types/DecimalVector3d";
+import { OnPhysicsCollisionEvent } from "../generated/RemoteGameEvents";
 
 describe("physics simple tests", () => {
   // afterAll(() => process.exit(0));
 
   it("can spawn an entity with physics near a planet", async () => {
-    const { gameApi, kill } = await boot(7878, false);
+    const { gameApi, baseApi, kill } = await boot(7878, false);
 
     console.log(await gameApi.getAllCelestialBodyNames());
 
@@ -250,6 +251,11 @@ describe("physics simple tests", () => {
     //     (await gameApi.transform.get(entityId)).position,
     //   ).distanceTo(DVec3.fromDecimalVector3d(earthPosition)),
     // );
+
+    baseApi.subscribe(OnPhysicsCollisionEvent, (e) => {
+      console.log(e);
+    });
+
     setInterval(async () => {
       const transform = await gameApi.transform.get(playerEID);
       const simple_physics = await gameApi.simplePhysics.get(playerEID);
@@ -269,16 +275,16 @@ describe("physics simple tests", () => {
           .asNumbers(),
       );
 
-      console.log(
-        altitude,
-        transform.position,
-        simple_physics.linear_velocity,
-        raycast,
-      );
+      // console.log(
+      //   altitude,
+      //   transform.position,
+      //   simple_physics.linear_velocity,
+      //   raycast,
+      // );
 
       await gameApi.uIText.set(labelId, {
         color: [1.0, 1.0, 1.0, 1.0],
-        content: altitude.terrain.toString() + " - " + new Date().toISOString(),
+        content: altitude.terrain.toString(),
         font_size: "Medium",
       });
     }, 100.0);

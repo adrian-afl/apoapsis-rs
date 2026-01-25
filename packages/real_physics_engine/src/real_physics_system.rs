@@ -6,7 +6,84 @@ use rapier3d_f64::prelude::*;
 use rapier3d_f64::pipeline::DebugRenderPipeline;
 use rapier3d_f64::pipeline::DebugRenderStyle;
 use serde::{Deserialize, Serialize};
+use tcpapi::send_event;
 use ts_rs::TS;
+
+#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct OnPhysicsCollisionEventData {
+    pub entity_a: u64,
+    pub entity_b: u64,
+    pub total_impulse_magnitude: f64,
+}
+
+// @api_event on_physics_collision_event(OnPhysicsCollisionEventData)
+
+pub struct MyEventHandler {}
+
+impl EventHandler for MyEventHandler {
+    fn handle_collision_event(
+        &self,
+        bodies: &RigidBodySet,
+        colliders: &ColliderSet,
+        event: CollisionEvent,
+        contact_pair: Option<&ContactPair>,
+    ) {
+        match contact_pair {
+            None => {}
+            Some(contact_pair) => {
+                let c1 = colliders.get(contact_pair.collider1).unwrap();
+                let c2 = colliders.get(contact_pair.collider2).unwrap();
+                let b1 = bodies.get(c1.parent().unwrap()).unwrap();
+                let b2 = bodies.get(c2.parent().unwrap()).unwrap();
+                let entity_a = b1.user_data as u64;
+                let entity_b = b2.user_data as u64;
+
+                let total_impulse_magnitude = contact_pair.total_impulse_magnitude();
+
+                send_event!(
+                    "on_physics_collision_event",
+                    OnPhysicsCollisionEventData {
+                        entity_a,
+                        entity_b,
+                        total_impulse_magnitude
+                    }
+                );
+            }
+        }
+
+        // match contact_pair {
+        //     None => {
+        //         println!("handle_collision_event {:?}", event);
+        //     }
+        //     Some(contact_pair) => {
+        //         println!(
+        //             "handle_collision_event {:?}, {:?}, {:?}, {:?}",
+        //             event, contact_pair.collider1, contact_pair.collider2, contact_pair.manifolds
+        //         );
+        //     }
+        // }
+    }
+
+    fn handle_contact_force_event(
+        &self,
+        dt: f64,
+        bodies: &RigidBodySet,
+        colliders: &ColliderSet,
+        contact_pair: &ContactPair,
+        total_force_magnitude: f64,
+    ) {
+        // println!(
+        //     "handle_contact_force_event  {:?}, {:?}, {:?}, {:?}, {:?}",
+        //     dt,
+        //     contact_pair.collider1,
+        //     contact_pair.collider2,
+        //     contact_pair.manifolds,
+        //     total_force_magnitude
+        // );
+    }
+}
 
 pub struct RealPhysicsSystem {
     gravity: Vector,
@@ -21,6 +98,7 @@ pub struct RealPhysicsSystem {
     rigid_body_set: RigidBodySet,
     collider_set: ColliderSet,
     debug_render_pipeline: DebugRenderPipeline,
+    my_event_handler: MyEventHandler,
 }
 
 pub struct RealPhysicsBodyKinematics {
@@ -146,14 +224,7 @@ impl RealPhysicsSystem {
         let impulse_joint_set = ImpulseJointSet::new();
         let multibody_joint_set = MultibodyJointSet::new();
         let ccd_solver = CCDSolver::new();
-        let query_pipeline = broad_phase.as_query_pipeline(
-            narrow_phase.query_dispatcher(),
-            &rigid_body_set,
-            &collider_set,
-            QueryFilter::default(),
-        );
-        let _physics_hooks = ();
-        let _event_handler = ();
+        let my_event_handler = MyEventHandler {};
 
         RealPhysicsSystem {
             rigid_body_set,
@@ -168,6 +239,7 @@ impl RealPhysicsSystem {
             multibody_joint_set,
             ccd_solver,
             debug_render_pipeline: DebugRenderPipeline::default(),
+            my_event_handler,
         }
     }
 
@@ -205,14 +277,14 @@ impl RealPhysicsSystem {
             &mut self.multibody_joint_set,
             &mut self.ccd_solver,
             // TODO events, especially collision!
-            &(), //&self.physics_hooks,
-            &(), //&self.event_handler,
+            &(),                    //&self.physics_hooks,
+            &self.my_event_handler, //&self.event_handler,
         );
     }
 
-    pub fn add_collider(&mut self, collider: Collider) -> ColliderHandle {
-        self.collider_set.insert(collider)
-    }
+    // pub fn add_collider(&mut self, collider: Collider) -> ColliderHandle {
+    //     self.collider_set.insert(collider)
+    // }
 
     pub fn add_body_with_collider(
         &mut self,
@@ -226,15 +298,15 @@ impl RealPhysicsSystem {
         (body_handle, collider_handle)
     }
 
-    pub fn remove_collider(&mut self, collider_handle: ColliderHandle) {
-        // TODO maybe wakeup should be controllable, but why? it doesn't make sense to wake a body without collider
-        self.collider_set.remove(
-            collider_handle,
-            &mut self.island_manager,
-            &mut self.rigid_body_set,
-            false,
-        );
-    }
+    // pub fn remove_collider(&mut self, collider_handle: ColliderHandle) {
+    //     // TODO maybe wakeup should be controllable, but why? it doesn't make sense to wake a body without collider
+    //     self.collider_set.remove(
+    //         collider_handle,
+    //         &mut self.island_manager,
+    //         &mut self.rigid_body_set,
+    //         false,
+    //     );
+    // }
 
     pub fn remove_body(&mut self, body_handle: RigidBodyHandle) {
         self.rigid_body_set.remove(

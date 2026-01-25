@@ -2334,6 +2334,8 @@ dependencies = [
  "rapier3d-f64",
  "rayon",
  "serde",
+ "serde_json",
+ "tcpapi",
  "thiserror 2.0.11",
  "ts-rs",
  "universe_simulation",
