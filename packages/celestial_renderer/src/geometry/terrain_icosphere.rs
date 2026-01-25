@@ -335,7 +335,7 @@ impl TerrainIcosphere {
                     )
                     .unwrap()
                     .contact_skin(1.0)
-                    .friction(1.0),
+                    .friction(0.2),
                 )
             },
             level,

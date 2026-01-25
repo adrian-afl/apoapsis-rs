@@ -209,11 +209,12 @@ impl Game {
                 );
             });
         }
-
-        profile!("camera_system update", {
-            self.camera_system
-                .update(&mut self.current_camera, stage_ecs);
-        });
+        if let Some(ref mut controls) = self.controls {
+            profile!("camera_system update", {
+                self.camera_system
+                    .update(&mut self.current_camera, controls, stage_ecs);
+            });
+        }
 
         if let Some(ref mut controls) = self.controls
             && let Some(ref window) = self.window

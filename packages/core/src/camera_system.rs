@@ -1,8 +1,10 @@
 use ecs::component_trait::Components;
 use ecs::ecs_world::ECSWorld;
+use glam::{DQuat, DVec2, DVec3, EulerRot};
+use input::controls::Controls;
+use math::decimal_vector_3d::DecimalVector3d;
 use renderer_common::camera::Camera;
 use std::f64::consts::PI;
-
 /*
 lets think about it
 i think each camera system is coupled with a movement style
@@ -34,32 +36,97 @@ Chase rotating TP camera for In Space Vehicle
 Before that surface collision must be implemented first
  */
 
-pub struct CameraSystem {}
+pub struct CameraSystem {
+    last_mouse: DVec2,
+    deflection: DVec2,
+}
 
 impl CameraSystem {
     pub fn new() -> Self {
-        Self {}
+        Self {
+            last_mouse: DVec2::ZERO,
+            deflection: DVec2::ZERO,
+        }
     }
 
-    pub fn update(&mut self, camera: &mut Camera, ecs: &mut ECSWorld) {
+    pub fn update(&mut self, camera: &mut Camera, controls: &Controls, ecs: &mut ECSWorld) {
         // println!("CameraSystem / update");
 
         let entity =
             ecs.find_first_by_components(&[&Components::CameraFocus, &Components::Transform]);
         match entity {
             Some(entity) => {
-                let transform = entity.components.transform.as_ref().unwrap();
-
                 if entity.components.has(&Components::FirstPersonCameraControl) {
+                    let transform = entity.components.transform.as_ref().unwrap();
+                    let mouse = controls.mouse.get_cursor_integrated();
+                    let mouse_diff = mouse - self.last_mouse;
+                    self.last_mouse = mouse;
+
+                    // transform.orientation *= DQuat::from_axis_angle(DVec3::X, mouse_diff.y)
+                    //     * DQuat::from_axis_angle(DVec3::Y, mouse_diff.x);
+
                     let first_person_component = entity
                         .components
                         .first_person_camera_control
                         .as_ref()
                         .unwrap();
                     camera.position.assign(&transform.position);
-                    camera.orientation = transform.orientation.inverse();
+                    self.deflection += -mouse_diff * 0.001;
+                    self.deflection.y = self.deflection.y.clamp(-PI / 2.0, PI / 2.0);
+                    self.deflection.x = self.deflection.x % (PI * 2.0);
+                    // let mouse_rot = DQuat::from_axis_angle(DVec3::Y, self.deflection.x)
+                    //     * DQuat::from_axis_angle(DVec3::X, (self.deflection.y).clamp(-PI, PI));
+                    let mouse_rot =
+                        DQuat::from_euler(EulerRot::ZYX, self.deflection.y, self.deflection.x, 0.0);
+                    // CHASE
+                    // camera.orientation = transform.orientation.inverse() * mouse_rot;
+                    // ABSOLTUE
+                    camera.orientation = mouse_rot;
                     camera.set_perspective(
                         first_person_component.fov * (PI / 180.0),
+                        4.0 / 3.0,
+                        0.1,
+                        9999999999.0,
+                    );
+
+                    camera.update();
+
+                    // println!("Cam pos is now {}", camera.position);
+                }
+                if entity
+                    .components
+                    .has(&Components::ThirdPersonOrbitCameraControl)
+                {
+                    let transform = entity.components.transform.as_ref().unwrap();
+                    let mouse = controls.mouse.get_cursor_integrated();
+                    let mouse_diff = mouse - self.last_mouse;
+                    self.last_mouse = mouse;
+
+                    // transform.orientation *= DQuat::from_axis_angle(DVec3::X, mouse_diff.y)
+                    //     * DQuat::from_axis_angle(DVec3::Y, mouse_diff.x);
+
+                    let camcontrol = entity
+                        .components
+                        .third_person_orbit_camera_control
+                        .as_ref()
+                        .unwrap();
+                    // CHASE
+
+                    self.deflection += -mouse_diff * 0.001;
+                    self.deflection.y = self.deflection.y.clamp(-PI / 2.0, PI / 2.0);
+                    self.deflection.x = self.deflection.x % (PI * 2.0);
+                    // let mouse_rot = DQuat::from_axis_angle(DVec3::Y, self.deflection.x)
+                    //     * DQuat::from_axis_angle(DVec3::X, (self.deflection.y).clamp(-PI, PI));
+                    let mouse_rot =
+                        DQuat::from_euler(EulerRot::ZYX, self.deflection.y, self.deflection.x, 0.0);
+
+                    camera.position.assign(
+                        &(&transform.position
+                            + &DecimalVector3d::from_dvec3(mouse_rot * -camcontrol.initial_offset)),
+                    );
+                    camera.orientation = mouse_rot;
+                    camera.set_perspective(
+                        camcontrol.fov * (PI / 180.0),
                         4.0 / 3.0,
                         0.1,
                         9999999999.0,

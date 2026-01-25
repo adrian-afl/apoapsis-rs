@@ -189,7 +189,7 @@ impl PhysicsSystem {
                                 simulated_object.rigid_body
                             }; // unlocks
 
-                            if simple_physics.mass > DBig::ZERO {
+                            if simple_physics.mass > DBig::ZERO && !has_glue {
                                 let gravity_force = context
                                     .universe_simulation
                                     .calculate_gravity_flux(&transform.position)
@@ -213,12 +213,23 @@ impl PhysicsSystem {
                                     },
                                 )
                                 .unwrap();
-
-                            // this is suspicious
-                            // transform.position = &transform.position
-                            //     + &DecimalVector3d::from_dvec3(
-                            //         simple_physics.linear_velocity * context.delta_time,
-                            //     );
+                            //
+                            // if simple_physics.mass > DBig::ZERO && !has_glue {
+                            //     let gravity_force = context
+                            //         .universe_simulation
+                            //         .calculate_gravity_flux(&transform.position)
+                            //         .to_dvec3_with_precision(5);
+                            //
+                            //     real_physics_system
+                            //         .apply_force(
+                            //             simulated_object_rigid_body,
+                            //             gravity_force * simple_physics.mass.to_f64().value(),
+                            //             true,
+                            //         )
+                            //         .unwrap();
+                            //
+                            //     // dbg!(relative_linear_velocity);
+                            // }
                         }
                     }
                 } else {
@@ -248,11 +259,16 @@ impl PhysicsSystem {
                 &Components::Transform,
             ],
             |entity| {
+                let has_glue = entity.components.glue_to_celestial_body.is_some();
+
                 let real_physics = entity.components.real_physics.as_ref().unwrap();
                 detected_element_real_physics_ids
                     .lock()
                     .unwrap()
                     .push(real_physics.id);
+                if has_glue {
+                    return;
+                }
 
                 let map = self.currently_simulated_bodies.read().unwrap();
                 let simulated = map.get(&real_physics.id);
@@ -297,7 +313,7 @@ impl PhysicsSystem {
                             );
 
                         transform.orientation = kinematics.orientation;
-                        simple_physics.angular_velocity = kinematics.angular_velocity * 0.9;
+                        simple_physics.angular_velocity = kinematics.angular_velocity;
                     }
                 }
             },
@@ -437,7 +453,7 @@ impl PhysicsSystem {
         let body_collider_tuple = real_physics_system.add_body_with_collider(
             rigid_body_builder.build(),
             build_collider(&real_physics.shape_description, rendering_system)
-                .restitution(0.0)
+                .restitution(0.8)
                 .restitution_combine_rule(CoefficientCombineRule::Min)
                 .build(),
         );

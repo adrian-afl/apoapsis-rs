@@ -105,12 +105,18 @@ describe("physics simple tests", () => {
             position: newPosition.toDecimalVector3d(),
             scale: [1.0, 1.0, 1.0],
           },
-          first_person_camera_control: {
+          // first_person_camera_control: {
+          // fov: 70.0,
+          // },
+          third_person_orbit_camera_control: {
+            style: "Absolute",
+            initial_offset: [0.0, 0.0, -5.0],
+            initial_orientation: [1.0, 0.0, 0.0, 1.0],
             fov: 70.0,
           },
           is_player: true,
           control_focus: true,
-          ui_require_free_cursor: true,
+          ui_require_free_cursor: false,
           universe_clock: {
             time: "1",
             should_advance: false,
@@ -136,6 +142,29 @@ describe("physics simple tests", () => {
             },
             override_real_simulation_cutoff: null,
           },
+          mesh: [
+            {
+              description: {
+                geometryPath: "media/smoothbox.pnut.raw",
+                material: {
+                  color: {
+                    color: [1.0, 1.0, 1.0],
+                  },
+                  roughness: {
+                    value: 1.0,
+                  },
+                  metalness: {
+                    value: 0.0,
+                  },
+                  emission: {
+                    color: [1.0, 0.0, 0.0],
+                  },
+                  bump: null,
+                  normal: null,
+                },
+              },
+            },
+          ],
           // glue_to_celestial_body: {
           //   bodyName: "earth",
           //   offset: [0.0, 0.0, -radius],
