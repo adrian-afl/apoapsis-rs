@@ -9,7 +9,7 @@ use vengine_rs::core::descriptor_set_layout::{
     VEDescriptorSetFieldStage, VEDescriptorSetFieldType, VEDescriptorSetLayout,
     VEDescriptorSetLayoutField,
 };
-use vengine_rs::core::helpers::clear_depth;
+use vengine_rs::core::helpers::{clear_color_f32, clear_depth};
 use vengine_rs::core::shader_module::VEShaderModuleType;
 use vengine_rs::core::toolkit::VEToolkit;
 use vengine_rs::graphics::attachment::VEAttachment;
@@ -53,7 +53,7 @@ impl MeshDrawer {
             &g_buffer.color_rgb_roughness_a,
             color_rgb_roughness_a_view,
             None,
-            None,
+            Some(clear_color_f32([0.0, 0.0, 0.0, 0.0])),
         )?;
 
         let emission_rgb_metalness_a_view = g_buffer
@@ -64,7 +64,7 @@ impl MeshDrawer {
             &g_buffer.emission_rgb_metalness_a,
             emission_rgb_metalness_a_view,
             None,
-            None,
+            Some(clear_color_f32([0.0, 0.0, 0.0, 0.0])),
         )?;
 
         let normal_rgb_distance_a_view = g_buffer
@@ -75,7 +75,7 @@ impl MeshDrawer {
             &g_buffer.normal_rgb_distance_a,
             normal_rgb_distance_a_view,
             None,
-            None,
+            Some(clear_color_f32([0.0, 0.0, 0.0, 0.0])),
         )?;
 
         let shared_depth_buffer_view = g_buffer

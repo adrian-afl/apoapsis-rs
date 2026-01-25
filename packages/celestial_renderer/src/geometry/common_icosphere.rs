@@ -96,15 +96,18 @@ pub fn update_icosphere_matrices(
     let translation_camera_space = &simulated_body.position - camera_position;
     let dvec_translation_camera_space = translation_camera_space.to_dvec3_with_precision(6);
 
-    let world_translation_matrix = DMat4::from_translation(dvec_translation_camera_space);
-    let rotation_matrix = simulated_body.orientation.as_dmat4().inverse();
+    let center_world_matrix = DMat4::from_rotation_translation(
+        simulated_body.orientation.as_dquat(),
+        dvec_translation_camera_space,
+    );
+    // let rotation_matrix = simulated_body.orientation.as_dmat4().inverse();
 
-    let pre_final_matrix = world_translation_matrix * rotation_matrix;
+    // let pre_final_matrix = world_translation_matrix * rotation_matrix;
 
     for i in 0..metadata.len() {
         let metadata = &metadata[i];
         let model_offset_matrix = DMat4::from_translation(metadata.center);
-        part_matrices[i] = pre_final_matrix * model_offset_matrix;
+        part_matrices[i] = center_world_matrix * model_offset_matrix;
     }
 }
 

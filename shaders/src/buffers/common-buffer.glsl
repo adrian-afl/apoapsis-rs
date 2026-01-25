@@ -20,5 +20,5 @@ vec3 frustumBottomLeft = commonData.frustumBottomLeft_zero.xyz;
 vec3 frustumTopRight = commonData.frustumTopRight_zero.xyz;
 vec3 frustumBottomRight = commonData.frustumBottomRight_zero.xyz;
 
-//#define IS_DEBUG_MODE_DISTANCE (commonData.elapsed_debugmode_zero_zero.y == 1.0)
-#define IS_DEBUG_MODE_DISTANCE true
+#define IS_DEBUG_MODE_DISTANCE (commonData.elapsed_debugmode_zero_zero.y == 1.0)
+// #define IS_DEBUG_MODE_DISTANCE true

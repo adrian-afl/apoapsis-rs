@@ -183,185 +183,92 @@ impl Renderer {
                 .record_copy_from_staging(&self.command_buffer);
 
             unsafe {
-                self.toolkit.device.device.cmd_clear_color_image(
-                    self.command_buffer.handle,
-                    self.g_buffer.color_rgb_roughness_a.handle,
-                    self.g_buffer.color_rgb_roughness_a.current_layout,
-                    &vk::ClearColorValue {
-                        float32: [0.0, 0.0, 0.0, 0.0],
-                    },
-                    &[vk::ImageSubresourceRange::default()
-                        .aspect_mask(vk::ImageAspectFlags::COLOR)
-                        .base_mip_level(0)
-                        .level_count(1) // TODO mip mapping
-                        .base_array_layer(0)
-                        .layer_count(1)],
-                );
+                match &body.terrain_icosphere {
+                    None => (),
+                    Some(icosphere) => {
+                        self.icosphere_drawer
+                            .record_terrain(&self.command_buffer, icosphere);
+                    }
+                }
 
-                self.toolkit.device.device.cmd_clear_color_image(
-                    self.command_buffer.handle,
-                    self.g_buffer.emission_rgb_metalness_a.handle,
-                    self.g_buffer.emission_rgb_metalness_a.current_layout,
-                    &vk::ClearColorValue {
-                        float32: [0.0, 0.0, 0.0, 0.0],
-                    },
-                    &[vk::ImageSubresourceRange::default()
-                        .aspect_mask(vk::ImageAspectFlags::COLOR)
-                        .base_mip_level(0)
-                        .level_count(1) // TODO mip mapping
-                        .base_array_layer(0)
-                        .layer_count(1)],
-                );
-
-                self.toolkit.device.device.cmd_clear_color_image(
-                    self.command_buffer.handle,
-                    self.g_buffer.normal_rgb_distance_a.handle,
-                    self.g_buffer.normal_rgb_distance_a.current_layout,
-                    &vk::ClearColorValue {
-                        float32: [0.0, 0.0, 0.0, 0.0],
-                    },
-                    &[vk::ImageSubresourceRange::default()
-                        .aspect_mask(vk::ImageAspectFlags::COLOR)
-                        .base_mip_level(0)
-                        .level_count(1) // TODO mip mapping
-                        .base_array_layer(0)
-                        .layer_count(1)],
-                );
-
-                self.toolkit.device.device.cmd_clear_depth_stencil_image(
-                    self.command_buffer.handle,
-                    self.g_buffer.shared_depth_buffer.handle,
-                    self.g_buffer.shared_depth_buffer.current_layout,
-                    &vk::ClearDepthStencilValue {
-                        depth: 1.0,
-                        stencil: 0,
-                    },
-                    &[vk::ImageSubresourceRange::default()
-                        .aspect_mask(vk::ImageAspectFlags::DEPTH)
-                        .base_mip_level(0)
-                        .level_count(1) // TODO mip mapping
-                        .base_array_layer(0)
-                        .layer_count(1)],
-                );
+                match &body.water_icosphere {
+                    None => (),
+                    Some(icosphere) => {
+                        self.icosphere_drawer
+                            .record_water(&self.command_buffer, icosphere);
+                    }
+                }
             }
+        }
 
-            let barrier_color_rgb_roughness_a = VEImageMemoryBarrier {
-                image: self.g_buffer.color_rgb_roughness_a.handle,
-                aspect: ImageAspectFlags::COLOR,
-                src_access: AccessFlags::SHADER_WRITE
-                    | AccessFlags::MEMORY_WRITE
-                    | AccessFlags::TRANSFER_WRITE,
-                dst_access: AccessFlags::COLOR_ATTACHMENT_WRITE
-                    | AccessFlags::COLOR_ATTACHMENT_READ,
-                old_layout: ImageLayout::GENERAL,
-                new_layout: ImageLayout::GENERAL,
-            };
+        let barrier_color_rgb_roughness_a = VEImageMemoryBarrier {
+            image: self.g_buffer.color_rgb_roughness_a.handle,
+            aspect: ImageAspectFlags::COLOR,
+            src_access: AccessFlags::SHADER_WRITE
+                | AccessFlags::SHADER_READ
+                | AccessFlags::MEMORY_WRITE
+                | AccessFlags::TRANSFER_WRITE
+                | AccessFlags::COLOR_ATTACHMENT_WRITE
+                | AccessFlags::COLOR_ATTACHMENT_READ,
+            dst_access: AccessFlags::COLOR_ATTACHMENT_WRITE
+                | AccessFlags::COLOR_ATTACHMENT_READ
+                | AccessFlags::SHADER_WRITE
+                | AccessFlags::SHADER_READ,
+            old_layout: ImageLayout::GENERAL,
+            new_layout: ImageLayout::GENERAL,
+        };
 
-            let barrier_emission_rgb_metalness_a = VEImageMemoryBarrier {
-                image: self.g_buffer.emission_rgb_metalness_a.handle,
-                aspect: ImageAspectFlags::COLOR,
-                src_access: AccessFlags::SHADER_WRITE
-                    | AccessFlags::MEMORY_WRITE
-                    | AccessFlags::TRANSFER_WRITE,
-                dst_access: AccessFlags::COLOR_ATTACHMENT_WRITE
-                    | AccessFlags::COLOR_ATTACHMENT_READ,
-                old_layout: ImageLayout::GENERAL,
-                new_layout: ImageLayout::GENERAL,
-            };
+        let barrier_emission_rgb_metalness_a = VEImageMemoryBarrier {
+            image: self.g_buffer.emission_rgb_metalness_a.handle,
+            aspect: ImageAspectFlags::COLOR,
+            src_access: AccessFlags::SHADER_WRITE
+                | AccessFlags::SHADER_READ
+                | AccessFlags::MEMORY_WRITE
+                | AccessFlags::TRANSFER_WRITE
+                | AccessFlags::COLOR_ATTACHMENT_WRITE
+                | AccessFlags::COLOR_ATTACHMENT_READ,
+            dst_access: AccessFlags::COLOR_ATTACHMENT_WRITE
+                | AccessFlags::COLOR_ATTACHMENT_READ
+                | AccessFlags::SHADER_WRITE
+                | AccessFlags::SHADER_READ,
+            old_layout: ImageLayout::GENERAL,
+            new_layout: ImageLayout::GENERAL,
+        };
 
-            let barrier_normal_rgb_distance_a = VEImageMemoryBarrier {
-                image: self.g_buffer.normal_rgb_distance_a.handle,
-                aspect: ImageAspectFlags::COLOR,
-                src_access: AccessFlags::SHADER_WRITE
-                    | AccessFlags::MEMORY_WRITE
-                    | AccessFlags::TRANSFER_WRITE,
-                dst_access: AccessFlags::COLOR_ATTACHMENT_WRITE
-                    | AccessFlags::COLOR_ATTACHMENT_READ,
-                old_layout: ImageLayout::GENERAL,
-                new_layout: ImageLayout::GENERAL,
-            };
+        let barrier_normal_rgb_distance_a = VEImageMemoryBarrier {
+            image: self.g_buffer.normal_rgb_distance_a.handle,
+            aspect: ImageAspectFlags::COLOR,
+            src_access: AccessFlags::SHADER_WRITE
+                | AccessFlags::SHADER_READ
+                | AccessFlags::MEMORY_WRITE
+                | AccessFlags::TRANSFER_WRITE
+                | AccessFlags::COLOR_ATTACHMENT_WRITE
+                | AccessFlags::COLOR_ATTACHMENT_READ,
+            dst_access: AccessFlags::COLOR_ATTACHMENT_WRITE
+                | AccessFlags::COLOR_ATTACHMENT_READ
+                | AccessFlags::SHADER_WRITE
+                | AccessFlags::SHADER_READ,
+            old_layout: ImageLayout::GENERAL,
+            new_layout: ImageLayout::GENERAL,
+        };
 
-            submit_barriers(
-                &self.toolkit.device,
-                &self.command_buffer,
-                PipelineStageFlags::ALL_COMMANDS,
-                PipelineStageFlags::ALL_GRAPHICS,
-                &[],
-                &[],
-                &[
-                    barrier_color_rgb_roughness_a.build(),
-                    barrier_emission_rgb_metalness_a.build(),
-                    barrier_normal_rgb_distance_a.build(),
-                ],
-            );
+        submit_barriers(
+            &self.toolkit.device,
+            &self.command_buffer,
+            PipelineStageFlags::ALL_COMMANDS,
+            PipelineStageFlags::ALL_GRAPHICS,
+            &[],
+            &[],
+            &[
+                barrier_color_rgb_roughness_a.build(),
+                barrier_emission_rgb_metalness_a.build(),
+                barrier_normal_rgb_distance_a.build(),
+            ],
+        );
 
-            let is_closest = i == 0;
-            if !is_closest {
-                self.mesh_drawer.record(
-                    &self.mesh_drawer.render_stage,
-                    &self.command_buffer,
-                    meshes,
-                );
-            }
-
+        for (i, body) in celestial_bodies.iter().enumerate() {
             self.cloud_generator_low_freq.record(&self.command_buffer);
             self.cloud_generator_high_freq.record(&self.command_buffer);
-            match &body.terrain_icosphere {
-                None => (),
-                Some(icosphere) => {
-                    self.icosphere_drawer
-                        .record_terrain(&self.command_buffer, icosphere);
-                }
-            }
-
-            match &body.water_icosphere {
-                None => (),
-                Some(icosphere) => {
-                    self.icosphere_drawer
-                        .record_water(&self.command_buffer, icosphere);
-                }
-            }
-
-            let barrier_color_rgb_roughness_a = VEImageMemoryBarrier {
-                image: self.g_buffer.color_rgb_roughness_a.handle,
-                aspect: ImageAspectFlags::COLOR,
-                src_access: AccessFlags::COLOR_ATTACHMENT_WRITE,
-                dst_access: AccessFlags::SHADER_READ,
-                old_layout: ImageLayout::GENERAL,
-                new_layout: ImageLayout::GENERAL,
-            };
-
-            let barrier_emission_rgb_metalness_a = VEImageMemoryBarrier {
-                image: self.g_buffer.emission_rgb_metalness_a.handle,
-                aspect: ImageAspectFlags::COLOR,
-                src_access: AccessFlags::COLOR_ATTACHMENT_WRITE,
-                dst_access: AccessFlags::SHADER_READ,
-                old_layout: ImageLayout::GENERAL,
-                new_layout: ImageLayout::GENERAL,
-            };
-
-            let barrier_normal_rgb_distance_a = VEImageMemoryBarrier {
-                image: self.g_buffer.normal_rgb_distance_a.handle,
-                aspect: ImageAspectFlags::COLOR,
-                src_access: AccessFlags::COLOR_ATTACHMENT_WRITE,
-                dst_access: AccessFlags::SHADER_READ,
-                old_layout: ImageLayout::GENERAL,
-                new_layout: ImageLayout::GENERAL,
-            };
-
-            submit_barriers(
-                &self.toolkit.device,
-                &self.command_buffer,
-                PipelineStageFlags::ALL_GRAPHICS,
-                PipelineStageFlags::COMPUTE_SHADER,
-                &[],
-                &[],
-                &[
-                    barrier_color_rgb_roughness_a.build(),
-                    barrier_emission_rgb_metalness_a.build(),
-                    barrier_normal_rgb_distance_a.build(),
-                ],
-            );
 
             self.atmosphere_drawer
                 .record(&self.command_buffer, &body.body_data_set, &self.config);

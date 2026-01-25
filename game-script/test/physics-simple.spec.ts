@@ -51,22 +51,6 @@ describe("physics simple tests", () => {
       return createBuilder(emptyAttachedComponents);
     }
 
-    console.log({
-      components: buildComponents()
-        .add({
-          camera_focus: true,
-          transform: {
-            orientation: [1.0, 0.0, 0.0, 1.0],
-            position: { x: "1000.0", y: "200.0", z: "1.0" },
-            scale: [1.0, 1.0, 1.0],
-          },
-          universe_clock: {
-            time: "1",
-            should_advance: true,
-          },
-        })
-        .build(),
-    });
     const { id: playerEID } = await gameApi.addEntity({
       components: buildComponents()
         .add({
@@ -77,7 +61,7 @@ describe("physics simple tests", () => {
             scale: [1.0, 1.0, 1.0],
           },
           universe_clock: {
-            time: "1",
+            time: "0",
             should_advance: false,
           },
         })
@@ -127,7 +111,7 @@ describe("physics simple tests", () => {
           control_focus: true,
           ui_require_free_cursor: false,
           universe_clock: {
-            time: "1",
+            time: "0",
             should_advance: false,
           },
           simple_physics: {
@@ -320,10 +304,7 @@ describe("physics simple tests", () => {
         gameApi.simplePhysics.get(playerEID),
       ]);
       const [altitude, raycast] = await Promise.all([
-        gameApi.getApproximateAltitudeOverCelestialBody(
-          "earth",
-          transform.position,
-        ),
+        gameApi.getRealAltitudeOverCelestialBody("earth", transform.position),
         gameApi.raycastRealPhysics(
           DVec3.fromNumbersArray(simple_physics.linear_velocity)
             .normalized()
@@ -343,7 +324,7 @@ describe("physics simple tests", () => {
       //   raycast,
       // );
       await Promise.all([
-        debugDisplay.debug("Altitude", dec(altitude).toFixed(4)),
+        debugDisplay.debug("Altitude", dec(altitude.terrain).toFixed(4)),
         debugDisplay.debug("Raycast", raycast ? raycast.toFixed(4) : "null"),
         debugDisplay.debug(
           "LinVel",
