@@ -128,6 +128,7 @@ impl PhysicsSystem {
                         .get_body(&glue_to_body.body_name);
 
                     let world_orientation = glue_to_body.orientation * body.orientation_f64;
+                    // let world_offset = body.orientation_f64 * glue_to_body.offset;
                     let world_offset = body.orientation_f64 * glue_to_body.offset;
 
                     let new_pos = &body.position + &DecimalVector3d::from_dvec3(world_offset);
@@ -138,8 +139,8 @@ impl PhysicsSystem {
                     simple_physics.linear_velocity =
                         context.universe_simulation.get_surface_velocity_f64(
                             &glue_to_body.body_name,
-                            // body.orientation.as_dquat().mul_vec3(glue_to_body.offset),
-                            glue_to_body.offset,
+                            body.orientation.as_dquat().mul_vec3(glue_to_body.offset), // TODO
+                                                                                       // glue_to_body.offset,
                         )
                 },
             );
@@ -460,15 +461,16 @@ impl PhysicsSystem {
         };
         let mut rigid_body = rigid_body_builder.build();
         rigid_body.user_data = entity_id as u128;
-        let body_collider_tuple = real_physics_system.add_body_with_collider(
-            rigid_body,
-            build_collider(&real_physics.shape_description, rendering_system)
-                .restitution(0.1)
-                .restitution_combine_rule(CoefficientCombineRule::Min)
-                .active_events(ActiveEvents::all())
-                .active_collision_types(ActiveCollisionTypes::all())
-                .build(),
-        );
+
+        let mut collider = build_collider(&real_physics.shape_description, rendering_system)
+            .restitution(0.1)
+            .restitution_combine_rule(CoefficientCombineRule::Min)
+            .active_events(ActiveEvents::all())
+            .active_collision_types(ActiveCollisionTypes::all())
+            .build();
+        collider.user_data = entity_id as u128;
+
+        let body_collider_tuple = real_physics_system.add_body_with_collider(rigid_body, collider);
 
         let simulated = SimulatedBody {
             rigid_body: body_collider_tuple.0,

@@ -22,8 +22,8 @@ impl WaterIcosphereDataBuffer {
             calculate_base_icosphere_parts_count(ICO_BASE_SUBDIVISION) as u64;
         // each part needs a mat4 f32, so 16 * 4 * count is total size
         // lets add some trailing space just for fun too
-        // let desired_buffer_size = 16 * 4 * icosphere_triangles_count + 2048;
-        let desired_buffer_size = 1024 * 1024;
+        let desired_buffer_size = 16 * 4 * icosphere_triangles_count + 2048;
+        // let desired_buffer_size = 1024 * 1024;
         Ok(Self {
             staging_buffer: toolkit.create_buffer(
                 &[VEBufferUsage::Storage, VEBufferUsage::TransferSource],

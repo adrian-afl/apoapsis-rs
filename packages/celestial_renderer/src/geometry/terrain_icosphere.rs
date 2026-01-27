@@ -278,7 +278,7 @@ impl TerrainIcosphere {
                             index: base_segment,
                         },
                     ),
-                    override_real_simulation_cutoff: Some(self.loaded_data.radius * 0.25),
+                    override_real_simulation_cutoff: Some(self.loaded_data.radius * 0.05),
                 })
             },
             glue_to_celestial_body_component: if !is_most_detailed_level {
@@ -297,6 +297,11 @@ impl TerrainIcosphere {
             collider_builder: if !is_most_detailed_level {
                 None
             } else {
+                // println!(
+                //     "{} DISTANCE EDGE TO EDGE FIRST IS {}",
+                //     self.loaded_data.body_name.clone(),
+                //     vertices[0].distance(vertices[1]).to_string()
+                // );
                 Some(
                     ColliderBuilder::trimesh_with_flags(
                         vertices

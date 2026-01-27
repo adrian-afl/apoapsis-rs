@@ -51,10 +51,22 @@
 
         // colors
 
-        // colors.push(linecolors[Math.floor(i / 2)][1], linecolors[Math.floor(i / 2)][2], linecolors[Math.floor(i / 2)][3]);
-        colors.push(1.0, 1.0, 1.0);
+        colors.push(
+            linecolors[Math.floor(i / 2)][0],
+            linecolors[Math.floor(i / 2)][1],
+            linecolors[Math.floor(i / 2)][2]
+        );
+        if (i > 22810 && i < 22910) {
+            console.log(linecolors[Math.floor(i / 2)][0],
+                linecolors[Math.floor(i / 2)][1],
+                linecolors[Math.floor(i / 2)][2]);
+        }
+        // colors.push(1.0, 1.0, 1.0);
 
     }
+
+    console.log(colors.length, positions.length)
+    console.log(colors.slice(22810, 22910));
 
     geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
     geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));

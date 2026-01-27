@@ -13,9 +13,9 @@ use std::sync::Mutex;
 use universe_simulation::simulation::SimulatedBody;
 use vengine_rs::graphics::vertex_buffer::VEVertexBuffer;
 
-pub static ICO_BASE_SUBDIVISION: u8 = 2u8;
-pub static ICO_LEVEL_SUBDIVISIONS: [u8; 3] = [3, 4, 5];
-static ICO_THRESHOLDS: [f64; 2] = [2000000.0, 5000000.0];
+pub static ICO_BASE_SUBDIVISION: u8 = 4u8;
+pub static ICO_LEVEL_SUBDIVISIONS: [u8; 3] = [1, 1, 6];
+static ICO_THRESHOLDS: [f64; 2] = [50000000.0, 50000.0];
 
 pub fn calculate_base_icosphere_parts_count(subdivisions: u8) -> u16 {
     let mut start = get_base_icosphere(); // base, currently, has 20 triangles
@@ -65,12 +65,12 @@ pub fn which_part_to_preload(
 
         // println!("distance {distance}");
 
-        let mut level = 1;
-        if distance < ICO_THRESHOLDS[1] {
-            level = 2;
-        }
-        if distance < ICO_THRESHOLDS[0] {
-            level = 3;
+        let mut level: u8 = 1;
+
+        for (ident, dist) in ICO_THRESHOLDS.iter().enumerate() {
+            if distance < *dist {
+                level = (ident + 2) as u8;
+            }
         }
 
         let exists = currently_loaded.contains_key(&m.base_segment);

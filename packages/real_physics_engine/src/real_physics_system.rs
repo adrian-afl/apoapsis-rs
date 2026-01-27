@@ -140,9 +140,22 @@ impl DebugRenderBackend for DebugCollector {
     }
 
     fn draw_line(&mut self, object: DebugRenderObject, a: Vector, b: Vector, color: [f32; 4]) {
+        let id = match object {
+            DebugRenderObject::RigidBody(_, b) => b.user_data,
+            DebugRenderObject::Collider(_, b) => b.user_data,
+            DebugRenderObject::ColliderAabb(_, _, _) => 0,
+            DebugRenderObject::ImpulseJoint(_, _) => 0,
+            DebugRenderObject::MultibodyJoint(_, _, _) => 0,
+            DebugRenderObject::ContactPair(_, _, _) => 0,
+        } as f32;
         self.lines.push([a.x, a.y, a.z]);
         self.lines.push([b.x, b.y, b.z]);
-        self.colors.push(color);
+        self.colors.push([
+            id * 123.345456567 % 1.0,
+            id * 456.678345234 % 1.0,
+            id * 34534.890896575 % 1.0,
+            1.0,
+        ]);
     }
 
     fn draw_polyline(
@@ -154,6 +167,14 @@ impl DebugRenderBackend for DebugCollector {
         scale: Vector,
         color: [f32; 4],
     ) {
+        let id = match object {
+            DebugRenderObject::RigidBody(_, b) => b.user_data,
+            DebugRenderObject::Collider(_, b) => b.user_data,
+            DebugRenderObject::ColliderAabb(_, _, _) => 0,
+            DebugRenderObject::ImpulseJoint(_, _) => 0,
+            DebugRenderObject::MultibodyJoint(_, _, _) => 0,
+            DebugRenderObject::ContactPair(_, _, _) => 0,
+        } as f32;
         for index in indices {
             let mut a = (transform * vertices[index[0] as usize]);
             a.x *= scale.x;
@@ -167,7 +188,13 @@ impl DebugRenderBackend for DebugCollector {
 
             self.lines.push([a.x, a.y, a.z]);
             self.lines.push([b.x, b.y, b.z]);
-            self.colors.push(color);
+            // self.colors.push(color);
+            self.colors.push([
+                id * 123.345456567 % 1.0,
+                id * 456.678345234 % 1.0,
+                id * 34534.890896575 % 1.0,
+                1.0,
+            ]);
         }
     }
 
@@ -180,6 +207,14 @@ impl DebugRenderBackend for DebugCollector {
         color: [f32; 4],
         closed: bool,
     ) {
+        let id = match object {
+            DebugRenderObject::RigidBody(_, b) => b.user_data,
+            DebugRenderObject::Collider(_, b) => b.user_data,
+            DebugRenderObject::ColliderAabb(_, _, _) => 0,
+            DebugRenderObject::ImpulseJoint(_, _) => 0,
+            DebugRenderObject::MultibodyJoint(_, _, _) => 0,
+            DebugRenderObject::ContactPair(_, _, _) => 0,
+        } as f32;
         let len = vertices.len();
         for i in 0..len - 1 {
             let mut v = transform * vertices[i];
@@ -193,7 +228,12 @@ impl DebugRenderBackend for DebugCollector {
             v.y *= scale.y;
             v.z *= scale.z;
             self.lines.push([v.x, v.y, v.z]);
-            self.colors.push(color);
+            self.colors.push([
+                id * 123.345456567 % 1.0,
+                id * 456.678345234 % 1.0,
+                id * 34534.890896575 % 1.0,
+                1.0,
+            ]);
         }
     }
 }
@@ -262,7 +302,6 @@ impl RealPhysicsSystem {
     }
 
     pub fn step(&mut self, delta: f64) {
-        // dbg!(delta);
         self.integration_parameters.dt = delta;
         self.integration_parameters.max_ccd_substeps = 8;
         self.physics_pipeline.step(
@@ -276,9 +315,8 @@ impl RealPhysicsSystem {
             &mut self.impulse_joint_set,
             &mut self.multibody_joint_set,
             &mut self.ccd_solver,
-            // TODO events, especially collision!
-            &(),                    //&self.physics_hooks,
-            &self.my_event_handler, //&self.event_handler,
+            &(),
+            &self.my_event_handler,
         );
     }
 

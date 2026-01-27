@@ -18,6 +18,7 @@ import {
 } from "../generated/RemoteGameEvents";
 import { DebugDisplay } from "../script/debugDisplay";
 import { dec } from "../framework/mathModule/decimalHelpers";
+import { DMat3 } from "../framework/mathModule/logic/linear/DMat3";
 
 describe("physics simple tests", () => {
   // afterAll(() => process.exit(0));
@@ -76,11 +77,33 @@ describe("physics simple tests", () => {
     const earthDef = await gameApi.getCelestialBodyDefinition("earth");
     console.log(earthDef);
 
-    const radius = earthDef.terrain.radius + 37.51 * 1000.0;
+    const radius = earthDef.terrain.radius + 23.21 * 1000.0;
 
     const newPosition = DVec3.fromDecimalVector3d(earthPosition).addVec3(
-      DVec3.fromNumbers(100000.0, 0.0, -radius),
+      DVec3.fromNumbers(1.0, 1.0, 1.0).normalized().mulScalar(dec(radius)),
     );
+
+    baseApi.subscribe(OnRawInputText, async (k) => {
+      if (k.data === "r") {
+        await gameApi.transform.set(playerEID, {
+          orientation: quatStr(new Quaternion().identity()),
+          position: newPosition.toDecimalVector3d(),
+          scale: [1.0, 1.0, 1.0],
+        });
+        await gameApi.simplePhysics.set(playerEID, {
+          angular_velocity: [1.0, 1.0, 1.0],
+          mass: "1.0",
+          linear_velocity: [0.0, 0.0, 0.0],
+        });
+      }
+      if (k.data === "b") {
+        await gameApi.simplePhysics.set(playerEID, {
+          angular_velocity: [1.0, 1.0, 1.0],
+          mass: "1.0",
+          linear_velocity: [0.0, 0.0, 0.0],
+        });
+      }
+    });
 
     const quatStr = (x: Quaternion) =>
       [x.x, x.y, x.z, x.w] as [number, number, number, number];
