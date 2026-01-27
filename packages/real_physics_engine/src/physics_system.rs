@@ -1,6 +1,8 @@
 use crate::build_collider::build_collider;
 use crate::real_physics_system::{DebugCollector, RealPhysicsSystem, SetRealPhysicsBodyKinematics};
-use celestial_renderer::geometry::common_icosphere::ICO_LEVEL_SUBDIVISIONS;
+use celestial_renderer::geometry::common_icosphere::{
+    ICO_BASE_SUBDIVISION, ICO_LEVEL_SUBDIVISIONS, calculate_base_icosphere_parts_count,
+};
 use celestial_renderer::rendering_system::RenderingSystem;
 use common_util::profile;
 use dashu_float::DBig;
@@ -526,7 +528,7 @@ impl PhysicsSystem {
             .iter()
             .map(|x| x.body.name.clone());
 
-        let segments_count = 20 * 4 * 4;
+        let segments_count = calculate_base_icosphere_parts_count(ICO_BASE_SUBDIVISION);
 
         let existing_entities = context
             .ecs

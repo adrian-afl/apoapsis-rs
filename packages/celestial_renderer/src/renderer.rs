@@ -331,7 +331,8 @@ impl Renderer {
                         let preload_result = if is_closest {
                             icosphere.preload(&self.toolkit)?
                         } else {
-                            icosphere.preload(&self.toolkit)?
+                            //  icosphere.preload(&self.toolkit)?
+                            PreloadResult::NotChanged
                         };
                         match preload_result {
                             PreloadResult::ChangesMade => {
@@ -350,7 +351,8 @@ impl Renderer {
                         let preload_result = if is_closest {
                             icosphere.preload(&self.toolkit)?
                         } else {
-                            icosphere.preload(&self.toolkit)?
+                            //   icosphere.preload(&self.toolkit)?
+                            PreloadResult::NotChanged
                         };
 
                         match preload_result {
@@ -363,27 +365,33 @@ impl Renderer {
                 }
             });
         }
-
         {
             let queue = &self
                 .toolkit
                 .queue
                 .lock()
                 .map_err(|_| RenderingError::QueueLockingFailed)?;
-            queue.wait_idle().unwrap();
+
+            profile!("queue wait", {
+                queue.wait_idle().unwrap();
+            });
 
             if any_updates {
                 // should aso check for meshes etc, maybe a trnasient entity to detect this
-                self.record(meshes, ui_items, celestial_hierarchy);
+                profile!("meshes record", {
+                    self.record(meshes, ui_items, celestial_hierarchy);
+                });
             }
 
-            self.command_buffer
-                .submit(
-                    queue,
-                    vec![swapchain.blit_done_semaphore.clone()],
-                    vec![self.outputting_semaphore.clone()],
-                )
-                .expect("Failed to compute output");
+            profile!("command_buffer submit", {
+                self.command_buffer
+                    .submit(
+                        queue,
+                        vec![swapchain.blit_done_semaphore.clone()],
+                        vec![self.outputting_semaphore.clone()],
+                    )
+                    .expect("Failed to compute output");
+            });
         }
         profile!("blit to swapchain", {
             swapchain

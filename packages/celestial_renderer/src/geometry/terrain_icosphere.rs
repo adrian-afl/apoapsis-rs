@@ -108,7 +108,7 @@ impl TerrainIcosphere {
             &self.currently_loaded.lock().unwrap(),
         );
 
-        which_to_preload.par_iter().for_each(|x| {
+        which_to_preload.iter().for_each(|x| {
             let geometry = self
                 .load_geometry(toolkit, x.base_segment, x.level)
                 .unwrap();
@@ -173,28 +173,28 @@ impl TerrainIcosphere {
             Some(loaded) => loaded.collider_builder.is_some(),
         }
     }
-
-    pub fn preload_lowest_quality(
-        &mut self,
-        toolkit: &VEToolkit,
-    ) -> Result<PreloadResult, RenderingError> {
-        let mut locked = self.currently_loaded.lock().unwrap();
-        let mut anything_changed = false;
-        for keyval in locked.iter_mut() {
-            if keyval.1.level != 1 {
-                let geometry = self.load_geometry(toolkit, *keyval.0, 1)?;
-                keyval.1.level = 1;
-                keyval.1.vertex_buffer = geometry.vertex_buffer;
-                anything_changed = true;
-            }
-        }
-
-        Ok(if anything_changed {
-            PreloadResult::ChangesMade
-        } else {
-            PreloadResult::NotChanged
-        })
-    }
+    //
+    // pub fn preload_lowest_quality(
+    //     &mut self,
+    //     toolkit: &VEToolkit,
+    // ) -> Result<PreloadResult, RenderingError> {
+    //     let mut locked = self.currently_loaded.lock().unwrap();
+    //     let mut anything_changed = false;
+    //     for keyval in locked.iter_mut() {
+    //         if keyval.1.level != 1 {
+    //             let geometry = self.load_geometry(toolkit, *keyval.0, 1)?;
+    //             keyval.1.level = 1;
+    //             keyval.1.vertex_buffer = geometry.vertex_buffer;
+    //             anything_changed = true;
+    //         }
+    //     }
+    //
+    //     Ok(if anything_changed {
+    //         PreloadResult::ChangesMade
+    //     } else {
+    //         PreloadResult::NotChanged
+    //     })
+    // }
 
     pub fn update_buffer(
         &mut self,
@@ -234,33 +234,6 @@ impl TerrainIcosphere {
 
         stage.end_render_pass(command_buffer);
     }
-
-    /*
-    How the physics should be loaded
-
-    There are 2 processess going on, physics in general working every frame, and this preload thing
-    This is probably good idea to only enable physics at the most detailed LOD level
-
-    The problem is this streaming of LOD levels is happening every frame and stuff can get loaded and unloaded at any moment
-
-    so there are 2 options, 2 directions:
-
-        1. Let the renderer tell physics when to move the bodies
-            - This can reuse existing ECS infrastructure
-            - would need to check every frame for preloads that are loaded with highest detail level
-            - in case new one appears, its added to ECS with a reference to renderer collider - not simple to pull it from there
-
-            Risks:
-            - Getting collider data from renderer to physics when the collider is being built is going to be weird
-            - Maybe caching can be added but its another layer of bullshit
-            - It looks like the systems should be decoupled in a way to offer similar api to the one TS uses
-                - for example, emitting an event to the whole game to manage the colliders etc, and get data too
-                - like a command to get the collider data and something responsds to it
-                - it might be increasibly likely that handling this on TS side will just be easier as its already decoupled
-
-        2. Let the physics system check for actions to do based on what renderer is rendering
-            - Not really ECS reuse but can be done as well
-     */
 
     fn load_geometry(
         &self,
@@ -305,7 +278,7 @@ impl TerrainIcosphere {
                             index: base_segment,
                         },
                     ),
-                    override_real_simulation_cutoff: Some(self.loaded_data.radius * 0.23),
+                    override_real_simulation_cutoff: Some(self.loaded_data.radius * 0.25),
                 })
             },
             glue_to_celestial_body_component: if !is_most_detailed_level {

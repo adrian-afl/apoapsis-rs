@@ -9,6 +9,7 @@ use ash::vk::{
 use ash::{Device, Instance, vk};
 use std::borrow::Cow;
 use std::ffi;
+use std::ffi::{CStr, c_char};
 use std::fmt::{Debug, Formatter};
 use thiserror::Error;
 use winit::raw_window_handle::{HandleError, HasDisplayHandle, HasWindowHandle};
@@ -73,38 +74,34 @@ unsafe extern "system" fn vulkan_debug_callback(
     message_type: DebugUtilsMessageTypeFlagsEXT,
     p_callback_data: *const vk::DebugUtilsMessengerCallbackDataEXT<'_>,
     _user_data: *mut std::os::raw::c_void,
-) -> vk::Bool32 { unsafe {
-    let callback_data = *p_callback_data;
-    let message_id_number = callback_data.message_id_number;
+) -> vk::Bool32 {
+    unsafe {
+        let callback_data = *p_callback_data;
+        let message_id_number = callback_data.message_id_number;
 
-    let message_id_name = if callback_data.p_message_id_name.is_null() {
-        Cow::from("")
-    } else {
-        ffi::CStr::from_ptr(callback_data.p_message_id_name).to_string_lossy()
-    };
+        let message_id_name = if callback_data.p_message_id_name.is_null() {
+            Cow::from("")
+        } else {
+            ffi::CStr::from_ptr(callback_data.p_message_id_name).to_string_lossy()
+        };
 
-    let message = if callback_data.p_message.is_null() {
-        Cow::from("")
-    } else {
-        ffi::CStr::from_ptr(callback_data.p_message).to_string_lossy()
-    };
+        let message = if callback_data.p_message.is_null() {
+            Cow::from("")
+        } else {
+            ffi::CStr::from_ptr(callback_data.p_message).to_string_lossy()
+        };
 
-    eprintln!(
-        "VALIDATION {message_severity:?}: {message_type:?} [{message_id_name} ({message_id_number})] : {message}",
-    );
+        eprintln!(
+            "VALIDATION {message_severity:?}: {message_type:?} [{message_id_name} ({message_id_number})] : {message}",
+        );
 
-    vk::FALSE
-}}
+        vk::FALSE
+    }
+}
 
 impl VEDevice {
     pub fn new(window: &VEWindow) -> Result<VEDevice, VEDeviceError> {
         let app_name = c"vengine-rs";
-
-        // let layer_names = [c"VK_LAYER_KHRONOS_validation"];
-        // let layers_names_raw: Vec<*const c_char> = layer_names
-        //     .iter()
-        //     .map(|raw_name| raw_name.as_ptr())
-        //     .collect();
 
         let winit_window = window
             .window
@@ -146,6 +143,14 @@ impl VEDevice {
         } else {
             InstanceCreateFlags::default()
         };
+
+        let layer_names: [&CStr; 0] = [];
+        #[cfg(debug_assertions)]
+        let layer_names = [c"VK_LAYER_KHRONOS_validation"];
+        let layers_names_raw: Vec<*const c_char> = layer_names
+            .iter()
+            .map(|raw_name| raw_name.as_ptr())
+            .collect();
 
         let create_info = InstanceCreateInfo::default()
             .application_info(&appinfo)

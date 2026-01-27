@@ -18,7 +18,7 @@ use vengine_rs::core::toolkit::VEToolkit;
 use vengine_rs::image::filtering::VEFiltering;
 use vengine_rs::image::image::{VEImage, VEImageUsage, VEImageViewCreateInfo};
 use vengine_rs::image::image_format::VEImageFormat;
-use vengine_rs::image::sampler::VESamplerAddressMode;
+use vengine_rs::image::sampler::{VESampler, VESamplerAddressMode};
 
 pub struct AtmosphereDrawer {
     device: Arc<VEDevice>,
@@ -32,7 +32,7 @@ pub struct AtmosphereDrawer {
 
     pub out_additive_rgb: VEImage,
     pub out_alpha_rgba: VEImage,
-    // linear_sampler: VESampler,
+    linear_sampler: VESampler,
 }
 
 static WORKGROUP_SIZE: u32 = 8; // from the shader!!! its 8x8x1
@@ -175,6 +175,7 @@ impl AtmosphereDrawer {
             common_data_set,
             out_additive_rgb,
             out_alpha_rgba,
+            linear_sampler,
         })
     }
 

@@ -1,4 +1,9 @@
+use crate::geometry::common_icosphere::{
+    ICO_BASE_SUBDIVISION, calculate_base_icosphere_parts_count,
+};
+use ash::vk::DeviceSize;
 use glam::{DMat4, DVec3};
+use planet_generator_library::base_icosphere::get_base_icosphere;
 use renderer_common::buffer_writers::{write_mat4, write_vec3_zero};
 use renderer_common::errors::RenderingError;
 use vengine_rs::buffer::buffer::{VEBuffer, VEBufferUsage};
@@ -13,16 +18,22 @@ pub struct WaterIcosphereDataBuffer {
 
 impl WaterIcosphereDataBuffer {
     pub fn new(toolkit: &VEToolkit) -> Result<Self, RenderingError> {
+        let icosphere_triangles_count =
+            calculate_base_icosphere_parts_count(ICO_BASE_SUBDIVISION) as u64;
+        // each part needs a mat4 f32, so 16 * 4 * count is total size
+        // lets add some trailing space just for fun too
+        // let desired_buffer_size = 16 * 4 * icosphere_triangles_count + 2048;
+        let desired_buffer_size = 1024 * 1024;
         Ok(Self {
             staging_buffer: toolkit.create_buffer(
                 &[VEBufferUsage::Storage, VEBufferUsage::TransferSource],
-                64 * 1024,
-                Some(VEMemoryProperties::HostCoherent), // should REALLY be device local...
+                desired_buffer_size as DeviceSize,
+                Some(VEMemoryProperties::HostCoherent),
             )?,
             buffer: toolkit.create_buffer(
                 &[VEBufferUsage::Storage, VEBufferUsage::TransferDestination],
-                64 * 1024,
-                Some(VEMemoryProperties::DeviceLocal), // should REALLY be device local...
+                desired_buffer_size as DeviceSize,
+                Some(VEMemoryProperties::DeviceLocal),
             )?,
         })
     }

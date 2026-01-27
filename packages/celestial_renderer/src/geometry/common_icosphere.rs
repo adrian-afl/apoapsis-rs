@@ -2,6 +2,7 @@ use ecs::components::physics::glue_to_celestial_body_component::GlueToCelestialB
 use ecs::components::physics::real_physics_component::RealPhysicsComponent;
 use glam::{DMat4, DVec3, Vec3};
 use math::decimal_vector_3d::DecimalVector3d;
+use planet_generator_library::base_icosphere::get_base_icosphere;
 use planet_generator_library::generate_icosphere::IcosphereMetadataItem;
 use rapier3d_f64::geometry::ColliderBuilder;
 use rayon::iter::IndexedParallelIterator;
@@ -12,8 +13,15 @@ use std::sync::Mutex;
 use universe_simulation::simulation::SimulatedBody;
 use vengine_rs::graphics::vertex_buffer::VEVertexBuffer;
 
+pub static ICO_BASE_SUBDIVISION: u8 = 2u8;
 pub static ICO_LEVEL_SUBDIVISIONS: [u8; 3] = [3, 4, 5];
 static ICO_THRESHOLDS: [f64; 2] = [2000000.0, 5000000.0];
+
+pub fn calculate_base_icosphere_parts_count(subdivisions: u8) -> u16 {
+    let mut start = get_base_icosphere(); // base, currently, has 20 triangles
+    // each subdivision makes 1 triangle become 4 triangles
+    (start.len() * (4_usize.pow(subdivisions as usize as u32))) as u16
+}
 
 pub struct IcosphereLoadedGeometry {
     pub vertex_buffer: VEVertexBuffer,

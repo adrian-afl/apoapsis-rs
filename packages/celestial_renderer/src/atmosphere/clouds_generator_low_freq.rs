@@ -66,7 +66,7 @@ impl CloudGeneratorLowFreq {
         let view = low_freq_data_r.get_view(VEImageViewCreateInfo::simple_2d())?;
         data_set.bind_image_storage(1, &low_freq_data_r, view)?;
 
-        let _command_buffer = toolkit.create_command_buffer()?;
+        // let _command_buffer = toolkit.create_command_buffer()?;
 
         let compute_stage =
             toolkit.create_compute_stage(&[&data_set_layout], &low_freq_compute_shader)?;

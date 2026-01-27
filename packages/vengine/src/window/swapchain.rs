@@ -294,7 +294,7 @@ impl VESwapchain {
 
         wait_handles.push(ack_semaphore.clone());
 
-        self.present_command_buffer.begin()?; // TODO try to remove this flag
+        self.present_command_buffer.begin()?;
 
         self.present_images[acquired as usize].transition_layout(
             &self.present_command_buffer,

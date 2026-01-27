@@ -2,7 +2,7 @@ use crate::core::command_buffer::{VECommandBuffer, VECommandBufferError};
 use crate::core::command_pool::VECommandPool;
 use crate::core::device::VEDevice;
 use crate::core::main_device_queue::{VEMainDeviceQueue, VEMainDeviceQueueError};
-use crate::core::memory_properties::{get_memory_properties_flags, VEMemoryProperties};
+use crate::core::memory_properties::{VEMemoryProperties, get_memory_properties_flags};
 use crate::memory::memory_chunk::{VEMemoryChunkError, VESingleAllocation};
 use crate::memory::memory_manager::{VEMemoryManager, VEMemoryManagerError};
 use ash::vk;
@@ -64,9 +64,7 @@ fn get_buffer_usage_flags(usages: &[VEBufferUsage]) -> vk::BufferUsageFlags {
             VEBufferUsage::Uniform => flags |= vk::BufferUsageFlags::UNIFORM_BUFFER,
             VEBufferUsage::Storage => flags |= vk::BufferUsageFlags::STORAGE_BUFFER,
             VEBufferUsage::TransferSource => flags |= vk::BufferUsageFlags::TRANSFER_SRC,
-            VEBufferUsage::TransferDestination => {
-                flags |= vk::BufferUsageFlags::TRANSFER_DST
-            }
+            VEBufferUsage::TransferDestination => flags |= vk::BufferUsageFlags::TRANSFER_DST,
             VEBufferUsage::Vertex => flags |= vk::BufferUsageFlags::VERTEX_BUFFER,
         }
     }
@@ -191,7 +189,7 @@ impl Drop for VEBuffer {
     fn drop(&mut self) {
         let locking_result = self.memory_manager.lock();
         match locking_result {
-            Ok(mut mem) => if { mem.free_allocation(&self.allocation) }.is_ok() {  },
+            Ok(mut mem) => if { mem.free_allocation(&self.allocation) }.is_ok() {},
             Err(_) => {
                 panic!("Locking memory manager failed")
             }

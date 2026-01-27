@@ -1,6 +1,6 @@
 use crate::atmosphere::atmosphere_drawer::AtmosphereDrawer;
 use crate::buffers::celestial_body_buffer::CelestialBodyBuffer;
-use crate::geometry::common_icosphere::ICO_LEVEL_SUBDIVISIONS;
+use crate::geometry::common_icosphere::{ICO_BASE_SUBDIVISION, ICO_LEVEL_SUBDIVISIONS};
 use crate::geometry::icosphere_drawer::IcosphereDrawer;
 use crate::geometry::terrain_icosphere::{TerrainData, TerrainIcosphere};
 use crate::geometry::water_icosphere::{WaterData, WaterIcosphere};
@@ -38,7 +38,7 @@ pub struct CelestialHierarchy {
 
 impl CelestialHierarchy {
     pub fn new(toolkit: Arc<VEToolkit>) -> Self {
-        let base_icosphere = Arc::new(generate_base_icosphere(2));
+        let base_icosphere = Arc::new(generate_base_icosphere(ICO_BASE_SUBDIVISION));
         let generator = Arc::new(IcosphereSegmentGenerator::new(
             &base_icosphere,
             &ICO_LEVEL_SUBDIVISIONS,

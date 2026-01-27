@@ -115,7 +115,7 @@ export class BaseGameApi {
         reject(
           new Error(`Timed out waiting for command reply: ${message.name}`),
         );
-      }, 5000);
+      }, 50000);
     });
     await this.transmitter({ ...message, replyTo });
 
