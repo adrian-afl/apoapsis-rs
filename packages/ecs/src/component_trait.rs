@@ -237,7 +237,7 @@ create_component_types_enum!(
         is_celestial_body_surface,
         IsCelestialBodySurface,
         IsCelestialBodySurfaceComponent,
-        Marker
+        Option
     ),
     (is_player, IsPlayer, IsPlayerComponent, Marker),
     (mesh, Mesh, MeshComponent, Vector),

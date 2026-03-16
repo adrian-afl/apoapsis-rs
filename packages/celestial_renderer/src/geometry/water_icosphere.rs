@@ -7,8 +7,7 @@ use crate::geometry::icosphere_drawer::WATER_ICOSPHERE_VERTEX_ATTRIBUTES;
 use ecs::component_trait::acquire_next_id;
 use ecs::components::physics::glue_to_celestial_body_component::GlueToCelestialBodyComponent;
 use ecs::components::physics::real_physics_component::{
-    CelestialBodyColliderSurfaceType, CelestialBodySurfaceColliderDescription,
-    RealPhysicsComponent, ShapeDescription, TriMeshColliderDescription,
+    ColliderDescription, ColliderShape, RealPhysicsComponent, TriMeshColliderDescription,
 };
 use glam::{DMat4, DQuat, DVec3};
 use math::decimal_vector_3d::DecimalVector3d;
@@ -19,8 +18,6 @@ use planet_generator_library::generate_icosphere::{
 use planet_generator_library::load_binary_maps::{
     get_water_maps_resolution, load_binary_water_map,
 };
-use rapier3d_f64::geometry::ColliderBuilder;
-use rapier3d_f64::math::Vector;
 use rayon::iter::ParallelIterator;
 use rayon::prelude::IntoParallelRefIterator;
 use renderer_common::errors::RenderingError;
@@ -206,17 +203,13 @@ impl WaterIcosphere {
     pub fn get_physics_components(
         &self,
         base_index: u16,
-    ) -> Option<(
-        RealPhysicsComponent,
-        GlueToCelestialBodyComponent,
-        ColliderBuilder,
-    )> {
+    ) -> Option<(RealPhysicsComponent, GlueToCelestialBodyComponent)> {
         let locked = self.currently_loaded.lock().unwrap();
         let loaded = locked.get(&base_index);
         match loaded {
             None => None,
             Some(loaded) => {
-                if loaded.collider_builder.is_none() {
+                if loaded.real_physics_component.is_none() {
                     return None;
                 }
                 Some((
@@ -226,7 +219,6 @@ impl WaterIcosphere {
                         .as_ref()
                         .unwrap()
                         .clone(),
-                    loaded.collider_builder.as_ref().unwrap().clone(),
                 ))
             }
         }
@@ -237,7 +229,7 @@ impl WaterIcosphere {
         let loaded = locked.get(&base_index);
         match loaded {
             None => false,
-            Some(loaded) => loaded.collider_builder.is_some(),
+            Some(loaded) => loaded.real_physics_component.is_some(),
         }
     }
 
@@ -262,10 +254,14 @@ impl WaterIcosphere {
             .create_vertex_buffer_from_data(segment.0, &WATER_ICOSPHERE_VERTEX_ATTRIBUTES)?;
 
         let vertices = segment.1;
-        let mut indices: Vec<[u32; 3]> = Vec::new();
-        for vertex_i in 0..vertices.len() / 3 {
-            let start = indices.len();
-            indices.push([(start + 0) as u32, (start + 1) as u32, (start + 2) as u32]);
+        let mut triangles: Vec<[DVec3; 3]> = Vec::new();
+        for _ in 0..vertices.len() / 3 {
+            let start = triangles.len();
+            triangles.push([
+                vertices[start + 0],
+                vertices[start + 1],
+                vertices[start + 2],
+            ]);
         }
 
         Ok(IcosphereLoadedGeometry {
@@ -275,13 +271,12 @@ impl WaterIcosphere {
             } else {
                 Some(RealPhysicsComponent {
                     id: acquire_next_id(),
-                    shape_description: ShapeDescription::CelestialBodySurface(
-                        CelestialBodySurfaceColliderDescription {
-                            body_name: self.loaded_data.body_name.clone(),
-                            surface_type: CelestialBodyColliderSurfaceType::Water,
-                            index: base_segment,
-                        },
-                    ),
+                    collider_descriptions: vec![ColliderDescription {
+                        shape: ColliderShape::TriMesh(TriMeshColliderDescription { triangles }),
+                        mass: 0.0,
+                        orientation: DQuat::IDENTITY,
+                        offset: DVec3::ZERO,
+                    }],
                     override_real_simulation_cutoff: Some(self.loaded_data.radius * 0.5),
                 })
             },
@@ -297,20 +292,6 @@ impl WaterIcosphere {
                     ),
                     orientation: DQuat::IDENTITY,
                 })
-            },
-            collider_builder: if !is_most_detailed_level {
-                None
-            } else {
-                Some(
-                    ColliderBuilder::trimesh(
-                        vertices
-                            .iter()
-                            .map(|x| Vector::new(x.x, x.y, x.z))
-                            .collect(),
-                        indices,
-                    )
-                    .unwrap(),
-                )
             },
             level,
         })

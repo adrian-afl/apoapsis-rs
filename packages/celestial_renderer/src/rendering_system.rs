@@ -8,14 +8,15 @@ use crate::scene::mesh::Mesh;
 use common_util::profile;
 use ecs::component_trait::Components;
 use ecs::components::physics::glue_to_celestial_body_component::GlueToCelestialBodyComponent;
-use ecs::components::physics::real_physics_component::RealPhysicsComponent;
+use ecs::components::physics::real_physics_component::{
+    RealPhysicsComponent, TriMeshColliderDescription,
+};
 use ecs::components::rendering::mesh_component::{
     ColorOrTextureDescription, MeshDescription, ValueOrTextureDescription,
 };
 use ecs::ecs_world::ECSWorld;
 use glam::DVec3;
 use math::decimal_vector_3d::DecimalVector3d;
-use rapier3d_f64::geometry::ColliderBuilder;
 use rayon::iter::ParallelIterator;
 use rayon::prelude::{IntoParallelRefIterator, IntoParallelRefMutIterator};
 use renderer_common::camera::Camera;
@@ -103,11 +104,7 @@ impl RenderingSystem {
         &self,
         body_name: &str,
         base_index: u16,
-    ) -> Option<(
-        RealPhysicsComponent,
-        GlueToCelestialBodyComponent,
-        ColliderBuilder,
-    )> {
+    ) -> Option<(RealPhysicsComponent, GlueToCelestialBodyComponent)> {
         let rendered_body = self.celestial_hierarchy.get_rendered_body(&body_name)?;
         rendered_body
             .terrain_icosphere
@@ -119,11 +116,7 @@ impl RenderingSystem {
         &self,
         body_name: &str,
         base_index: u16,
-    ) -> Option<(
-        RealPhysicsComponent,
-        GlueToCelestialBodyComponent,
-        ColliderBuilder,
-    )> {
+    ) -> Option<(RealPhysicsComponent, GlueToCelestialBodyComponent)> {
         let rendered_body = self.celestial_hierarchy.get_rendered_body(&body_name)?;
         rendered_body
             .water_icosphere

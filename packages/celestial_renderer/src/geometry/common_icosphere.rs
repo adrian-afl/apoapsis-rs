@@ -1,10 +1,11 @@
 use ecs::components::physics::glue_to_celestial_body_component::GlueToCelestialBodyComponent;
-use ecs::components::physics::real_physics_component::RealPhysicsComponent;
+use ecs::components::physics::real_physics_component::{
+    RealPhysicsComponent, TriMeshColliderDescription,
+};
 use glam::{DMat4, DVec3, Vec3};
 use math::decimal_vector_3d::DecimalVector3d;
 use planet_generator_library::base_icosphere::get_base_icosphere;
 use planet_generator_library::generate_icosphere::IcosphereMetadataItem;
-use rapier3d_f64::geometry::ColliderBuilder;
 use rayon::iter::IndexedParallelIterator;
 use rayon::iter::ParallelIterator;
 use rayon::prelude::IntoParallelRefIterator;
@@ -25,7 +26,6 @@ pub fn calculate_base_icosphere_parts_count(subdivisions: u8) -> u16 {
 
 pub struct IcosphereLoadedGeometry {
     pub vertex_buffer: VEVertexBuffer,
-    pub collider_builder: Option<ColliderBuilder>,
     pub real_physics_component: Option<RealPhysicsComponent>,
     pub glue_to_celestial_body_component: Option<GlueToCelestialBodyComponent>,
     pub level: u8,

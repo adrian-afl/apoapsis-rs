@@ -1,5 +1,5 @@
-use crate::build_collider::build_collider;
-use crate::real_physics_system::{DebugCollector, RealPhysicsSystem, SetRealPhysicsBodyKinematics};
+use crate::build_shape::build_shape;
+use crate::real_physics_system::{RealPhysicsSystem, SetRealPhysicsBodyKinematics};
 use celestial_renderer::geometry::common_icosphere::{
     ICO_BASE_SUBDIVISION, ICO_LEVEL_SUBDIVISIONS, calculate_base_icosphere_parts_count,
 };
@@ -8,20 +8,18 @@ use common_util::profile;
 use dashu_float::DBig;
 use ecs::component_trait::Components;
 use ecs::components::common::transform_component::TransformComponent;
+use ecs::components::physics::is_celestial_body_surface_component::IsCelestialBodySurfaceComponent;
 use ecs::components::physics::real_physics_component::{
-    CelestialBodyColliderSurfaceType, CelestialBodySurfaceColliderDescription,
-    RealPhysicsComponent, ShapeDescription,
+    CelestialBodyColliderSurfaceType, ColliderDescription, ColliderShape, RealPhysicsComponent,
 };
 use ecs::components::physics::simple_physics_component::SimplePhysicsComponent;
 use ecs::ecs_world::ECSWorld;
 use ecs::entity::Entity;
 use glam::{DQuat, DVec3};
+use katana_physics::colliders::katana_collider::KatanaCollider;
+use katana_physics::katana_rigid_body::KatanaRigidBody;
 use math::decimal_vector_3d::DecimalVector3d;
 use math::sin_cos::f64_to_dbig;
-use rapier3d_f64::dynamics::CoefficientCombineRule;
-use rapier3d_f64::geometry::ActiveCollisionTypes;
-use rapier3d_f64::pipeline::ActiveEvents;
-use rapier3d_f64::prelude::{RigidBodyBuilder, RigidBodyHandle};
 use rayon::iter::IntoParallelRefIterator;
 use rayon::iter::ParallelIterator;
 use serde::{Deserialize, Serialize};
@@ -32,7 +30,7 @@ use ts_rs::TS;
 use universe_simulation::simulation::Simulation;
 
 struct SimulatedBody {
-    rigid_body: RigidBodyHandle,
+    rigid_body: u64,
     phase_1_relative_position: DVec3,
     phase_1_relative_linear_velocity: DVec3,
 }
@@ -161,7 +159,6 @@ impl PhysicsSystem {
                     let real_physics = real_physics.unwrap();
 
                     let handle_or_none = self.handle_real_physics_simulation_start_stop(
-                        context.rendering_system,
                         entity.id,
                         transform,
                         simple_physics,
@@ -220,18 +217,20 @@ impl PhysicsSystem {
                                 )
                                 .unwrap();
 
-                            if simple_physics.mass > DBig::ZERO && !has_glue {
+                            if real_physics
+                                .collider_descriptions
+                                .iter()
+                                .fold(0.0, |p, c| p + c.mass)
+                                > 0.0
+                                && !has_glue
+                            {
                                 let gravity_force = context
                                     .universe_simulation
                                     .calculate_gravity_flux(&transform.position)
                                     .to_dvec3_with_precision(5);
 
                                 real_physics_system
-                                    .apply_force(
-                                        simulated_object_rigid_body,
-                                        gravity_force * simple_physics.mass.to_f64().value(),
-                                        false,
-                                    )
+                                    .apply_force(simulated_object_rigid_body, gravity_force)
                                     .unwrap();
 
                                 // dbg!(relative_linear_velocity);
@@ -281,7 +280,12 @@ impl PhysicsSystem {
 
                 if let Some(simulated) = simulated {
                     let simple_physics = entity.components.simple_physics.as_mut().unwrap();
-                    if simple_physics.mass.gt(&DBig::ZERO) {
+                    if real_physics
+                        .collider_descriptions
+                        .iter()
+                        .fold(0.0, |p, c| p + c.mass)
+                        > 0.0
+                    {
                         let real_physics_system = self.real_physics_system.read().unwrap();
                         let kinematics = real_physics_system
                             .get_body_kinematics(simulated.rigid_body)
@@ -359,7 +363,7 @@ impl PhysicsSystem {
         transform.position = &transform.position
             + &DecimalVector3d::from_dvec3(simple_physics.linear_velocity * half_delta_time);
 
-        if simple_physics.mass > DBig::ZERO {
+        if !simple_physics.is_static {
             let gravity_impulse = universe_simulation
                 .calculate_gravity_flux(&transform.position)
                 .to_dvec3_with_precision(5)
@@ -387,7 +391,6 @@ impl PhysicsSystem {
 
     fn handle_real_physics_simulation_start_stop(
         &self,
-        rendering_system: &RenderingSystem,
         entity_id: u64,
         transform: &TransformComponent,
         simple_physics: &SimplePhysicsComponent,
@@ -425,7 +428,6 @@ impl PhysicsSystem {
             // load
             println!("PSY LOAD {}", real_physics.id);
             Self::start_real_physics_sim(
-                rendering_system,
                 &mut real_physics_system,
                 &mut currently_simulated_bodies,
                 entity_id,
@@ -440,7 +442,6 @@ impl PhysicsSystem {
     }
 
     fn start_real_physics_sim(
-        rendering_system: &RenderingSystem,
         real_physics_system: &mut RealPhysicsSystem,
         currently_simulated_bodies: &mut HashMap<u64, SimulatedBody>,
         entity_id: u64,
@@ -448,41 +449,39 @@ impl PhysicsSystem {
         simple_physics: &SimplePhysicsComponent,
         real_physics: &RealPhysicsComponent,
     ) {
-        // let mass_f64 = simple_physics.mass.eq(&DBig::ZERO);
-        // remember somehow to do it in future
-        let rigid_body_builder = match simple_physics.mass != DBig::ZERO {
-            true => RigidBodyBuilder::dynamic()
-                .ccd_enabled(true)
-                .can_sleep(false)
-                .additional_mass(simple_physics.mass.to_f64().unwrap()),
-            false => RigidBodyBuilder::dynamic()
-                .ccd_enabled(true)
-                .can_sleep(false)
-                .additional_mass(999999.0),
-            // false => RigidBodyBuilder::fixed().ccd_enabled(false),
-        };
-        let mut rigid_body = rigid_body_builder.build();
+        let mut rigid_body = KatanaRigidBody::new();
         rigid_body.user_data = entity_id as u128;
 
-        let mut collider = build_collider(&real_physics.shape_description, rendering_system)
-            .restitution(0.1)
-            .restitution_combine_rule(CoefficientCombineRule::Min)
-            .active_events(ActiveEvents::all())
-            .active_collision_types(ActiveCollisionTypes::all())
-            .build();
-        collider.user_data = entity_id as u128;
+        let mut colliders = real_physics
+            .collider_descriptions
+            .iter()
+            .map(|description| {
+                let shape = build_shape(description);
+                let mut collider = KatanaCollider::new(
+                    shape,
+                    description.offset,
+                    description.orientation,
+                    description.mass,
+                );
+                collider.user_data = entity_id as u128;
+                collider
+            });
 
-        let body_collider_tuple = real_physics_system.add_body_with_collider(rigid_body, collider);
+        for collider in colliders {
+            rigid_body.add_collider(collider);
+        }
+
+        let body_id = real_physics_system.add_body(rigid_body);
 
         let simulated = SimulatedBody {
-            rigid_body: body_collider_tuple.0,
+            rigid_body: body_id,
             phase_1_relative_position: DVec3::new(0.0, 0.0, 0.0),
             phase_1_relative_linear_velocity: DVec3::new(0.0, 0.0, 0.0),
         };
 
         real_physics_system
             .set_body_kinematics(
-                body_collider_tuple.0,
+                body_id,
                 SetRealPhysicsBodyKinematics {
                     position: None,
                     orientation: Some(transform.orientation),
@@ -510,13 +509,6 @@ impl PhysicsSystem {
         currently_simulated_bodies.remove(&real_physics_component_id);
     }
 
-    pub fn debug_get_world(&mut self) -> DebugCollector {
-        self.real_physics_system
-            .try_write()
-            .unwrap()
-            .debug_get_world()
-    }
-
     // TODO not camera but player
     pub fn raycast_real(&self, camera_relative_origin: DVec3, direction: DVec3) -> Option<f64> {
         self.real_physics_system
@@ -542,14 +534,20 @@ impl PhysicsSystem {
         for existing_id in existing_entities {
             // println!("existing_id {existing_id}");
             let existing = &context.ecs[existing_id];
-            // let glue = existing.components.glue_to_celestial_body.as_ref().unwrap();
-            let real_physics = existing.components.real_physics.as_ref().unwrap();
-            let shape = match &real_physics.shape_description {
-                ShapeDescription::CelestialBodySurface(cfg) => cfg,
-                _ => panic!("should be CelestialBodySurface"),
-            };
+            // let glue = existing.components.glue_to_celestial_body.as_ref().unwrap(
+            let is_celestial_body_surface = existing
+                .components
+                .is_celestial_body_surface
+                .as_ref()
+                .unwrap();
             // println!("detected {} {}", shape.body_name.clone(), shape.index);
-            currently_simulated.insert((shape.body_name.clone(), shape.index), existing_id);
+            currently_simulated.insert(
+                (
+                    is_celestial_body_surface.body_name.clone(),
+                    is_celestial_body_surface.index,
+                ),
+                existing_id,
+            );
         }
 
         for body in all_bodies {
@@ -577,11 +575,14 @@ impl PhysicsSystem {
                         .rendering_system
                         .get_terrain_physics_components(&body, segment)
                         .unwrap();
-                    entity.components.is_celestial_body_surface = true;
+                    entity.components.is_celestial_body_surface =
+                        Some(IsCelestialBodySurfaceComponent::new(
+                            terrain_physics_data.1.body_name.clone(),
+                            segment,
+                        ));
                     entity.components.real_physics = Some(terrain_physics_data.0.clone());
                     entity.components.glue_to_celestial_body = Some(terrain_physics_data.1.clone());
-                    entity.components.simple_physics =
-                        Some(SimplePhysicsComponent::from_mass(DBig::ZERO));
+                    entity.components.simple_physics = Some(SimplePhysicsComponent::new_static());
                     entity.components.transform = Some(TransformComponent::default());
                     println!("adding {body} {segment}");
                     context.ecs.add(entity);

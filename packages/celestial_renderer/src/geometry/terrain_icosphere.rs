@@ -7,8 +7,7 @@ use crate::geometry::icosphere_drawer::TERRAIN_ICOSPHERE_VERTEX_ATTRIBUTES;
 use ecs::component_trait::acquire_next_id;
 use ecs::components::physics::glue_to_celestial_body_component::GlueToCelestialBodyComponent;
 use ecs::components::physics::real_physics_component::{
-    CelestialBodyColliderSurfaceType, CelestialBodySurfaceColliderDescription,
-    RealPhysicsComponent, ShapeDescription, TriMeshColliderDescription,
+    ColliderDescription, ColliderShape, RealPhysicsComponent, TriMeshColliderDescription,
 };
 use glam::{DMat4, DQuat, DVec3};
 use math::decimal_vector_3d::DecimalVector3d;
@@ -20,10 +19,7 @@ use planet_generator_library::interpolated_biome_data::LoadedBiomeData;
 use planet_generator_library::load_binary_maps::{
     get_terrain_maps_resolution, load_binary_biome_map, load_binary_terrain_map,
 };
-use rapier3d_f64::math::Vector;
-use rapier3d_f64::prelude::{ColliderBuilder, TriMeshFlags};
 use rayon::iter::ParallelIterator;
-use rayon::prelude::IntoParallelRefIterator;
 use renderer_common::errors::RenderingError;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
@@ -139,17 +135,13 @@ impl TerrainIcosphere {
     pub fn get_physics_components(
         &self,
         base_index: u16,
-    ) -> Option<(
-        RealPhysicsComponent,
-        GlueToCelestialBodyComponent,
-        ColliderBuilder,
-    )> {
+    ) -> Option<(RealPhysicsComponent, GlueToCelestialBodyComponent)> {
         let locked = self.currently_loaded.lock().unwrap();
         let loaded = locked.get(&base_index);
         match loaded {
             None => None,
             Some(loaded) => {
-                if loaded.collider_builder.is_none() {
+                if loaded.real_physics_component.is_none() {
                     return None;
                 }
                 Some((
@@ -159,7 +151,6 @@ impl TerrainIcosphere {
                         .as_ref()
                         .unwrap()
                         .clone(),
-                    loaded.collider_builder.as_ref().unwrap().clone(),
                 ))
             }
         }
@@ -170,7 +161,7 @@ impl TerrainIcosphere {
         let loaded = locked.get(&base_index);
         match loaded {
             None => false,
-            Some(loaded) => loaded.collider_builder.is_some(),
+            Some(loaded) => loaded.real_physics_component.is_some(),
         }
     }
     //
@@ -257,11 +248,14 @@ impl TerrainIcosphere {
             .create_vertex_buffer_from_data(segment.0, &TERRAIN_ICOSPHERE_VERTEX_ATTRIBUTES)?;
 
         let vertices = segment.1;
-        let mut indices: Vec<[u32; 3]> = Vec::new();
-        let mut i = 0;
-        for vertex_i in 0..vertices.len() / 3 {
-            indices.push([(i + 0) as u32, (i + 1) as u32, (i + 2) as u32]);
-            i += 3;
+        let mut triangles: Vec<[DVec3; 3]> = Vec::new();
+        for _ in 0..vertices.len() / 3 {
+            let start = triangles.len();
+            triangles.push([
+                vertices[start + 0],
+                vertices[start + 1],
+                vertices[start + 2],
+            ]);
         }
 
         Ok(IcosphereLoadedGeometry {
@@ -271,13 +265,12 @@ impl TerrainIcosphere {
             } else {
                 Some(RealPhysicsComponent {
                     id: acquire_next_id(),
-                    shape_description: ShapeDescription::CelestialBodySurface(
-                        CelestialBodySurfaceColliderDescription {
-                            body_name: self.loaded_data.body_name.clone(),
-                            surface_type: CelestialBodyColliderSurfaceType::Terrain,
-                            index: base_segment,
-                        },
-                    ),
+                    collider_descriptions: vec![ColliderDescription {
+                        shape: ColliderShape::TriMesh(TriMeshColliderDescription { triangles }),
+                        mass: 0.0,
+                        orientation: DQuat::IDENTITY,
+                        offset: DVec3::ZERO,
+                    }],
                     override_real_simulation_cutoff: Some(self.loaded_data.radius * 0.05),
                 })
             },
@@ -293,28 +286,6 @@ impl TerrainIcosphere {
                     ),
                     orientation: DQuat::IDENTITY,
                 })
-            },
-            collider_builder: if !is_most_detailed_level {
-                None
-            } else {
-                // println!(
-                //     "{} DISTANCE EDGE TO EDGE FIRST IS {}",
-                //     self.loaded_data.body_name.clone(),
-                //     vertices[0].distance(vertices[1]).to_string()
-                // );
-                Some(
-                    ColliderBuilder::trimesh_with_flags(
-                        vertices
-                            .iter()
-                            .map(|x| Vector::new(x.x, x.y, x.z))
-                            .collect(),
-                        indices,
-                        TriMeshFlags::FIX_INTERNAL_EDGES,
-                    )
-                    .unwrap()
-                    .contact_skin(0.1)
-                    .friction(0.5),
-                )
             },
             level,
         })
