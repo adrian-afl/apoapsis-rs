@@ -427,7 +427,7 @@ impl RealPhysicsSystem {
                     );
                 }
                 if data.wake_up {
-                    body.wake_up(true) // strong??
+                    body.wake_up(false) // strong??
                 }
                 Ok(())
             }

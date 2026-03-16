@@ -1,6 +1,6 @@
 use glam::{DVec2, DVec3, DVec4};
-use rand_xoshiro::rand_core::{RngCore, SeedableRng};
 use rand_xoshiro::Xoshiro256StarStar;
+use rand_xoshiro::rand_core::{Rng, SeedableRng};
 
 fn random_1d_hasher(v: f64) -> Xoshiro256StarStar {
     Xoshiro256StarStar::seed_from_u64(v.to_bits())

@@ -309,12 +309,10 @@ impl TerrainIcosphere {
                             .map(|x| Vector::new(x.x, x.y, x.z))
                             .collect(),
                         indices,
-                        TriMeshFlags::FIX_INTERNAL_EDGES
-                            | TriMeshFlags::ORIENTED
-                            | TriMeshFlags::MERGE_DUPLICATE_VERTICES,
+                        TriMeshFlags::FIX_INTERNAL_EDGES,
                     )
                     .unwrap()
-                    .contact_skin(1.0)
+                    .contact_skin(0.1)
                     .friction(0.5),
                 )
             },

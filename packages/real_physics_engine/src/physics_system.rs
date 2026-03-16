@@ -195,16 +195,16 @@ impl PhysicsSystem {
                                 simulated_object.rigid_body
                             }; // unlocks
 
-                            if simple_physics.mass > DBig::ZERO && !has_glue {
-                                let gravity_force = context
-                                    .universe_simulation
-                                    .calculate_gravity_flux(&transform.position)
-                                    .to_dvec3_with_precision(5);
-
-                                relative_linear_velocity += gravity_force * context.delta_time;
-
-                                // dbg!(relative_linear_velocity);
-                            }
+                            // if simple_physics.mass > DBig::ZERO && !has_glue {
+                            //     let gravity_force = context
+                            //         .universe_simulation
+                            //         .calculate_gravity_flux(&transform.position)
+                            //         .to_dvec3_with_precision(5);
+                            //
+                            //     relative_linear_velocity += gravity_force * context.delta_time;
+                            //
+                            //     // dbg!(relative_linear_velocity);
+                            // }
 
                             let mut real_physics_system = self.real_physics_system.write().unwrap();
                             real_physics_system
@@ -215,27 +215,27 @@ impl PhysicsSystem {
                                         angular_velocity: Some(simple_physics.angular_velocity),
                                         position: Some(relative_position),
                                         orientation: None,
-                                        wake_up: true,
+                                        wake_up: false,
                                     },
                                 )
                                 .unwrap();
-                            //
-                            // if simple_physics.mass > DBig::ZERO && !has_glue {
-                            //     let gravity_force = context
-                            //         .universe_simulation
-                            //         .calculate_gravity_flux(&transform.position)
-                            //         .to_dvec3_with_precision(5);
-                            //
-                            //     real_physics_system
-                            //         .apply_force(
-                            //             simulated_object_rigid_body,
-                            //             gravity_force * simple_physics.mass.to_f64().value(),
-                            //             true,
-                            //         )
-                            //         .unwrap();
-                            //
-                            //     // dbg!(relative_linear_velocity);
-                            // }
+
+                            if simple_physics.mass > DBig::ZERO && !has_glue {
+                                let gravity_force = context
+                                    .universe_simulation
+                                    .calculate_gravity_flux(&transform.position)
+                                    .to_dvec3_with_precision(5);
+
+                                real_physics_system
+                                    .apply_force(
+                                        simulated_object_rigid_body,
+                                        gravity_force * simple_physics.mass.to_f64().value(),
+                                        false,
+                                    )
+                                    .unwrap();
+
+                                // dbg!(relative_linear_velocity);
+                            }
                         }
                     }
                 } else {
@@ -452,10 +452,12 @@ impl PhysicsSystem {
         // remember somehow to do it in future
         let rigid_body_builder = match simple_physics.mass != DBig::ZERO {
             true => RigidBodyBuilder::dynamic()
-                .ccd_enabled(false)
+                .ccd_enabled(true)
+                .can_sleep(false)
                 .additional_mass(simple_physics.mass.to_f64().unwrap()),
             false => RigidBodyBuilder::dynamic()
-                .ccd_enabled(false)
+                .ccd_enabled(true)
+                .can_sleep(false)
                 .additional_mass(999999.0),
             // false => RigidBodyBuilder::fixed().ccd_enabled(false),
         };
