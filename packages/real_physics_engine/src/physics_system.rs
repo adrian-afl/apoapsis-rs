@@ -10,7 +10,7 @@ use ecs::component_trait::Components;
 use ecs::components::common::transform_component::TransformComponent;
 use ecs::components::physics::is_celestial_body_surface_component::IsCelestialBodySurfaceComponent;
 use ecs::components::physics::real_physics_component::{
-    CelestialBodyColliderSurfaceType, ColliderDescription, ColliderShape, RealPhysicsComponent,
+    ColliderDescription, ColliderShape, RealPhysicsComponent,
 };
 use ecs::components::physics::simple_physics_component::SimplePhysicsComponent;
 use ecs::ecs_world::ECSWorld;
@@ -20,6 +20,7 @@ use katana_physics::colliders::katana_collider::KatanaCollider;
 use katana_physics::katana_rigid_body::KatanaRigidBody;
 use math::decimal_vector_3d::DecimalVector3d;
 use math::sin_cos::f64_to_dbig;
+use media_provider::cached_fs_reader::CachedFSReader;
 use rayon::iter::IntoParallelRefIterator;
 use rayon::iter::ParallelIterator;
 use serde::{Deserialize, Serialize};
@@ -57,6 +58,7 @@ struct PhysicsUpdateContext<'a> {
     ecs: &'a mut ECSWorld,
     universe_simulation: &'a Simulation,
     rendering_system: &'a RenderingSystem,
+    cache: &'a CachedFSReader,
     delta_time: f64,
 }
 
@@ -163,6 +165,7 @@ impl PhysicsSystem {
                         transform,
                         simple_physics,
                         real_physics,
+                        context.cache,
                     );
 
                     match handle_or_none {
@@ -227,7 +230,8 @@ impl PhysicsSystem {
                                 let gravity_force = context
                                     .universe_simulation
                                     .calculate_gravity_flux(&transform.position)
-                                    .to_dvec3_with_precision(5);
+                                    .to_dvec3_with_precision(5)
+                                    * context.delta_time;
 
                                 real_physics_system
                                     .apply_force(simulated_object_rigid_body, gravity_force)
@@ -395,6 +399,7 @@ impl PhysicsSystem {
         transform: &TransformComponent,
         simple_physics: &SimplePhysicsComponent,
         real_physics: &RealPhysicsComponent,
+        cache: &CachedFSReader,
     ) -> Option<u64> {
         let relative_position = (&transform.position - &self.player_temporary_data.position);
 
@@ -434,6 +439,7 @@ impl PhysicsSystem {
                 transform,
                 simple_physics,
                 real_physics,
+                cache,
             );
             exists = true;
         }
@@ -448,6 +454,7 @@ impl PhysicsSystem {
         transform: &TransformComponent,
         simple_physics: &SimplePhysicsComponent,
         real_physics: &RealPhysicsComponent,
+        cache: &CachedFSReader,
     ) {
         let mut rigid_body = KatanaRigidBody::new();
         rigid_body.user_data = entity_id as u128;
@@ -456,7 +463,7 @@ impl PhysicsSystem {
             .collider_descriptions
             .iter()
             .map(|description| {
-                let shape = build_shape(description);
+                let shape = build_shape(description, cache);
                 let mut collider = KatanaCollider::new(
                     shape,
                     description.offset,
@@ -601,12 +608,14 @@ impl PhysicsSystem {
         ecs: &mut ECSWorld,
         universe_simulation: &Simulation,
         rendering_system: &RenderingSystem,
+        cache: &CachedFSReader,
         delta_time: f64,
     ) -> bool {
         let mut context = PhysicsUpdateContext {
             ecs,
             universe_simulation,
             rendering_system,
+            cache,
             delta_time,
         };
 
@@ -636,12 +645,14 @@ impl PhysicsSystem {
         ecs: &mut ECSWorld,
         universe_simulation: &Simulation,
         rendering_system: &RenderingSystem,
+        cache: &CachedFSReader,
         delta_time: f64,
     ) {
         let mut context = PhysicsUpdateContext {
             ecs,
             universe_simulation,
             rendering_system,
+            cache,
             delta_time,
         };
 

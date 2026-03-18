@@ -3,5 +3,7 @@
 export type OnPhysicsCollisionEventData = {
   entityA: number;
   entityB: number;
-  totalImpulseMagnitude: number;
+  centerWs: [number, number, number];
+  normalWs: [number, number, number];
+  overlap: number;
 };

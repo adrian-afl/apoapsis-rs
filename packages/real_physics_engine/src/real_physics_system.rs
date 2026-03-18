@@ -49,7 +49,6 @@ fn handle_collision_events(
 }
 
 pub struct RealPhysicsSystem {
-    gravity: DVec3,
     katana_world: KatanaWorld,
     plugins: Vec<BoxedKatanaPlugin>,
     // collision_plugin: &'a KatanaCollisionSolverPlugin,
@@ -75,7 +74,6 @@ impl RealPhysicsSystem {
         let collision_plugin = KatanaCollisionSolverPlugin::new();
         let plugins: Vec<BoxedKatanaPlugin> = vec![Box::new(collision_plugin)];
         Self {
-            gravity: DVec3::ZERO,
             katana_world: KatanaWorld::new(),
             // collision_plugin: &plugins[0],
             plugins,
@@ -83,7 +81,8 @@ impl RealPhysicsSystem {
     }
 
     pub fn step(&mut self, delta: f64) {
-        katana_integrate(delta, &mut self.katana_world, &mut self.plugins)
+        // katana_integrate(delta, &mut self.katana_world, &mut self.plugins);
+        katana_integrate(1.0 / 60.0, &mut self.katana_world, &mut self.plugins);
     }
 
     pub fn add_body(&mut self, body: KatanaRigidBody) -> u64 {
@@ -160,10 +159,6 @@ impl RealPhysicsSystem {
                 Ok(())
             }
         }
-    }
-
-    pub fn set_global_gravity(&mut self, gravity: DVec3) -> () {
-        self.gravity = gravity;
     }
 
     pub fn raycast(&self, camera_relative_origin: DVec3, direction: DVec3) -> Option<f64> {

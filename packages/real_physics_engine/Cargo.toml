@@ -9,6 +9,7 @@ math = { workspace = true }
 universe_simulation = { workspace = true }
 celestial_renderer = { workspace = true }
 common_util = { workspace = true }
+media_provider = { workspace = true }
 
 thiserror = { workspace = true }
 glam = { workspace = true }

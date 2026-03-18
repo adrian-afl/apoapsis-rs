@@ -19,6 +19,7 @@ members = [
     "packages/universe_simulation",
     "packages/tcpapi",
     "packages/config",
+    "packages/media_provider",
 ]
 
 [profile.dev.package.planet_generator_library]
@@ -58,6 +59,7 @@ ui_renderer = { path = "packages/ui_renderer" }
 universe_simulation = { path = "packages/universe_simulation" }
 tcpapi = { path = "packages/tcpapi" }
 config = { path = "packages/config" }
+media_provider = { path = "packages/media_provider" }
 
 [dependencies]
 glam = { workspace = true, features = ["serde"] }

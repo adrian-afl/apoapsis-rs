@@ -4,8 +4,6 @@ import { emptyAttachedComponents } from "../generated/RemoteGameApi";
 import { boot } from "./util/boot";
 import { AttachedComponents } from "../generated/types/AttachedComponents";
 import DVec3 from "../framework/mathModule/logic/linear/DVec3";
-import * as fs from "node:fs";
-import { setInterval } from "node:timers";
 import Decimal from "decimal.js";
 import { Quaternion } from "@aeroflightlabs/linear-math";
 import { DecimalVector3d } from "../generated/types/DecimalVector3d";
@@ -18,7 +16,6 @@ import {
 } from "../generated/RemoteGameEvents";
 import { DebugDisplay } from "../script/debugDisplay";
 import { dec } from "../framework/mathModule/decimalHelpers";
-import { DMat3 } from "../framework/mathModule/logic/linear/DMat3";
 
 describe("physics simple tests", () => {
   // afterAll(() => process.exit(0));
@@ -77,7 +74,7 @@ describe("physics simple tests", () => {
     const earthDef = await gameApi.getCelestialBodyDefinition("earth");
     console.log(earthDef);
 
-    const radius = earthDef.terrain.radius + 23.21 * 1000.0;
+    const radius = earthDef.terrain.radius + 8.21 * 1000.0;
 
     const newPosition = DVec3.fromDecimalVector3d(earthPosition).addVec3(
       DVec3.fromNumbers(1.0, 1.0, 1.0).normalized().mulScalar(dec(radius)),
@@ -92,15 +89,15 @@ describe("physics simple tests", () => {
         });
         await gameApi.simplePhysics.set(playerEID, {
           angular_velocity: [1.0, 1.0, 1.0],
-          mass: "1.0",
           linear_velocity: [0.0, 0.0, 0.0],
+          is_static: false,
         });
       }
       if (k.data === "b") {
         await gameApi.simplePhysics.set(playerEID, {
           angular_velocity: [1.0, 1.0, 1.0],
-          mass: "1.0",
           linear_velocity: [0.0, 0.0, 0.0],
+          is_static: false,
         });
       }
     });
@@ -139,8 +136,8 @@ describe("physics simple tests", () => {
           },
           simple_physics: {
             angular_velocity: [1.0, 1.0, 1.0],
-            mass: "1.0",
             linear_velocity: [0.0, 0.0, 0.0],
+            is_static: false,
             // linear_velocity: DVec3.fromDecimalVector3d(
             //   await gameApi.getCelestialBodySurfaceVelocity(
             //     "earth",
@@ -149,13 +146,20 @@ describe("physics simple tests", () => {
             // ).asNumbers(),
           },
           real_physics: {
-            shape_description: {
-              box: {
-                sizeX: 1.0,
-                sizeY: 1.0,
-                sizeZ: 1.0,
+            collider_descriptions: [
+              {
+                mass: 1.0,
+                offset: [0.0, 0.0, 0.0],
+                orientation: [0.0, 0.0, 0.0, 1.0],
+                shape: {
+                  box: {
+                    halfX: 1.0,
+                    halfY: 1.0,
+                    halfZ: 1.0,
+                  },
+                },
               },
-            },
+            ],
             override_real_simulation_cutoff: null,
           },
           mesh: [

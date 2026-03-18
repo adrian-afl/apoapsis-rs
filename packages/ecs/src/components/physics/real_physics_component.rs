@@ -20,28 +20,7 @@ pub struct BoxColliderDescription {
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
 pub struct TriMeshColliderDescription {
-    #[ts(
-        type = "[[number, number, number], [number, number, number], [number, number, number]][]"
-    )]
-    pub triangles: Vec<[DVec3; 3]>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, TS)]
-#[serde(rename_all = "camelCase")]
-pub struct TransientTriMeshColliderDescription {
-    #[ts(skip)]
-    #[serde(skip, default = "Vec::new")]
-    pub triangles: Vec<[DVec3; 3]>,
-}
-
-// TODO here also can be some other initializers like TrimeshFromFileColliderBlabla
-// that would initialize from file directly, or cache in between, etc
-
-#[derive(Debug, Clone, Serialize, Deserialize, TS)]
-#[serde(rename_all = "camelCase")]
-pub enum CelestialBodyColliderSurfaceType {
-    Terrain,
-    Water,
+    pub cache_key: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
@@ -50,7 +29,6 @@ pub enum ColliderShape {
     Sphere(SphereColliderDescription),
     Box(BoxColliderDescription),
     TriMesh(TriMeshColliderDescription),
-    TransientTriMesh(TransientTriMeshColliderDescription),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]

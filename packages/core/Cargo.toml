@@ -15,6 +15,7 @@ common_util = { workspace = true }
 math = { workspace = true }
 ts-rs = { workspace = true }
 tcpapi = { workspace = true }
+media_provider = { workspace = true }
 
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }

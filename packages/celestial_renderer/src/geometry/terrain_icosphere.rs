@@ -11,6 +11,7 @@ use ecs::components::physics::real_physics_component::{
 };
 use glam::{DMat4, DQuat, DVec3};
 use math::decimal_vector_3d::DecimalVector3d;
+use media_provider::cached_fs_reader::CachedFSReader;
 use planet_generator_library::cubemap_data::CubeMapDataLayer;
 use planet_generator_library::generate_icosphere::{
     IcosphereMetadataItem, IcosphereSegmentGenerator, Triangle, generate_icosphere_metadata,
@@ -97,7 +98,11 @@ impl TerrainIcosphere {
         self.loaded_data.loaded_height.get(normal)
     }
 
-    pub fn preload(&mut self, toolkit: &VEToolkit) -> Result<PreloadResult, RenderingError> {
+    pub fn preload(
+        &mut self,
+        toolkit: &VEToolkit,
+        cache: &CachedFSReader,
+    ) -> Result<PreloadResult, RenderingError> {
         let which_to_preload = which_part_to_preload(
             &self.loaded_data.metadata,
             &self.loaded_data.part_matrices,
@@ -106,7 +111,7 @@ impl TerrainIcosphere {
 
         which_to_preload.iter().for_each(|x| {
             let geometry = self
-                .load_geometry(toolkit, x.base_segment, x.level)
+                .load_geometry(toolkit, x.base_segment, x.level, cache)
                 .unwrap();
 
             match x.action {
@@ -231,6 +236,7 @@ impl TerrainIcosphere {
         toolkit: &VEToolkit,
         base_segment: u16,
         level: u8,
+        cache: &CachedFSReader,
     ) -> Result<IcosphereLoadedGeometry, RenderingError> {
         let subdivisions = ICO_LEVEL_SUBDIVISIONS[level as usize - 1];
 
@@ -258,15 +264,22 @@ impl TerrainIcosphere {
             ]);
         }
 
+        let cache_key = format!(
+            "celestial::terrain::{}::{base_segment}",
+            self.loaded_data.body_name
+        );
+
         Ok(IcosphereLoadedGeometry {
             vertex_buffer,
             real_physics_component: if !is_most_detailed_level {
+                cache.remove_entry(&cache_key);
                 None
             } else {
+                cache.precache_cast(&cache_key, triangles);
                 Some(RealPhysicsComponent {
                     id: acquire_next_id(),
                     collider_descriptions: vec![ColliderDescription {
-                        shape: ColliderShape::TriMesh(TriMeshColliderDescription { triangles }),
+                        shape: ColliderShape::TriMesh(TriMeshColliderDescription { cache_key }),
                         mass: 0.0,
                         orientation: DQuat::IDENTITY,
                         offset: DVec3::ZERO,

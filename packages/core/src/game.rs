@@ -8,6 +8,7 @@ use ecs::components::ui::ui_text_component::UIFontSize;
 use glam::DVec2;
 use input::controls::{ControlEvent, Controls};
 use input::controls_mapping::ControlMapItem;
+use media_provider::cached_fs_reader::CachedFSReader;
 use rayon::join;
 use real_physics_engine::physics_system::PhysicsSystem;
 use renderer_common::camera::Camera;
@@ -62,6 +63,8 @@ pub struct Game {
     ui_raycast_result: Vec<UIRaycastResultItem>,
 
     debug_mode_value: f64,
+
+    cache: CachedFSReader,
 }
 
 impl Game {
@@ -118,6 +121,8 @@ impl Game {
             current_camera: Camera::new(),
 
             debug_mode_value: 0.0,
+
+            cache: CachedFSReader::new(),
         }
     }
 
@@ -167,6 +172,8 @@ impl Game {
             current_camera: Camera::new(),
 
             debug_mode_value: 1.0,
+
+            cache: CachedFSReader::new(),
         }
     }
 
@@ -248,6 +255,7 @@ impl Game {
                     stage_ecs,
                     &self.universe_simulation,
                     rendering_system, // TODO how to do it without rendering
+                    &self.cache,
                     stage_ecs.time_counter.delta_time,
                 );
             });
@@ -323,6 +331,7 @@ impl Game {
                             &self.universe_simulation,
                             &self.current_camera,
                             ui_system,
+                            &self.cache,
                             self.debug_mode_value,
                         );
                     });
@@ -339,6 +348,7 @@ impl Game {
                     stage_ecs,
                     &self.universe_simulation,
                     rendering_system, // TODO how to do it without rendering
+                    &self.cache,
                     stage_ecs.time_counter.delta_time,
                 );
             });

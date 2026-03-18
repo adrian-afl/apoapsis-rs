@@ -395,6 +395,7 @@ dependencies = [
  "ecs",
  "glam",
  "math",
+ "media_provider",
  "planet_generator_library",
  "rayon",
  "renderer_common",
@@ -558,6 +559,7 @@ dependencies = [
  "glam",
  "input",
  "math",
+ "media_provider",
  "rayon",
  "real_physics_engine",
  "renderer_common",
@@ -1284,6 +1286,10 @@ dependencies = [
  "cfg-if",
  "rayon",
 ]
+
+[[package]]
+name = "media_provider"
+version = "0.1.0"
 
 [[package]]
 name = "memchr"
@@ -2041,6 +2047,7 @@ dependencies = [
  "glam",
  "katana-physics",
  "math",
+ "media_provider",
  "rayon",
  "serde",
  "serde_json",

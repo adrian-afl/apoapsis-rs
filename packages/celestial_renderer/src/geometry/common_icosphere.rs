@@ -14,9 +14,9 @@ use std::sync::Mutex;
 use universe_simulation::simulation::SimulatedBody;
 use vengine_rs::graphics::vertex_buffer::VEVertexBuffer;
 
-pub static ICO_BASE_SUBDIVISION: u8 = 3u8;
-pub static ICO_LEVEL_SUBDIVISIONS: [u8; 2] = [5, 5];
-static ICO_THRESHOLDS: [f64; 1] = [50000.0];
+pub static ICO_BASE_SUBDIVISION: u8 = 2u8;
+pub static ICO_LEVEL_SUBDIVISIONS: [u8; 3] = [3, 4, 5];
+static ICO_THRESHOLDS: [f64; 2] = [2000000.0, 5000000.0];
 
 pub fn calculate_base_icosphere_parts_count(subdivisions: u8) -> u16 {
     let mut start = get_base_icosphere(); // base, currently, has 20 triangles

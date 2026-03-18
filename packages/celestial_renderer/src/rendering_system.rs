@@ -17,6 +17,7 @@ use ecs::components::rendering::mesh_component::{
 use ecs::ecs_world::ECSWorld;
 use glam::DVec3;
 use math::decimal_vector_3d::DecimalVector3d;
+use media_provider::cached_fs_reader::CachedFSReader;
 use rayon::iter::ParallelIterator;
 use rayon::prelude::{IntoParallelRefIterator, IntoParallelRefMutIterator};
 use renderer_common::camera::Camera;
@@ -269,6 +270,7 @@ impl RenderingSystem {
         universe_simulation: &Simulation,
         camera: &Camera,
         ui_system: &UISystem,
+        cache: &CachedFSReader,
         debug_mode_value: f64,
     ) {
         // println!("RenderingSystem / update");
@@ -408,6 +410,7 @@ impl RenderingSystem {
                 &mut self.celestial_hierarchy,
                 camera,
                 &ecs.time_counter,
+                cache,
                 debug_mode_value,
             );
 

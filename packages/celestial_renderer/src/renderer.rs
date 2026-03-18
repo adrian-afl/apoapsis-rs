@@ -15,6 +15,7 @@ use ash::vk;
 use ash::vk::{AccessFlags, ImageAspectFlags, ImageLayout, PipelineStageFlags};
 use common_util::profile;
 use ecs::time_counter::TimeCounter;
+use media_provider::cached_fs_reader::CachedFSReader;
 use renderer_common::camera::Camera;
 use renderer_common::empty_textures::EMPTY_TEXTURES;
 use renderer_common::errors::RenderingError;
@@ -294,6 +295,7 @@ impl Renderer {
         celestial_hierarchy: &mut CelestialHierarchy,
         camera: &Camera,
         time_counter: &TimeCounter,
+        cache: &CachedFSReader,
         debug_mode_value: f64,
     ) -> Result<(), RenderingError> {
         profile!("common_buffer update", {
@@ -329,7 +331,7 @@ impl Renderer {
                     None => (),
                     Some(icosphere) => {
                         let preload_result = if is_closest {
-                            icosphere.preload(&self.toolkit)?
+                            icosphere.preload(&self.toolkit, cache)?
                         } else {
                             //  icosphere.preload(&self.toolkit)?
                             PreloadResult::NotChanged
@@ -349,7 +351,7 @@ impl Renderer {
                     None => (),
                     Some(icosphere) => {
                         let preload_result = if is_closest {
-                            icosphere.preload(&self.toolkit)?
+                            icosphere.preload(&self.toolkit, cache)?
                         } else {
                             //   icosphere.preload(&self.toolkit)?
                             PreloadResult::NotChanged

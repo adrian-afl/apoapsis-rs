@@ -27,7 +27,6 @@ import { AddEntityInput } from "./types/AddEntityInput.js";
 import { ObjectWithID } from "./types/ObjectWithID.js";
 import { Entity } from "./types/Entity.js";
 import { AttachedComponents } from "./types/AttachedComponents.js";
-import { DebugCollector } from "./types/DebugCollector.js";
 import { DVec3 } from "./types/DVec3.js";
 import { DecimalVector3d } from "./types/DecimalVector3d.js";
 import { BodyCelestialBodyDefinition } from "./types/BodyCelestialBodyDefinition.js";
@@ -91,13 +90,6 @@ export class RemoteGameApi {
       name: "command.find_all_entities_by_components",
       payload: components,
     }) as Promise<number[]>;
-  }
-
-  public async getDebugRealPhysicsWireframe(): Promise<DebugCollector> {
-    return this.api.send({
-      name: "command.get_debug_real_physics_wireframe",
-      payload: {},
-    }) as Promise<DebugCollector>;
   }
 
   public async raycastRealPhysics(
@@ -432,6 +424,32 @@ export class RemoteGameApi {
     },
   };
 
+  public isCelestialBodySurface = {
+    get: (entityId: number): Promise<IsCelestialBodySurfaceComponent> => {
+      return this.api.send({
+        name: "command.get_is_celestial_body_surface",
+        payload: { entityId },
+      }) as Promise<IsCelestialBodySurfaceComponent>;
+    },
+
+    set: async (
+      entityId: number,
+      component: IsCelestialBodySurfaceComponent,
+    ): Promise<void> => {
+      await this.api.send({
+        name: "command.set_is_celestial_body_surface",
+        payload: { entityId, component },
+      });
+    },
+
+    clear: async (entityId: number): Promise<void> => {
+      await this.api.send({
+        name: "command.clear_is_celestial_body_surface",
+        payload: { entityId },
+      });
+    },
+  };
+
   public shipControl = {
     get: (entityId: number): Promise<ShipControlComponent> => {
       return this.api.send({
@@ -692,22 +710,6 @@ export class RemoteGameApi {
     },
   };
 
-  public isCelestialBodySurface = {
-    get: (entityId: number): Promise<IsCelestialBodySurfaceComponent> => {
-      return this.api.send({
-        name: "command.get_is_celestial_body_surface",
-        payload: { entityId },
-      }) as Promise<IsCelestialBodySurfaceComponent>;
-    },
-
-    set: async (entityId: number, value: boolean): Promise<void> => {
-      await this.api.send({
-        name: "command.set_is_celestial_body_surface",
-        payload: { entityId, value },
-      });
-    },
-  };
-
   public isPlayer = {
     get: (entityId: number): Promise<IsPlayerComponent> => {
       return this.api.send({
@@ -784,7 +786,7 @@ export const emptyAttachedComponents = {
   simple_physics: null,
   set_physics_kinematics: [],
   glue_to_celestial_body: null,
-  is_celestial_body_surface: false,
+  is_celestial_body_surface: null,
   is_player: false,
   mesh: [],
   control_focus: false,
