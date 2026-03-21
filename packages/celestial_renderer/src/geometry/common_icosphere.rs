@@ -16,7 +16,9 @@ use vengine_rs::graphics::vertex_buffer::VEVertexBuffer;
 
 pub static ICO_BASE_SUBDIVISION: u8 = 2u8;
 pub static ICO_LEVEL_SUBDIVISIONS: [u8; 3] = [3, 4, 5];
-static ICO_THRESHOLDS: [f64; 2] = [2000000.0, 5000000.0];
+// static ICO_THRESHOLDS: [f64; 2] = [2000000.0, 5000000.0];
+static ICO_THRESHOLDS: [f64; 2] = [6378000.0 / 3.0, 5000000.0 / 6.0];
+// earth radius = 6378000
 
 pub fn calculate_base_icosphere_parts_count(subdivisions: u8) -> u16 {
     let mut start = get_base_icosphere(); // base, currently, has 20 triangles
@@ -31,12 +33,13 @@ pub struct IcosphereLoadedGeometry {
     pub level: u8,
 }
 
-#[derive(PartialEq, Eq)]
+#[derive(PartialEq, Eq, Debug)]
 pub enum PreloadDetectionResultAction {
     Insert,
     Update,
 }
 
+#[derive(Debug)]
 pub struct PreloadDetectionResult {
     pub base_segment: u16,
     pub level: u8,
@@ -60,7 +63,7 @@ pub fn which_part_to_preload(
         let final_matrix = part_matrices[i];
 
         let distance = final_matrix
-            .transform_vector3(DVec3::new(0.0, 0.0, 0.0))
+            .transform_point3(DVec3::new(0.0, 0.0, 0.0))
             .length();
 
         // println!("distance {distance}");

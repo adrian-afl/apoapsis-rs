@@ -15,7 +15,7 @@ use ash::vk;
 use ash::vk::{AccessFlags, ImageAspectFlags, ImageLayout, PipelineStageFlags};
 use common_util::profile;
 use ecs::time_counter::TimeCounter;
-use media_provider::cached_fs_reader::CachedFSReader;
+use media_provider::generic_cache::GenericCache;
 use renderer_common::camera::Camera;
 use renderer_common::empty_textures::EMPTY_TEXTURES;
 use renderer_common::errors::RenderingError;
@@ -295,7 +295,7 @@ impl Renderer {
         celestial_hierarchy: &mut CelestialHierarchy,
         camera: &Camera,
         time_counter: &TimeCounter,
-        cache: &CachedFSReader,
+        cache: &GenericCache<f64>,
         debug_mode_value: f64,
     ) -> Result<(), RenderingError> {
         profile!("common_buffer update", {

@@ -11,7 +11,7 @@ use ecs::components::physics::real_physics_component::{
 };
 use glam::{DMat4, DQuat, DVec3};
 use math::decimal_vector_3d::DecimalVector3d;
-use media_provider::cached_fs_reader::CachedFSReader;
+use media_provider::generic_cache::GenericCache;
 use planet_generator_library::cubemap_data::CubeMapDataLayer;
 use planet_generator_library::generate_icosphere::{
     IcosphereMetadataItem, IcosphereSegmentGenerator, Triangle, generate_icosphere_metadata,
@@ -102,7 +102,7 @@ impl WaterIcosphere {
     pub fn preload(
         &mut self,
         toolkit: &VEToolkit,
-        cache: &CachedFSReader,
+        cache: &GenericCache<f64>,
     ) -> Result<PreloadResult, RenderingError> {
         let which_to_preload = which_part_to_preload(
             &self.loaded_data.metadata,
@@ -243,7 +243,7 @@ impl WaterIcosphere {
         toolkit: &VEToolkit,
         base_segment: u16,
         level: u8,
-        cache: &CachedFSReader,
+        cache: &GenericCache<f64>,
     ) -> Result<IcosphereLoadedGeometry, RenderingError> {
         let subdivisions = ICO_LEVEL_SUBDIVISIONS[level as usize - 1];
 
@@ -260,15 +260,6 @@ impl WaterIcosphere {
             .create_vertex_buffer_from_data(segment.0, &WATER_ICOSPHERE_VERTEX_ATTRIBUTES)?;
 
         let vertices = segment.1;
-        let mut triangles: Vec<[DVec3; 3]> = Vec::new();
-        for _ in 0..vertices.len() / 3 {
-            let start = triangles.len();
-            triangles.push([
-                vertices[start + 0],
-                vertices[start + 1],
-                vertices[start + 2],
-            ]);
-        }
 
         let cache_key = format!(
             "celestial::water::{}::{base_segment}",
@@ -278,10 +269,16 @@ impl WaterIcosphere {
         Ok(IcosphereLoadedGeometry {
             vertex_buffer,
             real_physics_component: if !is_most_detailed_level {
-                cache.remove_entry(&cache_key);
+                cache.purge_cache(&cache_key);
                 None
             } else {
-                cache.precache_cast(&cache_key, triangles);
+                cache.write_cache(
+                    &cache_key,
+                    vertices
+                        .iter()
+                        .flat_map(|x| x.to_array())
+                        .collect::<Vec<_>>(),
+                );
                 Some(RealPhysicsComponent {
                     id: acquire_next_id(),
                     collider_descriptions: vec![ColliderDescription {

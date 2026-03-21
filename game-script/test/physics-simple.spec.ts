@@ -74,10 +74,20 @@ describe("physics simple tests", () => {
     const earthDef = await gameApi.getCelestialBodyDefinition("earth");
     console.log(earthDef);
 
-    const radius = earthDef.terrain.radius + 8.21 * 1000.0;
+    const radius = earthDef.terrain.radius + 0.21 * 1000.0;
 
     const newPosition = DVec3.fromDecimalVector3d(earthPosition).addVec3(
       DVec3.fromNumbers(1.0, 1.0, 1.0).normalized().mulScalar(dec(radius)),
+    );
+    const str = newPosition.toString(3);
+
+    console.log("SPAWNPOS", str);
+    console.log(
+      "SPAWNPOSREL",
+      DVec3.fromNumbers(1.0, 1.0, 1.0)
+        .normalized()
+        .mulScalar(dec(radius))
+        .toString(3),
     );
 
     baseApi.subscribe(OnRawInputText, async (k) => {

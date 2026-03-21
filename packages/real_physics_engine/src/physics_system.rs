@@ -20,7 +20,7 @@ use katana_physics::colliders::katana_collider::KatanaCollider;
 use katana_physics::katana_rigid_body::KatanaRigidBody;
 use math::decimal_vector_3d::DecimalVector3d;
 use math::sin_cos::f64_to_dbig;
-use media_provider::cached_fs_reader::CachedFSReader;
+use media_provider::generic_cache::GenericCache;
 use rayon::iter::IntoParallelRefIterator;
 use rayon::iter::ParallelIterator;
 use serde::{Deserialize, Serialize};
@@ -58,8 +58,13 @@ struct PhysicsUpdateContext<'a> {
     ecs: &'a mut ECSWorld,
     universe_simulation: &'a Simulation,
     rendering_system: &'a RenderingSystem,
-    cache: &'a CachedFSReader,
+    cache: &'a GenericCache<f64>,
     delta_time: f64,
+}
+
+pub enum FindStorePlayerFrameDataResult {
+    Continue,
+    Stop,
 }
 
 impl PhysicsSystem {
@@ -75,7 +80,10 @@ impl PhysicsSystem {
         }
     }
 
-    fn phase0(&mut self, context: &PhysicsUpdateContext) -> bool {
+    fn find_store_player_frame_data(
+        &mut self,
+        context: &PhysicsUpdateContext,
+    ) -> FindStorePlayerFrameDataResult {
         // println!("PhysicsSystem / phase0");
 
         let player = context.ecs.find_first_by_components(&[
@@ -93,19 +101,10 @@ impl PhysicsSystem {
                 .assign(&transform.position);
             self.player_temporary_data.linear_velocity = simple_physics.linear_velocity;
 
-            // let gravity_force = context
-            //     .universe_simulation
-            //     .calculate_gravity_flux(&transform.position)
-            //     .to_dvec3_with_precision(5);
-            //
-            // self.real_physics_system
-            //     .write()
-            //     .unwrap()
-            //     .set_global_gravity(gravity_force);
-            true
+            FindStorePlayerFrameDataResult::Continue
         } else {
             // println!("Player entity not found, Relativity can behave weird");
-            false
+            FindStorePlayerFrameDataResult::Stop
         }
     }
 
@@ -399,7 +398,7 @@ impl PhysicsSystem {
         transform: &TransformComponent,
         simple_physics: &SimplePhysicsComponent,
         real_physics: &RealPhysicsComponent,
-        cache: &CachedFSReader,
+        cache: &GenericCache<f64>,
     ) -> Option<u64> {
         let relative_position = (&transform.position - &self.player_temporary_data.position);
 
@@ -454,7 +453,7 @@ impl PhysicsSystem {
         transform: &TransformComponent,
         simple_physics: &SimplePhysicsComponent,
         real_physics: &RealPhysicsComponent,
-        cache: &CachedFSReader,
+        cache: &GenericCache<f64>,
     ) {
         let mut rigid_body = KatanaRigidBody::new();
         rigid_body.user_data = entity_id as u128;
@@ -591,7 +590,7 @@ impl PhysicsSystem {
                     entity.components.glue_to_celestial_body = Some(terrain_physics_data.1.clone());
                     entity.components.simple_physics = Some(SimplePhysicsComponent::new_static());
                     entity.components.transform = Some(TransformComponent::default());
-                    println!("adding {body} {segment}");
+                    // println!("adding {body} {segment}");
                     context.ecs.add(entity);
                 } else if !should_have_physics.0 && already_has_physics {
                     // shouldn't have, but has, time to remove it from ECS
@@ -608,9 +607,9 @@ impl PhysicsSystem {
         ecs: &mut ECSWorld,
         universe_simulation: &Simulation,
         rendering_system: &RenderingSystem,
-        cache: &CachedFSReader,
+        cache: &GenericCache<f64>,
         delta_time: f64,
-    ) -> bool {
+    ) -> FindStorePlayerFrameDataResult {
         let mut context = PhysicsUpdateContext {
             ecs,
             universe_simulation,
@@ -624,8 +623,8 @@ impl PhysicsSystem {
             Self::update_celestial_body_surfaces(&mut context);
         });
 
-        let should_continue = profile!("phase0", { self.phase0(&context) });
-        if should_continue {
+        let should_continue = profile!("phase0", { self.find_store_player_frame_data(&context) });
+        if let FindStorePlayerFrameDataResult::Continue = should_continue {
             profile!("phase1", {
                 self.phase1(&mut context);
             });
@@ -645,7 +644,7 @@ impl PhysicsSystem {
         ecs: &mut ECSWorld,
         universe_simulation: &Simulation,
         rendering_system: &RenderingSystem,
-        cache: &CachedFSReader,
+        cache: &GenericCache<f64>,
         delta_time: f64,
     ) {
         let mut context = PhysicsUpdateContext {

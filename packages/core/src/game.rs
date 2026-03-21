@@ -8,7 +8,7 @@ use ecs::components::ui::ui_text_component::UIFontSize;
 use glam::DVec2;
 use input::controls::{ControlEvent, Controls};
 use input::controls_mapping::ControlMapItem;
-use media_provider::cached_fs_reader::CachedFSReader;
+use media_provider::generic_cache::GenericCache;
 use rayon::join;
 use real_physics_engine::physics_system::PhysicsSystem;
 use renderer_common::camera::Camera;
@@ -64,7 +64,7 @@ pub struct Game {
 
     debug_mode_value: f64,
 
-    cache: CachedFSReader,
+    cache_f64: GenericCache<f64>,
 }
 
 impl Game {
@@ -122,7 +122,7 @@ impl Game {
 
             debug_mode_value: 0.0,
 
-            cache: CachedFSReader::new(),
+            cache_f64: GenericCache::new(1024),
         }
     }
 
@@ -173,7 +173,7 @@ impl Game {
 
             debug_mode_value: 1.0,
 
-            cache: CachedFSReader::new(),
+            cache_f64: GenericCache::new(1024),
         }
     }
 
@@ -255,7 +255,7 @@ impl Game {
                     stage_ecs,
                     &self.universe_simulation,
                     rendering_system, // TODO how to do it without rendering
-                    &self.cache,
+                    &self.cache_f64,
                     stage_ecs.time_counter.delta_time,
                 );
             });
@@ -331,7 +331,7 @@ impl Game {
                             &self.universe_simulation,
                             &self.current_camera,
                             ui_system,
-                            &self.cache,
+                            &self.cache_f64,
                             self.debug_mode_value,
                         );
                     });
@@ -348,7 +348,7 @@ impl Game {
                     stage_ecs,
                     &self.universe_simulation,
                     rendering_system, // TODO how to do it without rendering
-                    &self.cache,
+                    &self.cache_f64,
                     stage_ecs.time_counter.delta_time,
                 );
             });

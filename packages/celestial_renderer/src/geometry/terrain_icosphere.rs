@@ -11,7 +11,7 @@ use ecs::components::physics::real_physics_component::{
 };
 use glam::{DMat4, DQuat, DVec3};
 use math::decimal_vector_3d::DecimalVector3d;
-use media_provider::cached_fs_reader::CachedFSReader;
+use media_provider::generic_cache::GenericCache;
 use planet_generator_library::cubemap_data::CubeMapDataLayer;
 use planet_generator_library::generate_icosphere::{
     IcosphereMetadataItem, IcosphereSegmentGenerator, Triangle, generate_icosphere_metadata,
@@ -101,13 +101,15 @@ impl TerrainIcosphere {
     pub fn preload(
         &mut self,
         toolkit: &VEToolkit,
-        cache: &CachedFSReader,
+        cache: &GenericCache<f64>,
     ) -> Result<PreloadResult, RenderingError> {
         let which_to_preload = which_part_to_preload(
             &self.loaded_data.metadata,
             &self.loaded_data.part_matrices,
             &self.currently_loaded.lock().unwrap(),
         );
+
+        // println!("{:?}", which_to_preload);
 
         which_to_preload.iter().for_each(|x| {
             let geometry = self
@@ -124,8 +126,7 @@ impl TerrainIcosphere {
                 PreloadDetectionResultAction::Update => {
                     let mut locked = self.currently_loaded.lock().unwrap();
                     let mapped_mut = locked.get_mut(&x.base_segment).unwrap();
-                    mapped_mut.level = x.level;
-                    mapped_mut.vertex_buffer = geometry.vertex_buffer;
+                    *mapped_mut = geometry;
                 }
             }
         });
@@ -236,7 +237,7 @@ impl TerrainIcosphere {
         toolkit: &VEToolkit,
         base_segment: u16,
         level: u8,
-        cache: &CachedFSReader,
+        cache: &GenericCache<f64>,
     ) -> Result<IcosphereLoadedGeometry, RenderingError> {
         let subdivisions = ICO_LEVEL_SUBDIVISIONS[level as usize - 1];
 
@@ -254,15 +255,6 @@ impl TerrainIcosphere {
             .create_vertex_buffer_from_data(segment.0, &TERRAIN_ICOSPHERE_VERTEX_ATTRIBUTES)?;
 
         let vertices = segment.1;
-        let mut triangles: Vec<[DVec3; 3]> = Vec::new();
-        for _ in 0..vertices.len() / 3 {
-            let start = triangles.len();
-            triangles.push([
-                vertices[start + 0],
-                vertices[start + 1],
-                vertices[start + 2],
-            ]);
-        }
 
         let cache_key = format!(
             "celestial::terrain::{}::{base_segment}",
@@ -272,10 +264,16 @@ impl TerrainIcosphere {
         Ok(IcosphereLoadedGeometry {
             vertex_buffer,
             real_physics_component: if !is_most_detailed_level {
-                cache.remove_entry(&cache_key);
+                cache.purge_cache(&cache_key);
                 None
             } else {
-                cache.precache_cast(&cache_key, triangles);
+                cache.write_cache(
+                    &cache_key,
+                    vertices
+                        .iter()
+                        .flat_map(|x| x.to_array())
+                        .collect::<Vec<_>>(),
+                );
                 Some(RealPhysicsComponent {
                     id: acquire_next_id(),
                     collider_descriptions: vec![ColliderDescription {
@@ -284,7 +282,7 @@ impl TerrainIcosphere {
                         orientation: DQuat::IDENTITY,
                         offset: DVec3::ZERO,
                     }],
-                    override_real_simulation_cutoff: Some(self.loaded_data.radius * 0.05),
+                    override_real_simulation_cutoff: Some(self.loaded_data.radius * 0.6),
                 })
             },
             glue_to_celestial_body_component: if !is_most_detailed_level {
