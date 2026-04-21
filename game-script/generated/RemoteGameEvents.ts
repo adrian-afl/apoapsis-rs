@@ -24,7 +24,6 @@ import { UIIsRaycastableComponent } from "./types/UIIsRaycastableComponent.js";
 import { UIRequireFreeCursorComponent } from "./types/UIRequireFreeCursorComponent.js";
 import { ControlMapItem } from "./types/ControlMapItem.js";
 import { OnPhysicsCollisionEventData } from "./types/OnPhysicsCollisionEventData.js";
-import { OnGameBootReadyEventData } from "./types/OnGameBootReadyEventData.js";
 
 export abstract class AbstractBaseEvent {
   public eventName = this.constructor.name;
@@ -80,13 +79,7 @@ export class OnPhysicsCollisionEvent extends AbstractBaseEvent {
   }
 }
 
-export class OnGameBootReady extends AbstractBaseEvent {
-  public readonly data: OnGameBootReadyEventData;
-  public constructor(input: OnGameBootReadyEventData) {
-    super();
-    this.data = input;
-  }
-}
+export class OnGameBootReady extends AbstractBaseEvent {}
 
 export class Startup extends AbstractBaseEvent {}
 
@@ -99,7 +92,6 @@ export const eventsConstructors = {
   on_remote_game_mode_initialized: () => new OnRemoteGameModeInitialized(),
   on_physics_collision_event: (input: OnPhysicsCollisionEventData) =>
     new OnPhysicsCollisionEvent(input),
-  on_game_boot_ready: (input: OnGameBootReadyEventData) =>
-    new OnGameBootReady(input),
+  on_game_boot_ready: () => new OnGameBootReady(),
   startup: () => new Startup(),
 }; // eventsConstructors close

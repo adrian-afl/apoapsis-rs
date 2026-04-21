@@ -152,19 +152,6 @@ impl AppCallback for VEToolkitCallbacks {
 }
 
 impl VEToolkit {
-    pub fn start(
-        create_app: Box<dyn Fn(Arc<VEToolkit>, Arc<Mutex<Window>>) -> Arc<Mutex<dyn App>>>,
-        initial_window_attributes: WindowAttributes,
-    ) -> Result<(), VEToolkitError> {
-        let callbacks = Arc::new(Mutex::from(VEToolkitCallbacks {
-            toolkit: None,
-            app: None,
-            create_app,
-        }));
-        VEWindow::new(callbacks.clone(), initial_window_attributes)?;
-        Ok(())
-    }
-
     pub fn new(window: &VEWindow) -> Result<VEToolkit, VEToolkitError> {
         let device = Arc::new(VEDevice::new(window)?);
 
@@ -188,6 +175,19 @@ impl VEToolkit {
             command_pool,
             memory_manager,
         })
+    }
+
+    pub fn start(
+        create_app: Box<dyn Fn(Arc<VEToolkit>, Arc<Mutex<Window>>) -> Arc<Mutex<dyn App>>>,
+        initial_window_attributes: WindowAttributes,
+    ) -> Result<(), VEToolkitError> {
+        let callbacks = Arc::new(Mutex::from(VEToolkitCallbacks {
+            toolkit: None,
+            app: None,
+            create_app,
+        }));
+        VEWindow::new(callbacks.clone(), initial_window_attributes)?;
+        Ok(())
     }
 
     pub fn create_command_buffer(&self) -> Result<VECommandBuffer, VECommandBufferError> {

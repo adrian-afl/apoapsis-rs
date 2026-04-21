@@ -6,17 +6,15 @@ import { setTimeout } from "node:timers/promises";
 import { waitForEvent } from "./waitForEvent";
 import { OnGameBootReady } from "../../generated/RemoteGameEvents";
 
-export async function boot(port: number, headless?: boolean) {
+export async function boot(port: number, compile?: boolean) {
   const client = new TCPTransport(`localhost:${port}`);
   const baseApi = new BaseGameApi((message) => client.send(message));
   const gameApi = new RemoteGameApi(baseApi);
   client.setOnReceive((message) => baseApi.receive(message));
-  const gameInstance = await startGame(
-    "release",
-    port,
-    headless !== undefined ? headless : true,
-  );
-  // await setTimeout(1000);
+  console.log("Starting instance");
+  const gameInstance = await startGame("release", port, compile);
+  await setTimeout(1000);
+  console.log("Connecting to instance");
   await client.connect();
 
   console.log("Waiting for OnGameBootReady event");

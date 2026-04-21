@@ -4,7 +4,7 @@ use crate::geometry::common_icosphere::{
 use ash::vk::DeviceSize;
 use glam::{DMat4, DVec3};
 use planet_generator_library::base_icosphere::get_base_icosphere;
-use renderer_common::buffer_writers::{write_mat4, write_vec3_zero};
+use renderer_common::buffer_writers::{write_dmat4, write_mat4, write_vec3_zero};
 use renderer_common::errors::RenderingError;
 use vengine_rs::buffer::buffer::{VEBuffer, VEBufferUsage};
 use vengine_rs::core::command_buffer::VECommandBuffer;
@@ -22,7 +22,7 @@ impl WaterIcosphereDataBuffer {
             calculate_base_icosphere_parts_count(ICO_BASE_SUBDIVISION) as u64;
         // each part needs a mat4 f32, so 16 * 4 * count is total size
         // lets add some trailing space just for fun too
-        let desired_buffer_size = 16 * 4 * icosphere_triangles_count + 2048;
+        let desired_buffer_size = 16 * 8 * icosphere_triangles_count + 2048;
         // let desired_buffer_size = 1024 * 1024;
         Ok(Self {
             staging_buffer: toolkit.create_buffer(
@@ -57,8 +57,12 @@ impl WaterIcosphereDataBuffer {
         offset += write_vec3_zero(ptr, offset, water_color);
         offset += write_vec3_zero(ptr, offset, body_center_camera_space);
 
+        offset /= 2;
+
+        let ptr = self.staging_buffer.map()? as *mut f64;
+
         for matrix in part_matrices {
-            offset += write_mat4(ptr, offset, *matrix);
+            offset += write_dmat4(ptr, offset, *matrix);
         }
 
         Ok(())

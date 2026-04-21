@@ -24,86 +24,86 @@ impl App for GameWindowApp {
     }
 
     fn on_window_event(&mut self, event: WindowEvent) {
-        if let Some(ref mut controls) = self.game.controls {
-            match event {
-                WindowEvent::CloseRequested => {}
-                WindowEvent::Destroyed => {}
-                WindowEvent::Focused(_) => {}
-                WindowEvent::KeyboardInput { event, .. } => match event {
-                    KeyEvent {
-                        state,
-                        physical_key,
-                        repeat,
-                        text,
-                        ..
-                    } => {
-                        let text = match text {
-                            None => "",
-                            Some(ref x) => {
-                                let clone = x.as_str().clone();
-                                clone.trim();
-                                clone
-                            }
-                        };
-                        if !repeat {
-                            controls.on_key(
-                                physical_key,
-                                match state {
-                                    ElementState::Pressed => true,
-                                    ElementState::Released => false,
-                                },
-                                text,
-                            )
+        match event {
+            WindowEvent::CloseRequested => {}
+            WindowEvent::Destroyed => {}
+            WindowEvent::Focused(_) => {}
+            WindowEvent::KeyboardInput { event, .. } => match event {
+                KeyEvent {
+                    state,
+                    physical_key,
+                    repeat,
+                    text,
+                    ..
+                } => {
+                    let text = match text {
+                        None => "",
+                        Some(ref x) => {
+                            let clone = x.as_str().clone();
+                            clone.trim();
+                            clone
                         }
+                    };
+                    if !repeat {
+                        self.game.controls.on_key(
+                            physical_key,
+                            match state {
+                                ElementState::Pressed => true,
+                                ElementState::Released => false,
+                            },
+                            text,
+                        )
                     }
-                },
-                WindowEvent::CursorMoved { position, .. } => controls
-                    .mouse
-                    .on_mouse_move_on_surface(DVec2::new(position.x, position.y)),
-                WindowEvent::CursorEntered { .. } => {}
-                WindowEvent::CursorLeft { .. } => {}
-                WindowEvent::MouseWheel { delta, .. } => match delta {
-                    MouseScrollDelta::LineDelta(_x, y) => {
-                        // println!("Ecentr 1, x{}, y{}", x, y);
-                        controls.mouse.on_mouse_scroll(y as f64)
-                    }
-                    MouseScrollDelta::PixelDelta(_delta) => {
-                        // println!("Ecentr 2, x{}, y{}", delta.x, delta.y);
-                    }
-                },
-                WindowEvent::MouseInput { state, button, .. } => {
-                    controls.on_mouse_button(
-                        button,
-                        match state {
-                            ElementState::Pressed => true,
-                            ElementState::Released => false,
-                        },
-                    );
                 }
-                _ => (),
+            },
+            WindowEvent::CursorMoved { position, .. } => self
+                .game
+                .controls
+                .mouse
+                .on_mouse_move_on_surface(DVec2::new(position.x, position.y)),
+            WindowEvent::CursorEntered { .. } => {}
+            WindowEvent::CursorLeft { .. } => {}
+            WindowEvent::MouseWheel { delta, .. } => match delta {
+                MouseScrollDelta::LineDelta(_x, y) => {
+                    // println!("Ecentr 1, x{}, y{}", x, y);
+                    self.game.controls.mouse.on_mouse_scroll(y as f64)
+                }
+                MouseScrollDelta::PixelDelta(_delta) => {
+                    // println!("Ecentr 2, x{}, y{}", delta.x, delta.y);
+                }
+            },
+            WindowEvent::MouseInput { state, button, .. } => {
+                self.game.controls.on_mouse_button(
+                    button,
+                    match state {
+                        ElementState::Pressed => true,
+                        ElementState::Released => false,
+                    },
+                );
             }
+            _ => (),
         }
     }
 
     fn on_device_event(&mut self, _: DeviceId, event: DeviceEvent) {
-        if let Some(ref mut controls) = self.game.controls {
-            match event {
-                DeviceEvent::MouseMotion { delta } => controls
-                    .mouse
-                    .on_mouse_move_anywhere(DVec2::new(delta.0, delta.1)),
-                DeviceEvent::MouseWheel { delta, .. } => match delta {
-                    MouseScrollDelta::LineDelta(_x, _y) => {
-                        // println!("Ecentr 3, x{}, y{}", x, y);
-                    }
-                    MouseScrollDelta::PixelDelta(_px) => {
-                        // println!("Ecentr 4, x{}, y{}", px.x, px.y);
-                    }
-                },
-                DeviceEvent::Motion { .. } => {}
-                DeviceEvent::Button { .. } => {}
-                DeviceEvent::Key(_) => {}
-                _ => (),
-            }
+        match event {
+            DeviceEvent::MouseMotion { delta } => self
+                .game
+                .controls
+                .mouse
+                .on_mouse_move_anywhere(DVec2::new(delta.0, delta.1)),
+            DeviceEvent::MouseWheel { delta, .. } => match delta {
+                MouseScrollDelta::LineDelta(_x, _y) => {
+                    // println!("Ecentr 3, x{}, y{}", x, y);
+                }
+                MouseScrollDelta::PixelDelta(_px) => {
+                    // println!("Ecentr 4, x{}, y{}", px.x, px.y);
+                }
+            },
+            DeviceEvent::Motion { .. } => {}
+            DeviceEvent::Button { .. } => {}
+            DeviceEvent::Key(_) => {}
+            _ => (),
         }
     }
 }

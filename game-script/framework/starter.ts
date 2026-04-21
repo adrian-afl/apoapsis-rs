@@ -9,12 +9,12 @@ export interface ProcessStartResult {
   exitedWithCode: Promise<number>;
 }
 
-async function startProcess(
+function startProcess(
   color: InspectColorForeground,
   path: string,
   cwd: string,
   args: string[],
-): Promise<ProcessStartResult> {
+): ProcessStartResult {
   const ls = spawn(path, args, { cwd, env: { RUST_BACKTRACE: "1" } });
 
   const result: ProcessStartResult = {
@@ -50,15 +50,31 @@ async function startProcess(
   return result;
 }
 
-export function startGame(
+export async function startGame(
   mode: "release" | "debug",
   port: number,
-  headless: boolean,
+  compile?: boolean,
 ): Promise<ProcessStartResult> {
-  return startProcess(
-    "green",
-    `target/${mode}/planetdraw-rs.exe`,
-    `../`,
-    headless ? ["--headless", "--port", `${port}`] : ["--port", `${port}`],
-  );
+  if (compile) {
+    //cargo.exe build --color=always --message-format=json-diagnostic-rendered-ansi --package planetdraw-rs --bin planetdraw-rs --profile release
+    const cargo = startProcess("cyan", "cargo", "../", [
+      "build",
+      "--color",
+      "always",
+      "--package",
+      "planetdraw-rs",
+      "--bin",
+      "planetdraw-rs",
+      "--profile",
+      mode,
+    ]);
+    const exitedWith = await cargo.exitedWithCode;
+    if (exitedWith !== 0) {
+      throw new Error(`Compile pass ended with exit code ${exitedWith}`);
+    }
+  }
+  return startProcess("green", `target/${mode}/planetdraw-rs.exe`, `../`, [
+    "--port",
+    `${port}`,
+  ]);
 }

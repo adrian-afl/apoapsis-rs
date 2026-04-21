@@ -42,6 +42,7 @@ pub enum VertexAttribFormat {
     RG32f,
     RGB32f,
     RGBA32f,
+    RGBA64f,
 
     Padding8,
     Padding16,
@@ -83,6 +84,7 @@ pub(crate) fn get_vertex_attribute_type_byte_size(attrib: &VertexAttribFormat) -
         VertexAttribFormat::RG32f => 8,
         VertexAttribFormat::RGB32f => 12,
         VertexAttribFormat::RGBA32f => 16,
+        VertexAttribFormat::RGBA64f => 32,
         VertexAttribFormat::Padding8 => 1,
         VertexAttribFormat::Padding16 => 2,
         VertexAttribFormat::Padding24 => 4,
@@ -132,6 +134,7 @@ fn resolve_vertex_attribute_format(
         VertexAttribFormat::RG32f => Ok(vk::Format::R32G32_SFLOAT),
         VertexAttribFormat::RGB32f => Ok(vk::Format::R32G32B32_SFLOAT),
         VertexAttribFormat::RGBA32f => Ok(vk::Format::R32G32B32A32_SFLOAT),
+        VertexAttribFormat::RGBA64f => Ok(vk::Format::R64G64B64A64_SFLOAT),
         _ => Err(VEVertexAttributesError::InvalidFormat),
     }
 }

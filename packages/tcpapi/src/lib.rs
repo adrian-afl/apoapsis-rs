@@ -178,7 +178,10 @@ pub static TCP_CONTROL_SERVER: LazyLock<TCPControlServer> = LazyLock::new(|| {
     {
         let current_stream = current_stream.clone();
         thread::spawn(move || {
-            println!("TCP stream set loop starting...");
+            println!(
+                "TCP stream set loop starting, port {}...",
+                GLOBAL_CONFIG.port
+            );
             let listener = TcpListener::bind(format!("0.0.0.0:{}", GLOBAL_CONFIG.port)).unwrap();
             for stream in listener.incoming() {
                 let stream = stream.unwrap();

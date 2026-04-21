@@ -1,12 +1,12 @@
 use crate::errors::PhysicsError;
 use glam::{DQuat, DVec3};
-use katana_physics::integrator::katana_integrate::katana_integrate;
 use katana_physics::katana_raycast::katana_raycast;
 use katana_physics::katana_rigid_body::KatanaRigidBody;
 use katana_physics::katana_world::{KatanaWorld, KatanaWorldBodies};
 use katana_physics::plugins::collision_solver_plugin::katana_collision_solver_plugin::KatanaCollisionSolverPlugin;
-use katana_physics::plugins::katana_plugin::{BoxedKatanaPlugin, KatanaPlugin};
+use katana_physics::plugins::simple_gravity_plugin::katana_simple_gravity_plugin::KatanaSimpleGravityPlugin;
 use serde::{Deserialize, Serialize};
+use std::sync::{Arc, Mutex};
 use tcpapi::send_event;
 use ts_rs::TS;
 
@@ -50,8 +50,8 @@ fn handle_collision_events(
 
 pub struct RealPhysicsSystem {
     katana_world: KatanaWorld,
-    plugins: Vec<BoxedKatanaPlugin>,
-    // collision_plugin: &'a KatanaCollisionSolverPlugin,
+    collision_plugin: Arc<Mutex<KatanaCollisionSolverPlugin>>,
+    pub(crate) gravity_plugin: Arc<Mutex<KatanaSimpleGravityPlugin>>,
 }
 
 pub struct RealPhysicsBodyKinematics {
@@ -71,18 +71,22 @@ pub struct SetRealPhysicsBodyKinematics {
 
 impl RealPhysicsSystem {
     pub fn new() -> Self {
-        let collision_plugin = KatanaCollisionSolverPlugin::new();
-        let plugins: Vec<BoxedKatanaPlugin> = vec![Box::new(collision_plugin)];
+        let mut katana_world = KatanaWorld::new(4);
+        let gravity_plugin = Arc::new(Mutex::new(KatanaSimpleGravityPlugin::new(DVec3::ZERO)));
+        let collision_plugin = Arc::new(Mutex::new(KatanaCollisionSolverPlugin::new()));
+
+        katana_world.plugins.push(gravity_plugin.clone());
+        katana_world.plugins.push(collision_plugin.clone());
+
         Self {
-            katana_world: KatanaWorld::new(),
-            // collision_plugin: &plugins[0],
-            plugins,
+            katana_world,
+            gravity_plugin,
+            collision_plugin,
         }
     }
 
-    pub fn step(&mut self, delta: f64) {
-        // katana_integrate(delta, &mut self.katana_world, &mut self.plugins);
-        katana_integrate(1.0 / 60.0, &mut self.katana_world, &mut self.plugins);
+    pub fn step(&mut self, _delta: f64) {
+        self.katana_world.step(1.0 / 60.0);
     }
 
     pub fn add_body(&mut self, body: KatanaRigidBody) -> u64 {

@@ -21,7 +21,7 @@ describe("physics simple tests", () => {
   // afterAll(() => process.exit(0));
 
   it("can spawn an entity with physics near a planet", async () => {
-    const { gameApi, baseApi, kill } = await boot(7878, false);
+    const { gameApi, baseApi, kill } = await boot(7878, true);
 
     console.log(await gameApi.getAllCelestialBodyNames());
 
@@ -163,9 +163,9 @@ describe("physics simple tests", () => {
                 orientation: [0.0, 0.0, 0.0, 1.0],
                 shape: {
                   box: {
-                    halfX: 1.0,
-                    halfY: 1.0,
-                    halfZ: 1.0,
+                    halfX: 0.1,
+                    halfY: 0.1,
+                    halfZ: 0.1,
                   },
                 },
               },
@@ -175,7 +175,7 @@ describe("physics simple tests", () => {
           mesh: [
             {
               description: {
-                geometryPath: "media/smoothbox.pnut.raw",
+                geometryPath: "media/unitcube.raw",
                 material: {
                   color: {
                     color: [1.0, 1.0, 1.0],
@@ -194,27 +194,27 @@ describe("physics simple tests", () => {
                 },
               },
             },
-            {
-              description: {
-                geometryPath: "media/axes.pnut.raw",
-                material: {
-                  color: {
-                    color: [1.0, 0.0, 1.0],
-                  },
-                  roughness: {
-                    value: 1.0,
-                  },
-                  metalness: {
-                    value: 0.0,
-                  },
-                  emission: {
-                    color: [1.0, 0.0, 0.0],
-                  },
-                  bump: null,
-                  normal: null,
-                },
-              },
-            },
+            // {
+            //   description: {
+            //     geometryPath: "media/axes.pnut.raw",
+            //     material: {
+            //       color: {
+            //         color: [1.0, 0.0, 1.0],
+            //       },
+            //       roughness: {
+            //         value: 1.0,
+            //       },
+            //       metalness: {
+            //         value: 0.0,
+            //       },
+            //       emission: {
+            //         color: [1.0, 0.0, 0.0],
+            //       },
+            //       bump: null,
+            //       normal: null,
+            //     },
+            //   },
+            // },
           ],
           // glue_to_celestial_body: {
           //   bodyName: "earth",

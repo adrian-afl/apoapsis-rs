@@ -19,7 +19,7 @@ use vengine_rs::graphics::vertex_attributes::VertexAttribFormat;
 use vengine_rs::image::image::VEImageViewCreateInfo;
 
 pub static TERRAIN_ICOSPHERE_VERTEX_ATTRIBUTES: [VertexAttribFormat; 6] = [
-    VertexAttribFormat::RGB32f,    // pos
+    VertexAttribFormat::RGBA64f,   // pos
     VertexAttribFormat::RGB8inorm, // normal
     VertexAttribFormat::Padding8,
     VertexAttribFormat::RGBA8unorm, // color roughness
@@ -28,7 +28,7 @@ pub static TERRAIN_ICOSPHERE_VERTEX_ATTRIBUTES: [VertexAttribFormat; 6] = [
 ];
 
 pub static WATER_ICOSPHERE_VERTEX_ATTRIBUTES: [VertexAttribFormat; 3] = [
-    VertexAttribFormat::RGB32f,
+    VertexAttribFormat::RGBA64f,
     VertexAttribFormat::R16u,
     VertexAttribFormat::Padding16,
 ];

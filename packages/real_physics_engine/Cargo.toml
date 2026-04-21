@@ -19,5 +19,5 @@ serde = { version = "1.0.228", features = ["derive"] }
 ts-rs = { workspace = true }
 tcpapi = { workspace = true }
 serde_json = { workspace = true }
-katana-physics = { git = "ssh://git@github.com/adrian-afl/katana-rs.git", rev = "39b56812572042c797952956d89dbcda8db577b4" }
+katana-physics = { git = "ssh://git@github.com/adrian-afl/katana-rs.git", rev = "09378d01918ca0b304819be4eb13121745e502c7" }
 

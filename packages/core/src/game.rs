@@ -40,13 +40,13 @@ pub struct OnGameBootReadyEventData {
 
 pub struct Game {
     // toolkit: Arc<VEToolkit>,
-    window: Option<Arc<Mutex<Window>>>,
+    window: Arc<Mutex<Window>>,
 
     pub config: ResolutionConfig,
 
     universe_simulation: Simulation,
 
-    pub controls: Option<Controls>,
+    pub controls: Controls,
 
     remote_game_mode: RemoteGameMode,
 
@@ -55,11 +55,11 @@ pub struct Game {
 
     universe_simulation_updater_system: UniverseSimulationUpdaterSystem,
     camera_system: CameraSystem,
-    ui_system: Option<UISystem>,
-    rendering_system: Option<RenderingSystem>,
+    ui_system: UISystem,
+    rendering_system: RenderingSystem,
     physics_system: PhysicsSystem,
-    ui_cursor_system: Option<UICursorSystem>,
-    ui_raycast_system: Option<UIRaycastSystem>,
+    ui_cursor_system: UICursorSystem,
+    ui_raycast_system: UIRaycastSystem,
     ui_raycast_result: Vec<UIRaycastResultItem>,
 
     debug_mode_value: f64,
@@ -100,21 +100,21 @@ impl Game {
 
         Self {
             // toolkit: toolkit.clone(),
-            window: Some(window.clone()),
+            window: window.clone(),
 
             config,
 
             universe_simulation,
 
-            controls: Some(controls),
+            controls: controls,
 
-            ui_system: Some(ui_system),
+            ui_system: ui_system,
             camera_system,
             universe_simulation_updater_system,
-            rendering_system: Some(rendering_system),
+            rendering_system: rendering_system,
             physics_system,
-            ui_cursor_system: Some(ui_cursor_system),
-            ui_raycast_system: Some(ui_raycast_system),
+            ui_cursor_system: ui_cursor_system,
+            ui_raycast_system: ui_raycast_system,
             ui_raycast_result: vec![],
 
             remote_game_mode,
@@ -126,118 +126,58 @@ impl Game {
         }
     }
 
-    pub fn new_headless() -> Self {
-        let config = ResolutionConfig {
-            width: 640,
-            height: 480,
-        };
-
-        let mut universe_simulation = Simulation::new();
-
-        universe_simulation
-            .add_hierarchy(
-                &config,
-                &load_body_data("media/universe/solar_system/sun/sun.json"),
-                None,
-            )
-            .expect("Failed to load sun.json");
-
-        let universe_simulation_updater_system = UniverseSimulationUpdaterSystem::new();
-
-        let camera_system = CameraSystem::new();
-        let physics_system = PhysicsSystem::new();
-
-        let remote_game_mode = RemoteGameMode::new();
-
-        Self {
-            // toolkit: None,
-            window: None,
-
-            config,
-
-            universe_simulation,
-
-            controls: None,
-
-            ui_system: None,
-            camera_system,
-            universe_simulation_updater_system,
-            rendering_system: None,
-            physics_system,
-            ui_cursor_system: None,
-            ui_raycast_system: None,
-            ui_raycast_result: vec![],
-
-            remote_game_mode,
-            current_camera: Camera::new(),
-
-            debug_mode_value: 1.0,
-
-            cache_f64: GenericCache::new(1024),
-        }
-    }
-
     pub fn measure_text_pixels(&self, text: &str, font_size: &UIFontSize) -> DVec2 {
-        match &self.ui_system {
-            None => DVec2::ZERO,
-            Some(ui_system) => ui_system
-                .ui_drawer
-                .lock()
-                .unwrap()
-                .measure_text_pixels(text, font_size),
-        }
+        self.ui_system
+            .ui_drawer
+            .lock()
+            .unwrap()
+            .measure_text_pixels(text, font_size)
     }
 
     pub fn update(&mut self) {
         profile!("before update", {
             self.remote_game_mode.ecs.time_counter.update_time();
-            if let Some(ref mut controls) = self.controls {
-                controls.update_gamepad_helper();
-                let control_events = controls.get_new_events();
+            self.controls.update_gamepad_helper();
+            let control_events = self.controls.get_new_events();
 
-                if controls
-                    .get_new_events()
-                    .contains(&ControlEvent::ControlActivate(
-                        ControlMapItem::RecompileShaders,
-                    ))
-                    && let Some(ref mut rendering_system) = self.rendering_system
-                {
-                    rendering_system.recreate_stages().unwrap();
-                }
+            if self
+                .controls
+                .get_new_events()
+                .contains(&ControlEvent::ControlActivate(
+                    ControlMapItem::RecompileShaders,
+                ))
+            {
+                self.rendering_system.recreate_stages().unwrap();
+            }
 
-                for event in control_events {
-                    match event {
-                        ControlEvent::ControlActivate(v) => {
-                            send_event!("on_control_activate", v);
-                        }
-                        ControlEvent::ControlRelease(v) => {
-                            send_event!("on_control_release", v);
-                        }
-                        ControlEvent::RawKeyDown(v) => {
-                            send_event!("on_raw_key_down", v);
-                        }
-                        ControlEvent::RawKeyUp(v) => {
-                            send_event!("on_raw_key_up", v);
-                        }
-                        ControlEvent::RawText(v) => {
-                            send_event!("on_raw_input_text", v);
-                        }
+            for event in control_events {
+                match event {
+                    ControlEvent::ControlActivate(v) => {
+                        send_event!("on_control_activate", v);
+                    }
+                    ControlEvent::ControlRelease(v) => {
+                        send_event!("on_control_release", v);
+                    }
+                    ControlEvent::RawKeyDown(v) => {
+                        send_event!("on_raw_key_down", v);
+                    }
+                    ControlEvent::RawKeyUp(v) => {
+                        send_event!("on_raw_key_up", v);
+                    }
+                    ControlEvent::RawText(v) => {
+                        send_event!("on_raw_input_text", v);
                     }
                 }
             }
         });
 
-        if let Some(ref mut rendering_system) = self.rendering_system {
-            self.remote_game_mode.update(
-                &mut self.universe_simulation,
-                &mut self.physics_system,
-                rendering_system,
-            );
-        }
+        self.remote_game_mode.update(
+            &mut self.universe_simulation,
+            &mut self.physics_system,
+            &mut self.rendering_system,
+        );
 
-        if let Some(ref mut controls) = self.controls {
-            controls.clear_events();
-        }
+        self.controls.clear_events();
 
         let stage_ecs = &mut self.remote_game_mode.ecs;
 
@@ -249,109 +189,96 @@ impl Game {
             );
         });
 
-        if let Some(ref mut rendering_system) = self.rendering_system {
-            profile!("physics_system update part 1", {
-                self.physics_system.update_part_1(
-                    stage_ecs,
-                    &self.universe_simulation,
-                    rendering_system, // TODO how to do it without rendering
-                    &self.cache_f64,
-                    stage_ecs.time_counter.delta_time,
-                );
-            });
-        }
-        if let Some(ref mut controls) = self.controls {
-            profile!("camera_system update", {
-                self.camera_system
-                    .update(&mut self.current_camera, controls, stage_ecs);
-            });
-        }
-
-        if let Some(ref mut controls) = self.controls
-            && let Some(ref window) = self.window
-            && let Some(ref mut ui_cursor_system) = self.ui_cursor_system
-            && let Some(ref mut ui_raycast_system) = self.ui_raycast_system
-            && let Some(ref mut ui_system) = self.ui_system
-        {
-            profile!("ui_system & stuff update", {
-                let window_size = window.lock().unwrap().inner_size();
-
-                let normalized_cursor_pos = controls.mouse.get_cursor_absolute()
-                    / DVec2::new(window_size.width as f64, window_size.height as f64);
-
-                ui_system.update(stage_ecs, normalized_cursor_pos);
-                ui_raycast_system.update(
-                    &mut self.ui_raycast_result,
-                    stage_ecs,
-                    normalized_cursor_pos,
-                );
-                let cursor_system_result =
-                    ui_cursor_system.update(stage_ecs, &self.ui_raycast_result);
-                match cursor_system_result.cursor_locked {
-                    true => {
-                        if !controls.mouse.is_cursor_locked() {
-                            controls.mouse.lock_cursor();
-                        }
-                    }
-                    false => {
-                        if controls.mouse.is_cursor_locked() {
-                            controls.mouse.unlock_cursor();
-                        }
-                    }
-                }
-                match cursor_system_result.cursor_type {
-                    UICursorType::Arrow => {
-                        if controls.mouse.get_cursor_type() != CursorIcon::Default {
-                            controls.mouse.set_cursor_type(CursorIcon::Default)
-                        }
-                    }
-                    UICursorType::Pointer => {
-                        if controls.mouse.get_cursor_type() != CursorIcon::Pointer {
-                            controls.mouse.set_cursor_type(CursorIcon::Pointer)
-                        }
-                    }
-                    UICursorType::Grab => {
-                        if controls.mouse.get_cursor_type() != CursorIcon::Pointer {
-                            controls.mouse.set_cursor_type(CursorIcon::Pointer)
-                        }
-                    }
-                }
-            });
-        }
-
-        if let Some(ref mut rendering_system) = self.rendering_system
-            && let Some(ref ui_system) = self.ui_system
-        {
-            let dt = stage_ecs.time_counter.delta_time;
-            join(
-                || {
-                    profile!("rendering_system update", {
-                        rendering_system.update(
-                            stage_ecs,
-                            &self.universe_simulation,
-                            &self.current_camera,
-                            ui_system,
-                            &self.cache_f64,
-                            self.debug_mode_value,
-                        );
-                    });
-                },
-                || {
-                    profile!("physics_system update part 2", {
-                        self.physics_system.update_part_2_physics_step(dt);
-                    });
-                },
+        profile!("physics_system update part 1", {
+            self.physics_system.update_part_1(
+                stage_ecs,
+                &self.universe_simulation,
+                &self.rendering_system, // TODO how to do it without rendering
+                &self.cache_f64,
+                stage_ecs.time_counter.delta_time,
             );
+        });
 
-            profile!("physics_system update part 3", {
-                self.physics_system.update_part_3(
-                    stage_ecs,
-                    &self.universe_simulation,
-                    rendering_system, // TODO how to do it without rendering
-                    &self.cache_f64,
-                    stage_ecs.time_counter.delta_time,
-                );
-            });
-        }
+        profile!("camera_system update", {
+            self.camera_system
+                .update(&mut self.current_camera, &self.controls, stage_ecs);
+        });
+
+        profile!("ui_system & stuff update", {
+            let window_size = self.window.lock().unwrap().inner_size();
+
+            let normalized_cursor_pos = self.controls.mouse.get_cursor_absolute()
+                / DVec2::new(window_size.width as f64, window_size.height as f64);
+
+            self.ui_system.update(stage_ecs, normalized_cursor_pos);
+            self.ui_raycast_system.update(
+                &mut self.ui_raycast_result,
+                stage_ecs,
+                normalized_cursor_pos,
+            );
+            let cursor_system_result = self
+                .ui_cursor_system
+                .update(stage_ecs, &self.ui_raycast_result);
+            match cursor_system_result.cursor_locked {
+                true => {
+                    if !self.controls.mouse.is_cursor_locked() {
+                        self.controls.mouse.lock_cursor();
+                    }
+                }
+                false => {
+                    if self.controls.mouse.is_cursor_locked() {
+                        self.controls.mouse.unlock_cursor();
+                    }
+                }
+            }
+            match cursor_system_result.cursor_type {
+                UICursorType::Arrow => {
+                    if self.controls.mouse.get_cursor_type() != CursorIcon::Default {
+                        self.controls.mouse.set_cursor_type(CursorIcon::Default)
+                    }
+                }
+                UICursorType::Pointer => {
+                    if self.controls.mouse.get_cursor_type() != CursorIcon::Pointer {
+                        self.controls.mouse.set_cursor_type(CursorIcon::Pointer)
+                    }
+                }
+                UICursorType::Grab => {
+                    if self.controls.mouse.get_cursor_type() != CursorIcon::Pointer {
+                        self.controls.mouse.set_cursor_type(CursorIcon::Pointer)
+                    }
+                }
+            }
+        });
+
+        let dt = stage_ecs.time_counter.delta_time;
+        join(
+            || {
+                profile!("rendering_system update", {
+                    self.rendering_system.update(
+                        stage_ecs,
+                        &self.universe_simulation,
+                        &self.current_camera,
+                        &self.ui_system,
+                        &self.cache_f64,
+                        self.debug_mode_value,
+                    );
+                });
+            },
+            || {
+                profile!("physics_system update part 2", {
+                    self.physics_system.update_part_2_physics_step(dt);
+                });
+            },
+        );
+
+        profile!("physics_system update part 3", {
+            self.physics_system.update_part_3(
+                stage_ecs,
+                &self.universe_simulation,
+                &self.rendering_system, // TODO how to do it without rendering
+                &self.cache_f64,
+                stage_ecs.time_counter.delta_time,
+            );
+        });
     }
 }

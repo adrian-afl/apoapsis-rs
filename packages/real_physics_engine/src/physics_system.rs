@@ -101,6 +101,19 @@ impl PhysicsSystem {
                 .assign(&transform.position);
             self.player_temporary_data.linear_velocity = simple_physics.linear_velocity;
 
+            let gravity_force = context
+                .universe_simulation
+                .calculate_gravity_flux(&transform.position)
+                .to_dvec3_with_precision(8);
+
+            self.real_physics_system
+                .write()
+                .unwrap()
+                .gravity_plugin
+                .lock()
+                .unwrap()
+                .gravity = gravity_force;
+
             FindStorePlayerFrameDataResult::Continue
         } else {
             // println!("Player entity not found, Relativity can behave weird");
@@ -135,12 +148,12 @@ impl PhysicsSystem {
                     transform.position = new_pos;
                     transform.orientation = world_orientation;
 
-                    simple_physics.linear_velocity =
-                        context.universe_simulation.get_surface_velocity_f64(
-                            &glue_to_body.body_name,
-                            body.orientation.as_dquat().mul_vec3(glue_to_body.offset), // TODO
-                                                                                       // glue_to_body.offset,
-                        )
+                    // simple_physics.linear_velocity =
+                    //     context.universe_simulation.get_surface_velocity_f64(
+                    //         &glue_to_body.body_name,
+                    //         body.orientation.as_dquat().mul_vec3(glue_to_body.offset), // TODO
+                    //                                                                    // glue_to_body.offset,
+                    //     )
                 },
             );
         });
@@ -181,7 +194,7 @@ impl PhysicsSystem {
                         Some(id) => {
                             let relative_position = (&transform.position
                                 - &self.player_temporary_data.position)
-                                .to_dvec3_with_precision(5);
+                                .to_dvec3_with_precision(8);
                             let mut relative_linear_velocity = simple_physics.linear_velocity
                                 - self.player_temporary_data.linear_velocity;
 
@@ -194,18 +207,30 @@ impl PhysicsSystem {
                                 simulated_object.rigid_body
                             }; // unlocks
 
-                            // if simple_physics.mass > DBig::ZERO && !has_glue {
+                            let mut real_physics_system = self.real_physics_system.write().unwrap();
+
+                            // if real_physics
+                            //     .collider_descriptions
+                            //     .iter()
+                            //     .fold(0.0, |p, c| p + c.mass)
+                            //     > 0.0
+                            //     && !has_glue
+                            // {
                             //     let gravity_force = context
                             //         .universe_simulation
                             //         .calculate_gravity_flux(&transform.position)
-                            //         .to_dvec3_with_precision(5);
+                            //         .to_dvec3_with_precision(5)
+                            //         * context.delta_time;
                             //
-                            //     relative_linear_velocity += gravity_force * context.delta_time;
+                            //     relative_linear_velocity += gravity_force
+                            //
+                            //     // real_physics_system
+                            //     //     .apply_force(simulated_object_rigid_body, gravity_force)
+                            //     //     .unwrap();
                             //
                             //     // dbg!(relative_linear_velocity);
                             // }
 
-                            let mut real_physics_system = self.real_physics_system.write().unwrap();
                             real_physics_system
                                 .set_body_kinematics(
                                     simulated_object_rigid_body,
@@ -218,26 +243,6 @@ impl PhysicsSystem {
                                     },
                                 )
                                 .unwrap();
-
-                            if real_physics
-                                .collider_descriptions
-                                .iter()
-                                .fold(0.0, |p, c| p + c.mass)
-                                > 0.0
-                                && !has_glue
-                            {
-                                let gravity_force = context
-                                    .universe_simulation
-                                    .calculate_gravity_flux(&transform.position)
-                                    .to_dvec3_with_precision(5)
-                                    * context.delta_time;
-
-                                real_physics_system
-                                    .apply_force(simulated_object_rigid_body, gravity_force)
-                                    .unwrap();
-
-                                // dbg!(relative_linear_velocity);
-                            }
                         }
                     }
                 } else {

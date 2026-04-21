@@ -14,10 +14,10 @@ use std::sync::Mutex;
 use universe_simulation::simulation::SimulatedBody;
 use vengine_rs::graphics::vertex_buffer::VEVertexBuffer;
 
-pub static ICO_BASE_SUBDIVISION: u8 = 2u8;
+pub static ICO_BASE_SUBDIVISION: u8 = 3u8;
 pub static ICO_LEVEL_SUBDIVISIONS: [u8; 3] = [3, 4, 5];
 // static ICO_THRESHOLDS: [f64; 2] = [2000000.0, 5000000.0];
-static ICO_THRESHOLDS: [f64; 2] = [6378000.0 / 3.0, 5000000.0 / 6.0];
+static ICO_THRESHOLDS: [f64; 2] = [637800.0 / 3.0, 500000.0 / 6.0];
 // earth radius = 6378000
 
 pub fn calculate_base_icosphere_parts_count(subdivisions: u8) -> u16 {
@@ -105,7 +105,7 @@ pub fn update_icosphere_matrices(
     part_matrices: &mut Vec<DMat4>,
 ) {
     let translation_camera_space = &simulated_body.position - camera_position;
-    let dvec_translation_camera_space = translation_camera_space.to_dvec3_with_precision(6);
+    let dvec_translation_camera_space = translation_camera_space.to_dvec3_with_precision(8);
 
     let center_world_matrix = DMat4::from_rotation_translation(
         simulated_body.orientation.as_dquat(),

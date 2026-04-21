@@ -1,0 +1,24 @@
+{
+  "attributes": [
+    {
+      "dimensions": 3,
+      "normalize": false,
+      "format": "float32"
+    },
+    {
+      "dimensions": 3,
+      "normalize": false,
+      "format": "float32"
+    },
+    {
+      "dimensions": 2,
+      "normalize": false,
+      "format": "float32"
+    },
+    {
+      "dimensions": 4,
+      "normalize": false,
+      "format": "float32"
+    }
+  ]
+}

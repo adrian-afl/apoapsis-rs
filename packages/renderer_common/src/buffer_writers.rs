@@ -20,6 +20,21 @@ pub fn write_mat4(ptr: *mut f32, base_offset: isize, data: DMat4) -> isize {
     16
 }
 
+pub fn write_dmat4(ptr: *mut f64, base_offset: isize, data: DMat4) -> isize {
+    let mut offset = base_offset;
+    unsafe {
+        for v in data.to_cols_array() {
+            ptr.offset(offset).write(v as f64);
+            offset += 1;
+        }
+    }
+    // offset += write_vec4(ptr, offset, data.x_axis);
+    // offset += write_vec4(ptr, offset, data.y_axis);
+    // offset += write_vec4(ptr, offset, data.z_axis);
+    // offset += write_vec4(ptr, offset, data.w_axis);
+    16
+}
+
 pub fn write_vec2(ptr: *mut f32, base_offset: isize, data: DVec2) -> isize {
     let mut offset = base_offset;
     unsafe {

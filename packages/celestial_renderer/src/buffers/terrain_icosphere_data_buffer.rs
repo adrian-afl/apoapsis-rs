@@ -3,7 +3,7 @@ use crate::geometry::common_icosphere::{
 };
 use ash::vk::DeviceSize;
 use glam::DMat4;
-use renderer_common::buffer_writers::write_mat4;
+use renderer_common::buffer_writers::{write_dmat4, write_mat4};
 use renderer_common::errors::RenderingError;
 use vengine_rs::buffer::buffer::{VEBuffer, VEBufferUsage};
 use vengine_rs::core::command_buffer::VECommandBuffer;
@@ -22,7 +22,7 @@ impl TerrainIcosphereDataBuffer {
         dbg!(icosphere_triangles_count);
         // each part needs a mat4 f32, so 16 * 4 * count is total size
         // lets add some trailing space just for fun too
-        let desired_buffer_size = 16 * 4 * icosphere_triangles_count + 2048;
+        let desired_buffer_size = 16 * 8 * icosphere_triangles_count + 2048;
         // let desired_buffer_size = 1024 * 1024;
         Ok(Self {
             staging_buffer: toolkit.create_buffer(
@@ -43,12 +43,12 @@ impl TerrainIcosphereDataBuffer {
     mat4 partMatrix[320];
     */
     pub fn update(&mut self, part_matrices: &[DMat4]) -> Result<(), RenderingError> {
-        let ptr = self.staging_buffer.map()? as *mut f32;
+        let ptr = self.staging_buffer.map()? as *mut f64;
 
         let mut offset = 0;
 
         for matrix in part_matrices {
-            offset += write_mat4(ptr, offset, *matrix);
+            offset += write_dmat4(ptr, offset, *matrix);
         }
 
         Ok(())

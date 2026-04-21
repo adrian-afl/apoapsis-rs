@@ -98,13 +98,16 @@ fn write_vector_terrain(
     global_index: u32,
 ) {
     stream
-        .write_all(&(v.x as f32).to_le_bytes())
+        .write_all(&(v.x as f64).to_le_bytes())
         .expect("Write failed");
     stream
-        .write_all(&(v.y as f32).to_le_bytes())
+        .write_all(&(v.y as f64).to_le_bytes())
         .expect("Write failed");
     stream
-        .write_all(&(v.z as f32).to_le_bytes())
+        .write_all(&(v.z as f64).to_le_bytes())
+        .expect("Write failed");
+    stream
+        .write_all(&(0.0 as f64).to_le_bytes())
         .expect("Write failed");
 
     stream
