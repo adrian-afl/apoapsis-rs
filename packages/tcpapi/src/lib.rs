@@ -1,3 +1,5 @@
+mod mpmc;
+
 use config::GLOBAL_CONFIG;
 use std::collections::VecDeque;
 use std::io::{BufRead, Read, Write};

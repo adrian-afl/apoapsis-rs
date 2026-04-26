@@ -407,6 +407,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "celestial_tessellation_provider"
+version = "0.1.0"
+dependencies = [
+ "ash",
+ "common_util",
+ "dashu-float",
+ "ecs",
+ "glam",
+ "math",
+ "media_provider",
+ "planet_generator_library",
+ "rayon",
+ "renderer_common",
+ "serde",
+ "ts-rs",
+ "ui_renderer",
+ "universe_simulation",
+ "vengine-rs",
+]
+
+[[package]]
 name = "cesu8"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

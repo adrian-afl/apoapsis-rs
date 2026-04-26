@@ -1,0 +1,22 @@
+[package]
+name = "celestial_tessellation_provider"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+renderer_common = { workspace = true }
+ui_renderer = { workspace = true }
+universe_simulation = { workspace = true }
+math = { workspace = true }
+ecs = { workspace = true }
+planet_generator_library = { workspace = true }
+common_util = { workspace = true }
+media_provider = { workspace = true }
+
+vengine-rs = { workspace = true }
+dashu-float = { workspace = true }
+glam = { workspace = true, features = ["serde"] }
+ash = { workspace = true, features = ["loaded"] }
+rayon = { workspace = true }
+serde = { version = "1.0.228", features = ["derive"] }
+ts-rs = { workspace = true }

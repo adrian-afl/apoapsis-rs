@@ -19,7 +19,7 @@ members = [
     "packages/universe_simulation",
     "packages/tcpapi",
     "packages/config",
-    "packages/media_provider",
+    "packages/media_provider", "packages/celestial_tessellation_provider",
 ]
 
 [profile.dev.package.planet_generator_library]
