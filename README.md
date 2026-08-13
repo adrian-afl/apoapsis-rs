@@ -1,4 +1,4 @@
-# planetdraw-rs
+# apoapsis-rs
 
 This is very much in todo a Game Engine
 
